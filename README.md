@@ -203,6 +203,17 @@ For detailed setup instructions, configuration options, and getting started guid
 
 ## 🚧 Development
 
+```sh
+npm i
+cp backend/.env.example backend/.env   # optional now — auto-created on start
+# edit backend/.env: TUDUDI_USER_EMAIL, TUDUDI_USER_PASSWORD, TUDUDI_SESSION_SECRET
+npm run start
+# Every day after
+npm run start
+# Optional demo data
+npm run db:seed
+```
+
 Want to contribute or run Tududi from source? Check out our comprehensive development guide:
 
 **[Development Setup Guide](https://docs.tududi.com/#-development-setup)**

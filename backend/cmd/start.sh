@@ -80,6 +80,7 @@ backup_db() {
 # Check if database exists and create/authenticate
 if [ ! -f "$DB_FILE" ]; then
   echo "Creating new database..."
+  mkdir -p "$(dirname "$DB_FILE")"
   node scripts/db-init.js
 else
   backup_db
@@ -89,11 +90,8 @@ fi
 
 # Run database migrations automatically
 echo "Running database migrations..."
-if npx sequelize-cli db:migrate --config config/database.js; then
-  echo "Migrations completed successfully"
-else
-  echo "Migration failed, but continuing startup (may be expected for new installations)"
-fi
+node scripts/db-migrate.js || exit 1
+echo "Migrations completed successfully"
 
 if [ -n "${TUDUDI_USER_EMAIL:-}" ] && [ -n "${TUDUDI_USER_PASSWORD:-}" ]; then
   # Trim whitespace/carriage returns that may come from docker-compose env vars

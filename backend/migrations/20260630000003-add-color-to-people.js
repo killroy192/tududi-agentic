@@ -1,15 +1,25 @@
 'use strict';
 
+const { safeAddColumns } = require('../utils/migration-utils');
+
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.addColumn('people', 'color', {
-            type: Sequelize.STRING(20),
-            allowNull: true,
-            defaultValue: null,
-        });
+        await safeAddColumns(queryInterface, 'people', [
+            {
+                name: 'color',
+                definition: {
+                    type: Sequelize.STRING(20),
+                    allowNull: true,
+                    defaultValue: null,
+                },
+            },
+        ]);
     },
 
     async down(queryInterface) {
-        await queryInterface.removeColumn('people', 'color');
+        const tableInfo = await queryInterface.describeTable('people');
+        if ('color' in tableInfo) {
+            await queryInterface.removeColumn('people', 'color');
+        }
     },
 };

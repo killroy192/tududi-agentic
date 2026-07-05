@@ -411,10 +411,13 @@ describe('Project Sharing Integration Tests', () => {
             // Owner creates a task in the shared project
             const taskResponse = await ownerAgent.post('/api/task').send({
                 name: 'Task with attachments in shared project',
-                project_id: project.id,
+                project_uid: project.uid,
                 priority: 1,
                 status: 0,
             });
+
+            expect(taskResponse.status).toBe(201);
+            expect(taskResponse.body.uid).toBeTruthy();
             taskInSharedProject = taskResponse.body;
         });
 

@@ -4,11 +4,12 @@ const { Task, Project } = require('../../models');
 const { createTestUser } = require('../helpers/testUtils');
 
 describe('Recurring Task Display Fixes', () => {
-    let user, project, agent;
+    let user, project, agent, userEmail;
 
     beforeEach(async () => {
+        userEmail = `recurring-display-${Date.now()}@example.com`;
         user = await createTestUser({
-            email: 'test@example.com',
+            email: userEmail,
         });
 
         project = await Project.create({
@@ -16,13 +17,26 @@ describe('Recurring Task Display Fixes', () => {
             user_id: user.id,
         });
 
-        // Create authenticated agent
         agent = request.agent(app);
-        await agent.post('/api/login').send({
-            email: 'test@example.com',
+        const loginResponse = await agent.post('/api/login').send({
+            email: userEmail,
             password: 'password123',
         });
+        expect(loginResponse.status).toBe(200);
     });
+
+    async function fetchProjectTasks() {
+        const response = await agent.get(
+            `/api/tasks?project_id=${project.id}`
+        );
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body.tasks)).toBe(true);
+        return response.body.tasks;
+    }
+
+    function findTaskByUid(tasks, task) {
+        return tasks.find((t) => t.uid === task.uid);
+    }
 
     describe('Recurrence Type Display Names', () => {
         it('should show "Daily" instead of recurring task template name', async () => {
@@ -36,13 +50,11 @@ describe('Recurring Task Display Fixes', () => {
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await recurringTemplate.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const task = findTaskByUid(tasks, recurringTemplate);
 
-            expect(response.status).toBe(200);
-            const task = response.body.tasks.find(
-                (t) => t.id === recurringTemplate.id
-            );
             expect(task).toBeDefined();
             expect(task.name).toBe('Daily');
             expect(task.original_name).toBe('Daily Workout Original Name');
@@ -53,18 +65,17 @@ describe('Recurring Task Display Fixes', () => {
             const weeklyTask = await Task.create({
                 name: 'Weekly Review Task',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'weekly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await weeklyTask.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const task = findTaskByUid(tasks, weeklyTask);
 
-            expect(response.status).toBe(200);
-            const task = response.body.tasks.find(
-                (t) => t.id === weeklyTask.id
-            );
             expect(task).toBeDefined();
             expect(task.name).toBe('Weekly');
             expect(task.original_name).toBe('Weekly Review Task');
@@ -74,18 +85,17 @@ describe('Recurring Task Display Fixes', () => {
             const monthlyTask = await Task.create({
                 name: 'Monthly Report',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'monthly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await monthlyTask.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const task = findTaskByUid(tasks, monthlyTask);
 
-            expect(response.status).toBe(200);
-            const task = response.body.tasks.find(
-                (t) => t.id === monthlyTask.id
-            );
             expect(task).toBeDefined();
             expect(task.name).toBe('Monthly');
             expect(task.original_name).toBe('Monthly Report');
@@ -95,18 +105,17 @@ describe('Recurring Task Display Fixes', () => {
             const yearlyTask = await Task.create({
                 name: 'Annual Tax Filing',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'yearly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await yearlyTask.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const task = findTaskByUid(tasks, yearlyTask);
 
-            expect(response.status).toBe(200);
-            const task = response.body.tasks.find(
-                (t) => t.id === yearlyTask.id
-            );
             expect(task).toBeDefined();
             expect(task.name).toBe('Yearly');
             expect(task.original_name).toBe('Annual Tax Filing');
@@ -116,18 +125,17 @@ describe('Recurring Task Display Fixes', () => {
             const regularTask = await Task.create({
                 name: 'Regular Task Name',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'none',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await regularTask.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const task = findTaskByUid(tasks, regularTask);
 
-            expect(response.status).toBe(200);
-            const task = response.body.tasks.find(
-                (t) => t.id === regularTask.id
-            );
             expect(task).toBeDefined();
             expect(task.name).toBe('Regular Task Name');
             expect(task.original_name).toBe('Regular Task Name');
@@ -137,6 +145,7 @@ describe('Recurring Task Display Fixes', () => {
             const template = await Task.create({
                 name: 'Template Task',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'daily',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
@@ -146,39 +155,34 @@ describe('Recurring Task Display Fixes', () => {
             const instance = await Task.create({
                 name: 'Daily Instance - Aug 23',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'none',
                 recurring_parent_id: template.id,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await template.reload();
+            await instance.reload();
 
-            // Since instances are filtered out, we won't see them in the response
-            // But if they were included, they should keep their original name
-            const response = await agent.get('/api/tasks');
-
-            expect(response.status).toBe(200);
-            const templateTask = response.body.tasks.find(
-                (t) => t.id === template.id
-            );
-            const instanceTask = response.body.tasks.find(
-                (t) => t.id === instance.id
-            );
+            const tasks = await fetchProjectTasks();
+            const templateTask = findTaskByUid(tasks, template);
+            const instanceTask = findTaskByUid(tasks, instance);
 
             expect(templateTask).toBeDefined();
-            expect(templateTask.name).toBe('Daily'); // Template shows "Daily"
-            expect(instanceTask).toBeUndefined(); // Instance should be filtered out
+            expect(templateTask.name).toBe('Daily');
+            expect(instanceTask).toBeUndefined();
         });
     });
 
     describe('Past Missed Recurring Tasks Filtering', () => {
         it('should hide recurring templates with past due dates', async () => {
-            const pastDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // 3 days ago
-            const futureDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+            const pastDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+            const futureDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
-            // Past recurring template (should be hidden)
             const pastRecurring = await Task.create({
                 name: 'Past Daily Task',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'daily',
                 recurring_parent_id: null,
                 due_date: pastDate,
@@ -186,10 +190,10 @@ describe('Recurring Task Display Fixes', () => {
                 priority: Task.PRIORITY.MEDIUM,
             });
 
-            // Future recurring template (should be shown)
             const futureRecurring = await Task.create({
                 name: 'Future Daily Task',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'daily',
                 recurring_parent_id: null,
                 due_date: futureDate,
@@ -197,33 +201,28 @@ describe('Recurring Task Display Fixes', () => {
                 priority: Task.PRIORITY.MEDIUM,
             });
 
-            // Past regular task (should still be shown - overdue tasks are allowed)
             const pastRegular = await Task.create({
                 name: 'Past Regular Task',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'none',
                 recurring_parent_id: null,
                 due_date: pastDate,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await pastRecurring.reload();
+            await futureRecurring.reload();
+            await pastRegular.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const taskUids = tasks.map((t) => t.uid);
+            const taskNames = tasks.map((t) => t.name);
 
-            expect(response.status).toBe(200);
-
-            const taskIds = response.body.tasks.map((t) => t.id);
-            const taskNames = response.body.tasks.map((t) => t.name);
-
-            // Past recurring template should be hidden
-            expect(taskIds).not.toContain(pastRecurring.id);
-
-            // Future recurring template should be shown as "Daily"
-            expect(taskIds).toContain(futureRecurring.id);
+            expect(taskUids).not.toContain(pastRecurring.uid);
+            expect(taskUids).toContain(futureRecurring.uid);
             expect(taskNames).toContain('Daily');
-
-            // Past regular task should still be shown (overdue tasks are allowed for non-recurring)
-            expect(taskIds).toContain(pastRegular.id);
+            expect(taskUids).toContain(pastRegular.uid);
             expect(taskNames).toContain('Past Regular Task');
         });
 
@@ -231,46 +230,44 @@ describe('Recurring Task Display Fixes', () => {
             const recurringNoDueDate = await Task.create({
                 name: 'No Due Date Recurring',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'weekly',
                 recurring_parent_id: null,
                 due_date: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await recurringNoDueDate.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const taskUids = tasks.map((t) => t.uid);
+            const taskNames = tasks.map((t) => t.name);
 
-            expect(response.status).toBe(200);
-
-            const taskIds = response.body.tasks.map((t) => t.id);
-            const taskNames = response.body.tasks.map((t) => t.name);
-
-            expect(taskIds).toContain(recurringNoDueDate.id);
+            expect(taskUids).toContain(recurringNoDueDate.uid);
             expect(taskNames).toContain('Weekly');
         });
 
         it('should show recurring templates due today', async () => {
             const today = new Date();
-            today.setHours(12, 0, 0, 0); // Set to noon today
+            today.setHours(12, 0, 0, 0);
 
             const todayRecurring = await Task.create({
                 name: 'Today Recurring Task',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'daily',
                 recurring_parent_id: null,
                 due_date: today,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await todayRecurring.reload();
 
-            const response = await agent.get('/api/tasks');
+            const tasks = await fetchProjectTasks();
+            const taskUids = tasks.map((t) => t.uid);
+            const taskNames = tasks.map((t) => t.name);
 
-            expect(response.status).toBe(200);
-
-            const taskIds = response.body.tasks.map((t) => t.id);
-            const taskNames = response.body.tasks.map((t) => t.name);
-
-            expect(taskIds).toContain(todayRecurring.id);
+            expect(taskUids).toContain(todayRecurring.uid);
             expect(taskNames).toContain('Daily');
         });
     });
@@ -280,11 +277,13 @@ describe('Recurring Task Display Fixes', () => {
             const recurringTask = await Task.create({
                 name: 'My Weekly Review',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'weekly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await recurringTask.reload();
 
             const response = await agent.get(`/api/task/${recurringTask.uid}`);
 
@@ -298,11 +297,13 @@ describe('Recurring Task Display Fixes', () => {
             const monthlyTask = await Task.create({
                 name: 'Monthly Budget Review',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'monthly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await monthlyTask.reload();
 
             const response = await agent.get(`/api/task/${monthlyTask.uid}`);
 
@@ -318,13 +319,14 @@ describe('Recurring Task Display Fixes', () => {
             const recurringTask = await Task.create({
                 name: 'Daily Exercise Routine',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'daily',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await recurringTask.reload();
 
-            // Change status to in_progress
             const updateResponse = await agent
                 .patch(`/api/task/${recurringTask.uid}`)
                 .send({
@@ -333,7 +335,6 @@ describe('Recurring Task Display Fixes', () => {
 
             expect(updateResponse.status).toBe(200);
 
-            // Fetch the task again to verify the name wasn't changed
             const fetchResponse = await agent.get(
                 `/api/task/${recurringTask.uid}`
             );
@@ -348,13 +349,14 @@ describe('Recurring Task Display Fixes', () => {
             const weeklyTask = await Task.create({
                 name: 'Weekly Team Meeting',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'weekly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.HIGH,
             });
+            await weeklyTask.reload();
 
-            // Change status to planned
             const updateResponse = await agent
                 .patch(`/api/task/${weeklyTask.uid}`)
                 .send({
@@ -363,7 +365,6 @@ describe('Recurring Task Display Fixes', () => {
 
             expect(updateResponse.status).toBe(200);
 
-            // Fetch the task to verify
             const fetchResponse = await agent.get(
                 `/api/task/${weeklyTask.uid}`
             );
@@ -377,13 +378,14 @@ describe('Recurring Task Display Fixes', () => {
             const monthlyTask = await Task.create({
                 name: 'Monthly Budget Review',
                 user_id: user.id,
+                project_id: project.id,
                 recurrence_type: 'monthly',
                 recurring_parent_id: null,
                 status: Task.STATUS.NOT_STARTED,
                 priority: Task.PRIORITY.MEDIUM,
             });
+            await monthlyTask.reload();
 
-            // Change status to cancelled
             const updateResponse = await agent
                 .patch(`/api/task/${monthlyTask.uid}`)
                 .send({
@@ -392,7 +394,6 @@ describe('Recurring Task Display Fixes', () => {
 
             expect(updateResponse.status).toBe(200);
 
-            // Fetch the task to verify
             const fetchResponse = await agent.get(
                 `/api/task/${monthlyTask.uid}`
             );

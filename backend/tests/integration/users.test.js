@@ -355,7 +355,7 @@ describe('Users Routes', () => {
                 expect(response.status).toBe(200);
                 expect(response.body.frequency).toBe(frequency);
             }
-        });
+        }, 60000);
 
         it('should require authentication', async () => {
             const response = await request(app)

@@ -1,15 +1,12 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
 const axios = require('axios');
-const app = require('../../app');
 const {
-    sequelize,
     User,
     Task,
     CalDAVCalendar,
     CalDAVRemoteCalendar,
     CalDAVSyncState,
 } = require('../../models');
+const { createTestUser } = require('../helpers/testUtils');
 const syncEngine = require('../../modules/caldav/sync/sync-engine');
 const encryptionService = require('../../modules/caldav/services/encryption-service');
 
@@ -20,15 +17,10 @@ describe('CalDAV Sync Engine', () => {
     let calendar;
     let remoteCalendar;
 
-    beforeAll(async () => {
-        await sequelize.sync({ force: true });
-    });
-
     beforeEach(async () => {
-        testUser = await User.create({
-            email: 'synctest@test.com',
-            password_digest: await bcrypt.hash('password', 10),
-            verified: true,
+        testUser = await createTestUser({
+            email: `caldav-sync-${Date.now()}@test.com`,
+            email_verified: true,
         });
 
         calendar = await CalDAVCalendar.create({
@@ -60,12 +52,8 @@ describe('CalDAV Sync Engine', () => {
         await CalDAVRemoteCalendar.destroy({ where: {} });
         await CalDAVCalendar.destroy({ where: {} });
         await Task.destroy({ where: {} });
-        await User.destroy({ where: {} });
+        await User.destroy({ where: { id: testUser.id } });
         jest.clearAllMocks();
-    });
-
-    afterAll(async () => {
-        await sequelize.close();
     });
 
     describe('Pull Phase', () => {
@@ -154,6 +142,7 @@ END:VCALENDAR</cal:calendar-data>
             );
 
             expect(result.success).toBe(true);
+            expect(result.phases.merge.errors).toHaveLength(0);
 
             const deletedTask = await Task.findOne({
                 where: { uid: 'task-to-delete' },
@@ -171,7 +160,9 @@ END:VCALENDAR</cal:calendar-data>
                 syncEngine.syncCalendar(calendar.id, testUser.id, {
                     direction: 'pull',
                 })
-            ).rejects.toThrow();
+            ).rejects.toThrow(
+                'Failed to pull from remote: Authentication failed with remote CalDAV server'
+            );
         });
     });
 
@@ -361,6 +352,7 @@ END:VCALENDAR</cal:calendar-data>
         });
 
         test('should detect conflict on push with precondition failed', async () => {
+            const pastTime = new Date(Date.now() - 10000);
             const task = await Task.create({
                 uid: 'push-conflict-task',
                 user_id: testUser.id,
@@ -372,8 +364,8 @@ END:VCALENDAR</cal:calendar-data>
                 task_id: task.id,
                 calendar_id: calendar.id,
                 etag: 'etag-1',
-                last_modified: new Date(),
-                last_synced_at: new Date(),
+                last_modified: pastTime,
+                last_synced_at: pastTime,
                 sync_status: 'synced',
             });
 
@@ -521,7 +513,7 @@ END:VCALENDAR</cal:calendar-data>
 
             await expect(
                 syncEngine.syncCalendar(calendar.id, testUser.id)
-            ).rejects.toThrow();
+            ).rejects.toThrow('Failed to pull from remote: Network error');
 
             await calendar.reload();
             expect(calendar.last_sync_status).toBe('error');

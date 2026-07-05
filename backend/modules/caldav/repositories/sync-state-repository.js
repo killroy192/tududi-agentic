@@ -166,6 +166,16 @@ class SyncStateRepository extends BaseRepository {
         return stats;
     }
 
+    async deleteByTaskId(taskId, options = {}) {
+        const syncStates = await this.findByTaskId(taskId, options);
+
+        await Promise.all(
+            syncStates.map((state) => this.delete(state, options))
+        );
+
+        return syncStates.length;
+    }
+
     async deleteByCalendarId(calendarId, options = {}) {
         const syncStates = await this.findByCalendarId(calendarId, options);
 

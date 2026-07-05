@@ -1,4 +1,4 @@
-const { AppError } = require('../../../shared/errors/AppError');
+const AppError = require('../../../shared/errors/AppError');
 const logger = require('../../../services/logService');
 const { Task } = require('../../../models');
 const SyncStateRepository = require('../repositories/sync-state-repository');
