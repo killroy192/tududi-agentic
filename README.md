@@ -20,12 +20,6 @@ More screenshots are [available here](#screenshots).
 
 ---
 
-## 💖 Enjoying tududi?
-
-Help keep it free and actively developed by [buying me a coffee](https://coff.ee/chrisveleris) ☕, [becoming a sponsor](https://github.com/sponsors/chrisvel), or [supporting on Patreon](https://www.patreon.com/ChrisVeleris). You can also support the project by purchasing a **hosted subscription** for a hassle-free, managed solution. Every contribution helps maintain this project and build new features!
-
----
-
 ## 🚀 How It Works
 
 This app allows users to manage their tasks, projects, areas, notes, and tags in an organized way. Users can create tasks, projects, areas (to group projects), notes, and tags. Each task can be associated with a project, and both tasks and notes can be tagged for better organization. Projects can belong to areas and can also have multiple notes and tags. This structure helps users categorize and track their work efficiently, whether they’re managing individual tasks, larger projects, or keeping detailed notes.
@@ -74,10 +68,6 @@ For the thinking behind tududi, read:
     - Conflict detection and resolution
     - Background automatic synchronization
     - HTTP Basic Authentication for CalDAV clients
-
-## 🗺️ Roadmap
-
-Check out our [GitHub Project](https://github.com/users/chrisvel/projects/2) for planned features and progress.
 
 ## 🛠️ Getting Started
 
@@ -217,23 +207,6 @@ Want to contribute or run Tududi from source? Check out our comprehensive develo
 
 **[Development Setup Guide](https://docs.tududi.com/#-development-setup)**
 
-Quick overview:
-
-```bash
-# Clone and install
-git clone https://github.com/chrisvel/tududi.git
-cd tududi
-npm install
-
-# Start development servers
-npm run backend:dev   # Terminal 1 - Backend on :3001
-npm run frontend:dev  # Terminal 2 - Frontend on :8080
-```
-
-For database management, testing, and detailed development instructions, see [docs.tududi.com](https://docs.tududi.com)
-
-## 🔌 API
-
 Tududi provides a comprehensive REST API for integration with external tools and automation workflows.
 
 **Base URL:** `http://localhost:8080/api/v1`
@@ -263,59 +236,8 @@ curl -X POST \
 
 For full API documentation, visit `/api-docs` after authentication or check the Swagger schema definitions in [`backend/config/swagger.js`](backend/config/swagger.js).
 
-## 🤝 Contributing
-
-Contributions to tududi are welcome! Whether it's bug fixes, new features, documentation improvements, or translations, we appreciate your help.
-
-**Before you start:**
-
-- Check [existing issues](https://github.com/chrisvel/tududi/issues) and [discussions](https://github.com/chrisvel/tududi/discussions) to avoid duplicate work
-- For bugs, [open an issue](https://github.com/chrisvel/tududi/issues/new/choose) with the bug report template
-- For feature requests, start a [discussion](https://github.com/chrisvel/tududi/discussions/categories/feature-requests)
-
-**Quick contribution workflow:**
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes following our [code standards](.github/CONTRIBUTING.md#code-standards)
-4. Run linting and tests: `npm run pre-push`
-5. Commit your changes with a clear message
-6. Push to your fork and open a Pull Request
-
-**Read our [Contributing Guide](.github/CONTRIBUTING.md) for:**
-
-- Development setup and workflow
-- Code standards and best practices
-- Testing requirements
-- Database migrations
-- Translation guidelines
-- Pull request checklist
-
-## 📜 License
-
-This project is licensed under the [MIT License](LICENSE).
-
-## 📬 Contact
-
-For questions or comments, please [open an issue](https://github.com/chrisvel/tududi/issues) or contact the developer directly.
-
-Join the tududi community:
-
-[![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/fkbeJ9CmcH)
-[![Reddit](https://img.shields.io/reddit/subreddit-subscribers/tududi?color=ff4500&label=Reddit&logo=reddit&logoColor=white&style=for-the-badge)](https://www.reddit.com/r/tududi/)
-
-## 🌟 Please check my other projects!
-
-- **[Reconya](https://reconya.com)** - Network reconnaissance and asset discovery tool
-- **[BreachHarbor](https://breachharbor.com)** - Cybersecurity suite for digital asset protection
-- **[Hevetra](https://hevetra.com)** - Digital tracking for child health milestones
-
 # Screenshots
 
 ![Light Mode Screenshot](screenshots/all-light.png)
 
 ![Dark Mode Screenshot](screenshots/all-dark.png)
-
----
-
-README created by [Chris Veleris](https://github.com/chrisvel) for `tududi`.
