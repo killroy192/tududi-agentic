@@ -442,6 +442,51 @@ const Tasks: React.FC = () => {
         }
     };
 
+    const insertTaskAfterSource = (
+        taskList: Task[],
+        newTask: Task,
+        sourceTaskUid: string
+    ): Task[] => {
+        const sourceIndex = taskList.findIndex((t) => t.uid === sourceTaskUid);
+        if (sourceIndex < 0) {
+            return [newTask, ...taskList];
+        }
+        const updated = [...taskList];
+        updated.splice(sourceIndex + 1, 0, newTask);
+        return updated;
+    };
+
+    const handleTaskDuplicated = (newTask: Task, sourceTaskUid: string) => {
+        setTasks((prevTasks) =>
+            insertTaskAfterSource(prevTasks, newTask, sourceTaskUid)
+        );
+        setTotalCount((prevCount) => prevCount + 1);
+
+        if (groupedTasks) {
+            setGroupedTasks((prevGroupedTasks) => {
+                if (!prevGroupedTasks) return null;
+
+                const newGroupedTasks: GroupedTasks = { ...prevGroupedTasks };
+                for (const [groupName, groupTaskList] of Object.entries(
+                    prevGroupedTasks
+                )) {
+                    const sourceIndex = groupTaskList.findIndex(
+                        (t) => t.uid === sourceTaskUid
+                    );
+                    if (sourceIndex >= 0) {
+                        newGroupedTasks[groupName] = insertTaskAfterSource(
+                            groupTaskList,
+                            newTask,
+                            sourceTaskUid
+                        );
+                        break;
+                    }
+                }
+                return newGroupedTasks;
+            });
+        }
+    };
+
     const handleTaskDelete = async (taskUid: string) => {
         try {
             const response = await fetch(
@@ -904,6 +949,8 @@ const Tasks: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
+                                            onTaskDuplicated={handleTaskDuplicated}
                                             projects={projects}
                                             hideProjectName={false}
                                             onToggleToday={undefined}
@@ -952,6 +999,7 @@ const Tasks: React.FC = () => {
                                             handleTaskCompletionToggle
                                         }
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         hideProjectName={false}
                                         onToggleToday={undefined}
@@ -967,6 +1015,7 @@ const Tasks: React.FC = () => {
                                             handleTaskCompletionToggle
                                         }
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         onToggleToday={undefined}
                                         showCompletedTasks={showCompleted}

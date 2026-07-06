@@ -48,6 +48,29 @@ const logEvent = async ({
 };
 
 /**
+ * Log task duplication event
+ */
+const logTaskDuplicated = async (
+    taskId,
+    userId,
+    sourceTaskUid,
+    metadata = {}
+) => {
+    return await logEvent({
+        taskId,
+        userId,
+        eventType: 'duplicated',
+        oldValue: sourceTaskUid,
+        newValue: null,
+        metadata: {
+            ...metadata,
+            action: 'task_duplicated',
+            source_task_uid: sourceTaskUid,
+        },
+    });
+};
+
+/**
  * Log task creation event
  */
 const logTaskCreated = async (taskId, userId, taskData, metadata = {}) => {
@@ -472,6 +495,7 @@ const getTaskTodayMoveCounts = async (taskIds) => {
 
 module.exports = {
     logEvent,
+    logTaskDuplicated,
     logTaskCreated,
     logStatusChange,
     logPriorityChange,

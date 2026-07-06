@@ -904,6 +904,22 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleDuplicate = async () => {
+        if (!task?.uid) return;
+
+        try {
+            await tasksStore.duplicateTask(task.uid);
+            showSuccessToast(
+                t('task.duplicateSuccess', 'Task duplicated')
+            );
+        } catch (error) {
+            console.error('Error duplicating task:', error);
+            showErrorToast(
+                t('task.duplicateError', 'Failed to duplicate task')
+            );
+        }
+    };
+
     const handleDeleteConfirm = async () => {
         if (taskToDelete?.uid) {
             try {
@@ -1248,6 +1264,7 @@ const TaskDetails: React.FC = () => {
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
                     onDelete={handleDeleteClick}
+                    onDuplicate={handleDuplicate}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
                     activePill={activePill}

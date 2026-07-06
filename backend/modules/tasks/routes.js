@@ -25,7 +25,7 @@ const {
     shouldGenerateNextTask,
 } = require('./recurringTaskService');
 const { logError } = require('../../services/logService');
-const { logEvent } = require('./taskEventService');
+const { logEvent, logTaskCreated, logTaskDuplicated } = require('./taskEventService');
 
 const { serializeTask, serializeTasks } = require('./core/serializers');
 const { updateTaskTags } = require('./operations/tags');
@@ -49,6 +49,7 @@ const {
     buildUpdateAttributes,
 } = require('./core/builders');
 const { createSubtasks, updateSubtasks } = require('./operations/subtasks');
+const { duplicateTask } = require('./operations/duplicate');
 const { handleCompletionStatus } = require('./operations/completion');
 const { captureOldValues, logTaskChanges } = require('./utils/logging');
 const {
@@ -526,6 +527,69 @@ router.post('/task', async (req, res) => {
         logError('Error name:', error.name);
         res.status(400).json({
             error: 'There was a problem creating the task.',
+            details: error.errors
+                ? error.errors.map((e) => e.message)
+                : [error.message],
+        });
+    }
+});
+
+router.post('/task/:uid/duplicate', requireTaskReadAccess, async (req, res) => {
+    try {
+        const sourceTask = await taskRepository.findByUid(req.params.uid, {
+            include: TASK_INCLUDES_WITH_SUBTASKS,
+        });
+
+        if (!sourceTask) {
+            return res.status(404).json({ error: 'Task not found.' });
+        }
+
+        if (sourceTask.project_id) {
+            try {
+                await validateProjectAccess(
+                    sourceTask.project_id,
+                    req.currentUser.id
+                );
+            } catch (error) {
+                return res
+                    .status(error.message === 'Forbidden' ? 403 : 400)
+                    .json({ error: error.message });
+            }
+        }
+
+        const newTask = await duplicateTask(sourceTask, req.currentUser.id);
+
+        if (!newTask) {
+            return res.status(500).json({ error: 'Failed to duplicate task.' });
+        }
+
+        await logTaskCreated(newTask.id, req.currentUser.id, {
+            uid: newTask.uid,
+            name: newTask.name,
+        });
+        await logTaskDuplicated(
+            newTask.id,
+            req.currentUser.id,
+            sourceTask.uid
+        );
+
+        const serializedTask = await serializeTask(
+            newTask,
+            req.currentUser.timezone,
+            { skipDisplayNameTransform: true }
+        );
+
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+        });
+
+        res.status(201).json(serializedTask);
+    } catch (error) {
+        logError('Error duplicating task:', error);
+        res.status(400).json({
+            error: 'There was a problem duplicating the task.',
             details: error.errors
                 ? error.errors.map((e) => e.message)
                 : [error.message],

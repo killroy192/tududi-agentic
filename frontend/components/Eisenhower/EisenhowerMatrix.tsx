@@ -127,6 +127,18 @@ const EisenhowerMatrix: React.FC = () => {
         }
     };
 
+    const handleTaskDuplicated = (newTask: Task, sourceTaskUid: string) => {
+        setTasks((prev) => {
+            const sourceIndex = prev.findIndex((t) => t.uid === sourceTaskUid);
+            if (sourceIndex < 0) {
+                return [newTask, ...prev];
+            }
+            const updated = [...prev];
+            updated.splice(sourceIndex + 1, 0, newTask);
+            return updated;
+        });
+    };
+
     const moveTaskToQuadrant = async (task: Task, targetKey: string) => {
         const { important: targetImportant, urgent: targetUrgent } = QUADRANT_AXES[targetKey];
 
@@ -312,6 +324,7 @@ const EisenhowerMatrix: React.FC = () => {
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskCompletionToggle={handleTaskCompletionToggle}
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         hideProjectName={false}
                                         onToggleToday={undefined}

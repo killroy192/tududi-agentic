@@ -371,6 +371,18 @@ const ProjectDetails: React.FC = () => {
         setTasks(tasks.filter((task) => task.uid !== taskUid));
     };
 
+    const handleTaskDuplicated = (newTask: Task, sourceTaskUid: string) => {
+        setTasks((prev) => {
+            const sourceIndex = prev.findIndex((t) => t.uid === sourceTaskUid);
+            if (sourceIndex < 0) {
+                return [newTask, ...prev];
+            }
+            const updated = [...prev];
+            updated.splice(sourceIndex + 1, 0, newTask);
+            return updated;
+        });
+    };
+
     const handleTaskCompletionToggle = (updatedTask: Task) => {
         if (!updatedTask.id) return;
         setTasks((prev) =>
@@ -1071,6 +1083,7 @@ const ProjectDetails: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                            onTaskDuplicated={handleTaskDuplicated}
                                             onToggleToday={undefined}
                                             allProjects={allProjects}
                                             showCompleted={

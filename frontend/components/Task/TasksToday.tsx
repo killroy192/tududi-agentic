@@ -1000,6 +1000,32 @@ const TasksToday: React.FC = () => {
         []
     );
 
+    const handleTaskDuplicated = useCallback(
+        async (_newTask: Task, _sourceTaskUid: string) => {
+            if (!isMounted.current) return;
+
+            try {
+                const result = await fetchTasks('?type=today');
+                if (isMounted.current) {
+                    useStore.getState().tasksStore.setTasks(result.tasks);
+                    setMetrics({
+                        ...result.metrics,
+                        tasks_in_progress: result.tasks_in_progress || [],
+                        tasks_due_today: result.tasks_due_today || [],
+                        tasks_overdue: result.tasks_overdue || [],
+                        today_plan_tasks: result.tasks_today_plan || [],
+                        suggested_tasks: result.suggested_tasks || [],
+                        tasks_completed_today:
+                            result.tasks_completed_today || [],
+                    } as any);
+                }
+            } catch (error) {
+                console.error('Error refreshing tasks after duplicate:', error);
+            }
+        },
+        []
+    );
+
     const updateTaskInState = useCallback(
         (updatedTask: Task): void => {
             if (!isMounted.current) return;
@@ -1596,6 +1622,7 @@ const TasksToday: React.FC = () => {
                                         )}
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={localProjects}
                                         onToggleToday={undefined}
                                         onTaskCompletionToggle={
@@ -1691,6 +1718,7 @@ const TasksToday: React.FC = () => {
                                             projects={localProjects}
                                             onTaskUpdate={handleTaskUpdate}
                                             onTaskDelete={handleTaskDelete}
+                                            onTaskDuplicated={handleTaskDuplicated}
                                             onToggleToday={undefined}
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
@@ -1785,6 +1813,7 @@ const TasksToday: React.FC = () => {
                                         )}
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={localProjects}
                                         onToggleToday={undefined}
                                         onTaskCompletionToggle={
@@ -1892,6 +1921,7 @@ const TasksToday: React.FC = () => {
                                         handleTaskCompletionToggle
                                     }
                                     onTaskDelete={handleTaskDelete}
+                                    onTaskDuplicated={handleTaskDuplicated}
                                     projects={localProjects}
                                     onToggleToday={undefined}
                                     showSuggestionChips={true}
@@ -1956,6 +1986,7 @@ const TasksToday: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                             projects={localProjects}
                                             onToggleToday={undefined}
                                             showCompletedTasks={true}

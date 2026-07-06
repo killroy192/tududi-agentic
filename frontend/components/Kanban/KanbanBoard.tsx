@@ -239,6 +239,18 @@ const KanbanBoard: React.FC = () => {
         }
     };
 
+    const handleTaskDuplicated = (newTask: Task, sourceTaskUid: string) => {
+        setTasks((prev) => {
+            const sourceIndex = prev.findIndex((t) => t.uid === sourceTaskUid);
+            if (sourceIndex < 0) {
+                return [newTask, ...prev];
+            }
+            const updated = [...prev];
+            updated.splice(sourceIndex + 1, 0, newTask);
+            return updated;
+        });
+    };
+
     const moveTaskToCol = async (task: Task, targetCol: ColKey) => {
         const newStatus = COLUMN_STATUS[targetCol];
         const updatedTask: Task = { ...task, status: newStatus };
@@ -398,6 +410,7 @@ const KanbanBoard: React.FC = () => {
                                                     onTaskUpdate={handleTaskUpdate}
                                                     onTaskCompletionToggle={handleTaskCompletionToggle}
                                                     onTaskDelete={handleTaskDelete}
+                                                    onTaskDuplicated={handleTaskDuplicated}
                                                     projects={projects}
                                                     hideProjectName={false}
                                                     onToggleToday={undefined}

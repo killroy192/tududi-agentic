@@ -30,7 +30,9 @@
     "download": "Download",
     "exitFocusMode": "Exit focus mode",
     "searchTimezones": "Search timezones...",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "copy": "Copy",
+    "moreActions": "More actions"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -146,6 +148,7 @@
     "hideSubtasks": "Hide subtasks",
     "edit": "Edit task",
     "delete": "Delete task",
+    "duplicate": "Duplicate task",
     "sortTasks": "Sort tasks",
     "sortBy": "Sort by",
     "direction": "Direction",
@@ -901,6 +904,9 @@
     "updateError": "Failed to update task",
     "deleteSuccess": "Task deleted successfully",
     "deleteError": "Failed to delete task",
+    "duplicate": "Duplicate task",
+    "duplicateSuccess": "Task duplicated",
+    "duplicateError": "Failed to duplicate task",
     "startedSuccessfully": "Task started successfully!",
     "created": "Task",
     "createdSuccessfully": "created successfully!",

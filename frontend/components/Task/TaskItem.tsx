@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
@@ -14,6 +14,7 @@ import {
     ScaleIcon,
     ArrowRightCircleIcon,
     SparklesIcon,
+    DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 
 // Import SubtasksDisplay component from TaskHeader
@@ -153,13 +154,14 @@ import { toggleTaskCompletion, updateTask, fetchSubtasks } from '../../utils/tas
 import { isTaskOverdueInTodayPlan } from '../../utils/dateUtils';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import { getApiPath } from '../../config/paths';
+import { useStore } from '../../store/useStore';
 
 interface TaskItemProps {
     task: Task;
     onTaskUpdate: (task: Task) => Promise<void>;
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
+    onTaskDuplicated?: (newTask: Task, sourceTaskUid: string) => void;
     projects: Project[];
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
@@ -176,6 +178,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     onTaskUpdate,
     onTaskCompletionToggle,
     onTaskDelete,
+    onTaskDuplicated,
     projects,
     hideProjectName = false,
     onToggleToday,
@@ -191,8 +194,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
     const { t } = useTranslation();
     const [projectList, setProjectList] = useState<Project[]>(projects);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-    const { showErrorToast, showUndoToast } = useToast();
+    const { showErrorToast, showUndoToast, showSuccessToast } = useToast();
+    const duplicateTask = useStore((state) => state.tasksStore.duplicateTask);
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+
+    // Actions menu state
+    const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+    const actionsMenuRef = useRef<HTMLDivElement>(null);
 
     // Status menu state
     const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
@@ -248,6 +256,27 @@ const TaskItem: React.FC<TaskItemProps> = ({
     useEffect(() => {
         setShowSubtasks(false);
     }, [task.id]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                actionsMenuOpen &&
+                actionsMenuRef.current &&
+                !actionsMenuRef.current.contains(e.target as Node)
+            ) {
+                setActionsMenuOpen(false);
+            }
+        };
+
+        if (actionsMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [actionsMenuOpen]);
+
     const fromState = { state: { from: location.pathname + location.search } };
 
     const handleTaskClick = () => {
@@ -309,6 +338,27 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     t('errors.permissionDenied', 'Permission denied')
                 );
             }
+        }
+    };
+
+    const handleDuplicate = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setActionsMenuOpen(false);
+
+        if (!task.uid) return;
+
+        try {
+            const newTask = await duplicateTask(task.uid);
+            onTaskDuplicated?.(newTask, task.uid);
+            showSuccessToast(
+                t('task.duplicateSuccess', 'Task duplicated')
+            );
+        } catch (error) {
+            console.error('Task duplicate failed:', error);
+            showErrorToast(
+                t('task.duplicateError', 'Failed to duplicate task')
+            );
         }
     };
 
@@ -424,7 +474,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     return (
         <div className={`relative ${isStatusMenuOpen ? 'z-[10001]' : ''}`}>
             <div
-                className={`rounded-lg shadow-sm bg-white dark:bg-gray-900 relative overflow-visible transition-colors duration-200 ease-in-out hover:ring-1 hover:ring-gray-200 dark:hover:ring-gray-700 ${priorityBorderClass} ${
+                className={`rounded-lg shadow-sm bg-white dark:bg-gray-900 relative overflow-visible transition-colors duration-200 ease-in-out hover:ring-1 hover:ring-gray-200 dark:hover:ring-gray-700 group ${priorityBorderClass} ${
                     isInProgress
                         ? 'ring-1 ring-blue-500/60 dark:ring-blue-600/60'
                         : ''
@@ -453,6 +503,38 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     hideStatusControl={hideStatusControl}
                     isKanbanView={isKanbanView}
                 />
+
+                <div
+                    ref={actionsMenuRef}
+                    className={`absolute top-2 right-2 z-20 ${isKanbanView ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100'}`}
+                >
+                    <button
+                        type="button"
+                        className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setActionsMenuOpen(!actionsMenuOpen);
+                        }}
+                        aria-haspopup="true"
+                        aria-expanded={actionsMenuOpen}
+                        aria-label={t('common.moreActions', 'More actions')}
+                    >
+                        <span className="text-base leading-none">...</span>
+                    </button>
+                    {actionsMenuOpen && (
+                        <div className="absolute right-0 mt-1 z-30 w-40 rounded-lg shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                            <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg flex items-center gap-2"
+                                onClick={handleDuplicate}
+                            >
+                                <DocumentDuplicateIcon className="h-4 w-4" />
+                                {t('tasks.duplicate', 'Duplicate task')}
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Progress bar at bottom of parent task */}
                 {subtasks.length > 0 && (
