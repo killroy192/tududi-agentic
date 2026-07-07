@@ -194,13 +194,13 @@ const TaskDetails: React.FC = () => {
         if (!tagsStore.hasLoaded && !tagsStore.isLoading) {
             tagsStore.loadTags();
         }
-    }, [tagsStore]);
+    }, [tagsStore.hasLoaded, tagsStore.isLoading]);
 
     useEffect(() => {
-        if (!areasStore.isLoading && areasStore.areas.length === 0) {
+        if (!areasStore.hasLoaded && !areasStore.isLoading) {
             areasStore.loadAreas();
         }
-    }, [areasStore]);
+    }, [areasStore.hasLoaded, areasStore.isLoading]);
 
     const handleStartRecurrenceEdit = () => {
         setRecurrenceForm({
