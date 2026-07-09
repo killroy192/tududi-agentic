@@ -5,6 +5,7 @@ import TaskList from './TaskList';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { sortTasksByPriorityDueDateProject } from '../../utils/taskSortUtils';
+import { isTaskInProgress } from '../../constants/taskStatus';
 
 interface TodayPlanProps {
     todayPlanTasks: Task[] | undefined;
@@ -33,11 +34,11 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
         if (safeTodayPlanTasks.length === 0) return [];
 
         // Separate in-progress and non-in-progress tasks
-        const inProgressTasks = safeTodayPlanTasks.filter(
-            (task) => task.status === 'in_progress' || task.status === 1
+        const inProgressTasks = safeTodayPlanTasks.filter((task) =>
+            isTaskInProgress(task.status)
         );
         const otherTasks = safeTodayPlanTasks.filter(
-            (task) => task.status !== 'in_progress' && task.status !== 1
+            (task) => !isTaskInProgress(task.status)
         );
 
         // Sort each group using multi-criteria sorting

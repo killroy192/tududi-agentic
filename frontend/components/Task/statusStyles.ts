@@ -1,4 +1,12 @@
 import { StatusType } from '../../entities/Task';
+import {
+    isTaskPlanned,
+    isTaskInProgress,
+    isTaskDone,
+    isTaskArchived,
+    isTaskWaiting,
+    isTaskCancelled,
+} from '../../constants/taskStatus';
 
 type StatusKey =
     | 'not_started'
@@ -46,12 +54,12 @@ const STATUS_STYLES: Record<StatusKey, StatusStyle> = {
 };
 
 const resolveStatusKey = (status?: StatusType | number | null): StatusKey => {
-    if (status === 'planned' || status === 6) return 'planned';
-    if (status === 'in_progress' || status === 1) return 'in_progress';
-    if (status === 'done' || status === 2) return 'done';
-    if (status === 'archived' || status === 3) return 'archived';
-    if (status === 'waiting' || status === 4) return 'waiting';
-    if (status === 'cancelled' || status === 5) return 'cancelled';
+    if (isTaskPlanned(status)) return 'planned';
+    if (isTaskInProgress(status)) return 'in_progress';
+    if (isTaskDone(status)) return 'done';
+    if (isTaskArchived(status)) return 'archived';
+    if (isTaskWaiting(status)) return 'waiting';
+    if (isTaskCancelled(status)) return 'cancelled';
     return 'not_started';
 };
 

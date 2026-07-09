@@ -12,6 +12,7 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
+import { TASK_STATUS, TASK_STATUS_STRINGS } from '../../constants/taskStatus';
 
 interface TaskTimelineProps {
     taskUid: string | undefined;
@@ -56,22 +57,22 @@ const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskUid, refreshKey }) => {
         fetchTimeline();
     }, [taskUid, refreshKey]);
 
+    // Note: intentionally covers only NOT_STARTED..WAITING (0-4) plus the legacy
+    // 'completed' string alias, matching prior behavior - CANCELLED/PLANNED fall
+    // through to the "unknown" fallback like any other unrecognized value.
     const getTranslatedStatusLabel = (status: number | string): string => {
-        // Handle both numeric and string status values
         const statusMap: Record<string | number, string> = {
-            // Numeric values
-            0: t('status.notStarted'),
-            1: t('status.inProgress'),
-            2: t('status.completed'),
-            3: t('status.archived'),
-            4: t('status.waiting'),
-            // String values
-            not_started: t('status.notStarted'),
-            in_progress: t('status.inProgress'),
-            done: t('status.completed'),
+            [TASK_STATUS.NOT_STARTED]: t('status.notStarted'),
+            [TASK_STATUS.IN_PROGRESS]: t('status.inProgress'),
+            [TASK_STATUS.DONE]: t('status.completed'),
+            [TASK_STATUS.ARCHIVED]: t('status.archived'),
+            [TASK_STATUS.WAITING]: t('status.waiting'),
+            [TASK_STATUS_STRINGS.NOT_STARTED]: t('status.notStarted'),
+            [TASK_STATUS_STRINGS.IN_PROGRESS]: t('status.inProgress'),
+            [TASK_STATUS_STRINGS.DONE]: t('status.completed'),
             completed: t('status.completed'),
-            archived: t('status.archived'),
-            waiting: t('status.waiting'),
+            [TASK_STATUS_STRINGS.ARCHIVED]: t('status.archived'),
+            [TASK_STATUS_STRINGS.WAITING]: t('status.waiting'),
         };
 
         return statusMap[status] || t('status.unknown', { status });

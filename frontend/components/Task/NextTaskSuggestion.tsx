@@ -9,6 +9,10 @@ import {
 import { FolderIcon } from '@heroicons/react/24/solid';
 import { Task } from '../../entities/Task';
 import { useToast } from '../Shared/ToastContext';
+import {
+    isTaskNotStarted,
+    TASK_STATUS_STRINGS,
+} from '../../constants/taskStatus';
 
 interface NextTaskSuggestionProps {
     metrics: {
@@ -40,9 +44,7 @@ const NextTaskSuggestion: React.FC<NextTaskSuggestionProps> = ({
     }
 
     // Helper function to check if task is not started
-    const isNotStarted = (task: Task) => {
-        return task.status === 'not_started' || task.status === 0;
-    };
+    const isNotStarted = (task: Task) => isTaskNotStarted(task.status);
 
     // Get all available tasks in priority order:
     // 1. Today plan tasks (user's intentional selection for today)
@@ -91,7 +93,7 @@ const NextTaskSuggestion: React.FC<NextTaskSuggestionProps> = ({
             // Setting status to in_progress makes it appear in today's plan
             const updatedTask = {
                 ...suggestedTask,
-                status: 'in_progress' as const,
+                status: TASK_STATUS_STRINGS.IN_PROGRESS,
             };
             await onTaskUpdate(updatedTask);
             showSuccessToast(

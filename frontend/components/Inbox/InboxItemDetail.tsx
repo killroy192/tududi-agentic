@@ -21,6 +21,7 @@ import QuickCaptureInput, {
 } from './QuickCaptureInput';
 import InboxCard from './InboxCard';
 import { isUrl } from '../../utils/urlService';
+import { TASK_STATUS_STRINGS } from '../../constants/taskStatus';
 
 interface InboxItemDetailProps {
     item: InboxItem;
@@ -374,7 +375,7 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
 
             const newTask: Task = {
                 name: payload.cleanedContent || displayText,
-                status: 'not_started',
+                status: TASK_STATUS_STRINGS.NOT_STARTED,
                 priority: null,
                 tags: payload.tagObjects,
                 project_uid: payload.projectUid,

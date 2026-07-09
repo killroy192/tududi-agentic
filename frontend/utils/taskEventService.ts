@@ -5,6 +5,8 @@ import {
     CompletionAnalyticsResponse,
     TaskActivitySummary,
 } from '../entities/TaskEvent';
+import { TASK_STATUS } from '../constants/taskStatus';
+import { TASK_PRIORITY } from '../constants/taskPriority';
 
 const API_BASE = '/api';
 
@@ -186,15 +188,17 @@ export const getEventTypeLabel = (eventType: string): string => {
 };
 
 /**
- * Get human-readable status value
+ * Get human-readable status value.
+ * Note: intentionally only covers NOT_STARTED..WAITING (0-4), matching prior behavior;
+ * CANCELLED/PLANNED fall through to the `Status ${status}` fallback like any other value.
  */
 export const getStatusLabel = (status: number): string => {
     const statusLabels: Record<number, string> = {
-        0: 'Not Started',
-        1: 'In Progress',
-        2: 'Completed',
-        3: 'Archived',
-        4: 'Waiting',
+        [TASK_STATUS.NOT_STARTED]: 'Not Started',
+        [TASK_STATUS.IN_PROGRESS]: 'In Progress',
+        [TASK_STATUS.DONE]: 'Completed',
+        [TASK_STATUS.ARCHIVED]: 'Archived',
+        [TASK_STATUS.WAITING]: 'Waiting',
     };
 
     return statusLabels[status] || `Status ${status}`;
@@ -205,9 +209,9 @@ export const getStatusLabel = (status: number): string => {
  */
 export const getPriorityLabel = (priority: number): string => {
     const priorityLabels: Record<number, string> = {
-        0: 'Low',
-        1: 'Medium',
-        2: 'High',
+        [TASK_PRIORITY.LOW]: 'Low',
+        [TASK_PRIORITY.MEDIUM]: 'Medium',
+        [TASK_PRIORITY.HIGH]: 'High',
     };
 
     return priorityLabels[priority] || `Priority ${priority}`;

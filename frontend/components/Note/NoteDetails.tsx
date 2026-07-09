@@ -20,6 +20,7 @@ import {
 import { deleteNoteWithStoreUpdate } from '../../utils/noteDeleteUtils';
 import { createProject } from '../../utils/projectsService';
 import { useStore } from '../../store/useStore';
+import { TASK_PRIORITY_STRINGS } from '../../constants/taskPriority';
 
 const NoteDetails: React.FC = () => {
     const { t } = useTranslation();
@@ -108,7 +109,7 @@ const NoteDetails: React.FC = () => {
         try {
             const newProject = await createProject({
                 name,
-                priority: 'low',
+                priority: TASK_PRIORITY_STRINGS.LOW,
             });
             setProjects([...projects, newProject]);
             return newProject;

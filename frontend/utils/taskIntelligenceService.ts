@@ -1,4 +1,5 @@
 import { Task } from '../entities/Task';
+import { TASK_STATUS_STRINGS } from '../constants/taskStatus';
 
 /**
  * Analyzes a task name to determine if it's vague or needs improvement
@@ -149,7 +150,13 @@ export const analyzeTaskName = (taskName: string): TaskAnalysis => {
  */
 export const getVagueTasks = (tasks: Task[]): Task[] => {
     return tasks.filter((task) => {
-        if (task.status === 'done' || task.status === 'archived') return false;
+        // Intentionally string-only (not isTaskCompleted) to preserve existing behavior:
+        // numeric done/archived statuses are not currently excluded here.
+        if (
+            task.status === TASK_STATUS_STRINGS.DONE ||
+            task.status === TASK_STATUS_STRINGS.ARCHIVED
+        )
+            return false;
 
         const analysis = analyzeTaskName(task.name);
         return analysis.isVague;

@@ -2,6 +2,7 @@ import React from 'react';
 import TaskItem from './TaskItem';
 import { Project } from '../../entities/Project';
 import { Task } from '../../entities/Task';
+import { isTaskCompleted, isTaskCancelled } from '../../constants/taskStatus';
 
 interface TaskListProps {
     tasks: Task[];
@@ -36,12 +37,7 @@ const TaskList: React.FC<TaskListProps> = ({
         ? tasks
         : tasks.filter((task) => {
               const isCompleted =
-                  task.status === 'done' ||
-                  task.status === 'archived' ||
-                  task.status === 'cancelled' ||
-                  task.status === 2 ||
-                  task.status === 3 ||
-                  task.status === 5;
+                  isTaskCompleted(task.status) || isTaskCancelled(task.status);
               return !isCompleted;
           });
 

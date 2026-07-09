@@ -12,6 +12,11 @@ import {
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { getVagueTasks } from '../../utils/taskIntelligenceService';
+import {
+    isTaskCompleted,
+    isTaskNotStarted,
+    isTaskInProgress,
+} from '../../constants/taskStatus';
 
 interface ProductivityInsight {
     type:
@@ -67,7 +72,7 @@ const ProductivityAssistant: React.FC<ProductivityAssistantProps> = ({
 
             // Filter to only include non-completed tasks
             const activeTasks = tasks.filter(
-                (task) => task.status !== 'done' && task.status !== 'archived'
+                (task) => !isTaskCompleted(task.status)
             );
 
             // 1. Stalled Projects (no tasks/actions)
@@ -97,15 +102,14 @@ const ProductivityAssistant: React.FC<ProductivityAssistantProps> = ({
                 const projectTasks = tasks.filter(
                     (task) => task.project_id === project.id
                 );
-                const hasCompletedTasks = projectTasks.some(
-                    (task) =>
-                        task.status === 'done' || task.status === 'archived'
+                const hasCompletedTasks = projectTasks.some((task) =>
+                    isTaskCompleted(task.status)
                 );
                 const hasNextAction = activeTasks.some(
                     (task) =>
                         task.project_id === project.id &&
-                        (task.status === 'not_started' ||
-                            task.status === 'in_progress')
+                        (isTaskNotStarted(task.status) ||
+                            isTaskInProgress(task.status))
                 );
                 return (
                     (project.status === 'planned' ||

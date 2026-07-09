@@ -7,6 +7,7 @@ import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import TaskItem from '../Task/TaskItem';
 import { getCsrfToken } from '../../utils/csrfService';
+import { isTaskCompleted } from '../../constants/taskStatus';
 
 const URGENT_TAG = 'urgent';
 
@@ -63,12 +64,7 @@ const EisenhowerMatrix: React.FC = () => {
     }, []);
 
     const quadrants: Quadrant[] = useMemo(() => {
-        const active = tasks.filter((t) => {
-            const done =
-                t.status === 'done' || t.status === 'archived' ||
-                t.status === 2 || t.status === 3;
-            return !done;
-        });
+        const active = tasks.filter((t) => !isTaskCompleted(t.status));
         return [
             { key: 'do_now',    tasks: active.filter((t) => isImportant(t) && isUrgent(t)) },
             { key: 'schedule',  tasks: active.filter((t) => isImportant(t) && !isUrgent(t)) },

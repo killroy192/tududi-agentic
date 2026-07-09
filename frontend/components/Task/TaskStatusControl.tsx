@@ -15,6 +15,8 @@ import {
     isTaskInProgress,
     isTaskNotStarted,
     getStatusString,
+    TASK_STATUS_STRINGS,
+    TaskStatusString,
 } from '../../constants/taskStatus';
 import {
     getStatusBorderColorClasses,
@@ -35,11 +37,11 @@ interface TaskStatusControlProps {
     onMenuOpenChange?: (isOpen: boolean) => void;
 }
 
-const quickStartStatuses = new Set([
-    'not_started',
-    'planned',
-    'waiting',
-    'cancelled',
+const quickStartStatuses = new Set<TaskStatusString>([
+    TASK_STATUS_STRINGS.NOT_STARTED,
+    TASK_STATUS_STRINGS.PLANNED,
+    TASK_STATUS_STRINGS.WAITING,
+    TASK_STATUS_STRINGS.CANCELLED,
 ]);
 
 const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
@@ -140,7 +142,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
     const showQuickStartButton =
         showQuickActions && quickStartStatuses.has(currentStatusString);
     const showQuickCompleteButton =
-        showQuickActions && currentStatusString !== 'done';
+        showQuickActions && currentStatusString !== TASK_STATUS_STRINGS.DONE;
 
     const handleCompletionClick = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -189,7 +191,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
     const renderStatusMenuOptions = (menuType: CompletionMenuTarget) => {
         const options: StatusDropdownOption[] = [
             {
-                value: 'not_started',
+                value: TASK_STATUS_STRINGS.NOT_STARTED,
                 label: t('task.status.notStarted', 'Not started'),
                 Icon: PauseCircleIcon,
                 activeClasses:
@@ -200,7 +202,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                 inactiveIconClass: 'text-gray-500 dark:text-gray-400',
             },
             {
-                value: 'planned',
+                value: TASK_STATUS_STRINGS.PLANNED,
                 label: t('task.status.planned', 'Planned'),
                 Icon: ClockIcon,
                 activeClasses:
@@ -211,7 +213,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                 inactiveIconClass: 'text-purple-500 dark:text-purple-400',
             },
             {
-                value: 'in_progress',
+                value: TASK_STATUS_STRINGS.IN_PROGRESS,
                 label: t('task.status.inProgress', 'In progress'),
                 Icon: PlayIcon,
                 activeClasses:
@@ -222,7 +224,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                 inactiveIconClass: 'text-blue-500 dark:text-blue-400',
             },
             {
-                value: 'waiting',
+                value: TASK_STATUS_STRINGS.WAITING,
                 label: t('task.status.waiting', 'Waiting'),
                 Icon: ClockIcon,
                 activeClasses:
@@ -233,7 +235,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                 inactiveIconClass: 'text-yellow-500 dark:text-yellow-400',
             },
             {
-                value: 'cancelled',
+                value: TASK_STATUS_STRINGS.CANCELLED,
                 label: t('task.status.cancelled', 'Cancelled'),
                 Icon: XCircleIcon,
                 activeClasses:
@@ -244,7 +246,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                 inactiveIconClass: 'text-red-500 dark:text-red-400',
             },
             {
-                value: 'done',
+                value: TASK_STATUS_STRINGS.DONE,
                 label: t('task.status.setAsDone', 'Set as done'),
                 Icon: CheckIcon,
                 activeClasses:
@@ -359,9 +361,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                     type="button"
                     onClick={
                         taskInProgress ||
-                        (!taskCompleted &&
-                            (task.status === 'not_started' ||
-                                isTaskNotStarted(task.status)))
+                        (!taskCompleted && isTaskNotStarted(task.status))
                             ? (e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -384,7 +384,10 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                     <button
                         type="button"
                         onClick={async (e) => {
-                            await handleStatusSelection(e, 'in_progress');
+                            await handleStatusSelection(
+                                e,
+                                TASK_STATUS_STRINGS.IN_PROGRESS
+                            );
                         }}
                         className={quickButtonClasses}
                         title={t('tasks.setInProgress', 'Set in progress')}
@@ -446,8 +449,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                             onClick={
                                 taskInProgress ||
                                 (!taskCompleted &&
-                                    (task.status === 'not_started' ||
-                                        isTaskNotStarted(task.status)))
+                                    isTaskNotStarted(task.status))
                                     ? (e) => {
                                           e.preventDefault();
                                           e.stopPropagation();
@@ -467,7 +469,7 @@ const TaskStatusControl: React.FC<TaskStatusControlProps> = ({
                                 onClick={async (e) => {
                                     await handleStatusSelection(
                                         e,
-                                        'in_progress'
+                                        TASK_STATUS_STRINGS.IN_PROGRESS
                                     );
                                 }}
                                 className={`${completionButtonChevronClasses} ${statusButtonColorClasses} px-2 border-l ${statusBorderColorClass}`}

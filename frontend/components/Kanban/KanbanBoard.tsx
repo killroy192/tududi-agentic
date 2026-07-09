@@ -8,16 +8,17 @@ import { Project } from '../../entities/Project';
 import { Tag } from '../../entities/Tag';
 import TaskItem from '../Task/TaskItem';
 import { getCsrfToken } from '../../utils/csrfService';
-
-const COLUMN_STATUS: Record<string, number> = {
-    not_started: 0,
-    planned:     6,
-    in_progress: 1,
-    waiting:     4,
-    cancelled:   5,
-    done:        2,
-    archived:    3,
-};
+import {
+    TASK_STATUS,
+    TaskStatusValue,
+    isTaskNotStarted,
+    isTaskPlanned,
+    isTaskInProgress,
+    isTaskWaiting,
+    isTaskCancelled,
+    isTaskDone,
+    isTaskArchived,
+} from '../../constants/taskStatus';
 
 const ALL_COLS = [
     'not_started',
@@ -29,6 +30,16 @@ const ALL_COLS = [
     'archived',
 ] as const;
 type ColKey = (typeof ALL_COLS)[number];
+
+const COLUMN_STATUS: Record<ColKey, TaskStatusValue> = {
+    not_started: TASK_STATUS.NOT_STARTED,
+    planned: TASK_STATUS.PLANNED,
+    in_progress: TASK_STATUS.IN_PROGRESS,
+    waiting: TASK_STATUS.WAITING,
+    cancelled: TASK_STATUS.CANCELLED,
+    done: TASK_STATUS.DONE,
+    archived: TASK_STATUS.ARCHIVED,
+};
 
 const DEFAULT_VISIBLE: ColKey[] = ['not_started', 'in_progress', 'waiting', 'done'];
 const STORAGE_KEY = 'kanban_visible_columns';
@@ -53,13 +64,13 @@ function saveVisibleCols(cols: ColKey[]) {
 
 const getTaskColumn = (task: Task): ColKey | null => {
     const s = task.status;
-    if (s === 'not_started' || s === 0) return 'not_started';
-    if (s === 'planned' || s === 6) return 'planned';
-    if (s === 'in_progress' || s === 1) return 'in_progress';
-    if (s === 'waiting' || s === 4) return 'waiting';
-    if (s === 'cancelled' || s === 5) return 'cancelled';
-    if (s === 'done' || s === 2) return 'done';
-    if (s === 'archived' || s === 3) return 'archived';
+    if (isTaskNotStarted(s)) return 'not_started';
+    if (isTaskPlanned(s)) return 'planned';
+    if (isTaskInProgress(s)) return 'in_progress';
+    if (isTaskWaiting(s)) return 'waiting';
+    if (isTaskCancelled(s)) return 'cancelled';
+    if (isTaskDone(s)) return 'done';
+    if (isTaskArchived(s)) return 'archived';
     return null;
 };
 

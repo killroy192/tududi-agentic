@@ -352,8 +352,7 @@ const ProjectInsightsPanel: React.FC<ProjectInsightsPanelProps> = ({
                                     {t('tasks.todayPlan', 'Today plan')}
                                 </span>
                             )}
-                            {(nextBestAction.status === 'in_progress' ||
-                                nextBestAction.status === 1) && (
+                            {isTaskInProgress(nextBestAction.status) && (
                                 <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
                                     {t('task.status.inProgress', 'In progress')}
                                 </span>
@@ -364,20 +363,17 @@ const ProjectInsightsPanel: React.FC<ProjectInsightsPanelProps> = ({
                                 type="button"
                                 onClick={onStartNextAction}
                                 disabled={
-                                    (nextBestAction.status === 'in_progress' ||
-                                        nextBestAction.status === 1) &&
+                                    isTaskInProgress(nextBestAction.status) &&
                                     isTaskInTodayPlan(nextBestAction)
                                 }
                                 className={`inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition-colors ${
-                                    (nextBestAction.status === 'in_progress' ||
-                                        nextBestAction.status === 1) &&
+                                    isTaskInProgress(nextBestAction.status) &&
                                     isTaskInTodayPlan(nextBestAction)
                                         ? 'bg-gray-400 dark:bg-gray-700 cursor-not-allowed'
                                         : 'bg-blue-600 hover:bg-blue-700'
                                 }`}
                             >
-                                {(nextBestAction.status === 'in_progress' ||
-                                    nextBestAction.status === 1) &&
+                                {isTaskInProgress(nextBestAction.status) &&
                                 isTaskInTodayPlan(nextBestAction)
                                     ? t('tasks.inProgress', 'In progress')
                                     : t('tasks.startNow', 'Start now')}

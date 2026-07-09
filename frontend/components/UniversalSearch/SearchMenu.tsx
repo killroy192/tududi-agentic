@@ -12,6 +12,7 @@ import SearchResults from './SearchResults';
 import { useToast } from '../Shared/ToastContext';
 import { getApiPath } from '../../config/paths';
 import { getCsrfToken } from '../../utils/csrfService';
+import { TASK_PRIORITY_STRINGS } from '../../constants/taskPriority';
 
 interface SearchMenuProps {
     searchQuery: string;
@@ -44,9 +45,9 @@ const filterTypes = [
 ];
 
 const priorityOptions = [
-    { value: 'high', labelKey: 'priority.high' },
-    { value: 'medium', labelKey: 'priority.medium' },
-    { value: 'low', labelKey: 'priority.low' },
+    { value: TASK_PRIORITY_STRINGS.HIGH, labelKey: 'priority.high' },
+    { value: TASK_PRIORITY_STRINGS.MEDIUM, labelKey: 'priority.medium' },
+    { value: TASK_PRIORITY_STRINGS.LOW, labelKey: 'priority.low' },
 ];
 
 const dueOptions = [

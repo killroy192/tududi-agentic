@@ -9,6 +9,7 @@ import TaskItem from './TaskItem';
 import { Project } from '../../entities/Project';
 import { Task } from '../../entities/Task';
 import { GroupedTasks } from '../../utils/tasksService';
+import { isTaskCompleted } from '../../constants/taskStatus';
 
 interface GroupedTaskListProps {
     tasks: Task[];
@@ -73,12 +74,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
             ? tasks
             : tasks.filter((task) => {
                   // Show only non-completed tasks
-                  const isCompleted =
-                      task.status === 'done' ||
-                      task.status === 'archived' ||
-                      task.status === 2 ||
-                      task.status === 3;
-                  return !isCompleted;
+                  return !isTaskCompleted(task.status);
               });
 
         const groups = new Map<number, TaskGroup>();
@@ -147,12 +143,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                 ? groupTasks
                 : groupTasks.filter((task) => {
                       // Show only non-completed tasks
-                      const isCompleted =
-                          task.status === 'done' ||
-                          task.status === 'archived' ||
-                          task.status === 2 ||
-                          task.status === 3;
-                      return !isCompleted;
+                      return !isTaskCompleted(task.status);
                   });
 
             // Apply search filter if search query provided
@@ -191,12 +182,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
         const filtered = showCompletedTasks
             ? tasks
             : tasks.filter((task) => {
-                  const isCompleted =
-                      task.status === 'done' ||
-                      task.status === 'archived' ||
-                      task.status === 2 ||
-                      task.status === 3;
-                  return !isCompleted;
+                  return !isTaskCompleted(task.status);
               });
 
         // Apply search

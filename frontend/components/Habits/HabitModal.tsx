@@ -7,6 +7,7 @@ import {
 } from '../../utils/habitsService';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
+import { TASK_STATUS_STRINGS } from '../../constants/taskStatus';
 
 interface HabitModalProps {
     isOpen: boolean;
@@ -40,7 +41,7 @@ const HabitModal: React.FC<HabitModalProps> = ({
             // Set planned status for new habits to show in "Planned" section
             const habitData = { ...formData };
             if (!habit?.uid) {
-                habitData.status = 'planned';
+                habitData.status = TASK_STATUS_STRINGS.PLANNED;
             }
 
             if (habit?.uid) {

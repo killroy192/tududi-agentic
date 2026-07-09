@@ -6,7 +6,11 @@ import {
     isTaskInProgress,
     isTaskPlanned,
     isTaskWaiting,
+    isTaskCompleted,
+    isTaskNotStarted,
+    TASK_STATUS_STRINGS,
 } from '../../constants/taskStatus';
+import { isHighPriority, isMediumPriority } from '../../constants/taskPriority';
 import { parseDateString, getTodayDateString, toLocalDateString } from '../../utils/dateUtils';
 
 // Check if task is in today's plan (has active status)
@@ -40,32 +44,20 @@ export const useProjectMetrics = (
         const soonDay = String(soonBoundary.getDate()).padStart(2, '0');
         const soonStr = `${soonYear}-${soonMonth}-${soonDay}`;
 
-        const isCompleted = (status: Task['status']) =>
-            status === 'done' ||
-            status === 'archived' ||
-            status === 2 ||
-            status === 3;
-
-        const isInProgress = (status: Task['status']) =>
-            status === 'in_progress' || status === 1;
-
-        const isNotStarted = (status: Task['status']) =>
-            status === 'not_started' || status === 0;
-
         tasks.forEach((task) => {
             const status = task.status;
 
-            if (isCompleted(status)) {
+            if (isTaskCompleted(status)) {
                 stats.completed += 1;
-            } else if (isInProgress(status)) {
+            } else if (isTaskInProgress(status)) {
                 stats.inProgress += 1;
-            } else if (isNotStarted(status)) {
+            } else if (isTaskNotStarted(status)) {
                 stats.notStarted += 1;
             } else {
                 stats.notStarted += 1;
             }
 
-            if (!isCompleted(status) && task.due_date) {
+            if (!isTaskCompleted(status) && task.due_date) {
                 const dueDateStr = task.due_date.split('T')[0];
                 if (dueDateStr < todayStr) {
                     stats.overdue += 1;
@@ -137,14 +129,8 @@ export const useProjectMetrics = (
         const weekStr = toDateStr(7);
         const monthStr = toDateStr(30);
 
-        const isCompleted = (status: Task['status']) =>
-            status === 'done' ||
-            status === 'archived' ||
-            status === 2 ||
-            status === 3;
-
         tasks.forEach((task) => {
-            if (isCompleted(task.status)) return;
+            if (isTaskCompleted(task.status)) return;
 
             if (!task.due_date) {
                 buckets.unscheduled.push(task);
@@ -255,14 +241,8 @@ export const useProjectMetrics = (
         const counts: Record<string, number> = {};
         labels.forEach((l) => (counts[l.dateKey] = 0));
 
-        const isCompleted = (status: Task['status']) =>
-            status === 'done' ||
-            status === 'archived' ||
-            status === 2 ||
-            status === 3;
-
         tasks.forEach((task) => {
-            if (!task.due_date || isCompleted(task.status)) return;
+            if (!task.due_date || isTaskCompleted(task.status)) return;
             // Use the due_date string directly as key (YYYY-MM-DD format)
             // This avoids timezone conversion issues with new Date().toISOString()
             const key = task.due_date.split('T')[0];
@@ -315,17 +295,9 @@ export const useProjectMetrics = (
     }, [dueBuckets]);
 
     const nextBestAction = useMemo(() => {
-        const isCompleted = (status: Task['status']) =>
-            status === 'done' ||
-            status === 'archived' ||
-            status === 2 ||
-            status === 3;
-
         const candidates = tasks.filter(
             (task) =>
-                !isCompleted(task.status) &&
-                task.status !== 'in_progress' &&
-                task.status !== 1
+                !isTaskCompleted(task.status) && !isTaskInProgress(task.status)
         );
         if (candidates.length === 0) return null;
 
@@ -333,8 +305,8 @@ export const useProjectMetrics = (
         startOfToday.setHours(0, 0, 0, 0);
 
         const getPriorityScore = (priority: Task['priority']) => {
-            if (priority === 'high' || priority === 2) return -8;
-            if (priority === 'medium' || priority === 1) return -4;
+            if (isHighPriority(priority)) return -8;
+            if (isMediumPriority(priority)) return -4;
             return 0;
         };
 
@@ -342,7 +314,7 @@ export const useProjectMetrics = (
             .map((task) => {
                 let score = 0;
 
-                if (task.status === 'in_progress' || task.status === 1) {
+                if (isTaskInProgress(task.status)) {
                     score -= 30;
                 }
 
@@ -431,9 +403,7 @@ export const useProjectMetrics = (
     const handleStartNextAction = useCallback(async () => {
         if (!nextBestAction?.id) return;
 
-        const isAlreadyInProgress =
-            nextBestAction.status === 'in_progress' ||
-            nextBestAction.status === 1;
+        const isAlreadyInProgress = isTaskInProgress(nextBestAction.status);
 
         if (isAlreadyInProgress) {
             return;
@@ -442,7 +412,7 @@ export const useProjectMetrics = (
         try {
             await handleTaskUpdate({
                 ...nextBestAction,
-                status: 'in_progress',
+                status: TASK_STATUS_STRINGS.IN_PROGRESS,
             });
 
             if (showSuccessToast) {

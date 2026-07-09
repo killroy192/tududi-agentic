@@ -1,4 +1,5 @@
 import { Task } from '../entities/Task';
+import { getPriorityValue } from '../constants/taskPriority';
 
 interface SortOptions {
     excludeFutureDeferred?: boolean;
@@ -36,19 +37,10 @@ export const sortTasksByPriorityDueDateProject = (
 
     return [...filteredTasks].sort((a, b) => {
         // 1. Priority (High → Medium → Low → None)
-        // Handle both string ('low', 'medium', 'high') and numeric (0, 1, 2) priority values
-        const getPriorityValue = (priority: any): number => {
-            if (typeof priority === 'number') {
-                // Backend numeric format: 0 = LOW, 1 = MEDIUM, 2 = HIGH
-                return priority;
-            }
-            // Frontend string format
-            const priorityOrder = { high: 2, medium: 1, low: 0 };
-            return priorityOrder[priority as keyof typeof priorityOrder] ?? -1;
-        };
-
-        const aPriority = getPriorityValue(a.priority);
-        const bPriority = getPriorityValue(b.priority);
+        // Handles both string ('low', 'medium', 'high') and numeric (0, 1, 2) priority values;
+        // "None" (null/undefined/unrecognized) sorts below Low via the -1 fallback.
+        const aPriority = getPriorityValue(a.priority) ?? -1;
+        const bPriority = getPriorityValue(b.priority) ?? -1;
         if (aPriority !== bPriority) {
             return bPriority - aPriority; // Higher priority first
         }

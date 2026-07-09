@@ -21,6 +21,8 @@ import CalendarDayView from './Calendar/CalendarDayView';
 import { getApiPath } from '../config/paths';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { parseDateString } from '../utils/dateUtils';
+import { TASK_STATUS_STRINGS } from '../constants/taskStatus';
+import { TASK_PRIORITY_STRINGS } from '../constants/taskPriority';
 
 const getLocale = (language: string) => {
     switch (language) {
@@ -177,8 +179,8 @@ const Calendar: React.FC = () => {
                 const taskEntity: Task = {
                     ...task,
                     name: task.name || task.title || `Task ${task.id}`,
-                    priority: task.priority || 'low',
-                    status: task.status || 'not_started',
+                    priority: task.priority || TASK_PRIORITY_STRINGS.LOW,
+                    status: task.status || TASK_STATUS_STRINGS.NOT_STARTED,
                     tags: task.tags || [],
                     note: task.note || task.description || '',
                     due_date: task.due_date,

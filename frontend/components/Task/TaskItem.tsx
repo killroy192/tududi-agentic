@@ -5,7 +5,13 @@ import { Project } from '../../entities/Project';
 import TaskHeader from './TaskHeader';
 import { useToast } from '../Shared/ToastContext';
 import TaskPriorityIcon from '../Shared/Icons/TaskPriorityIcon';
-import { isTaskCompleted } from '../../constants/taskStatus';
+import {
+    isTaskCompleted,
+    isTaskInProgress,
+    isTaskArchived,
+    TASK_STATUS_STRINGS,
+} from '../../constants/taskStatus';
+import { getPriorityString, TASK_PRIORITY_STRINGS } from '../../constants/taskPriority';
 import {
     ExclamationTriangleIcon,
     BoltIcon,
@@ -28,17 +34,7 @@ interface SubtasksDisplayProps {
 const getPriorityBorderClassName = (
     priority?: Task['priority'] | number
 ): string => {
-    let normalizedPriority = priority;
-    if (typeof normalizedPriority === 'number') {
-        const priorityNames: Array<'low' | 'medium' | 'high'> = [
-            'low',
-            'medium',
-            'high',
-        ];
-        normalizedPriority = priorityNames[normalizedPriority] || undefined;
-    }
-
-    switch (normalizedPriority) {
+    switch (getPriorityString(priority)) {
         case 'high':
             return 'border-l-4 border-l-red-500';
         case 'medium':
@@ -93,8 +89,14 @@ const SubtasksDisplay: React.FC<SubtasksDisplayProps> = ({
                             <div className="px-3 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                                     <TaskPriorityIcon
-                                        priority={subtask.priority || 'low'}
-                                        status={subtask.status || 'not_started'}
+                                        priority={
+                                            subtask.priority ||
+                                            TASK_PRIORITY_STRINGS.LOW
+                                        }
+                                        status={
+                                            subtask.status ||
+                                            TASK_STATUS_STRINGS.NOT_STARTED
+                                        }
                                         onToggleCompletion={async () => {
                                             if (subtask.uid) {
                                                 try {
@@ -225,12 +227,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
     // Calculate completion percentage
     const calculateCompletionPercentage = () => {
         if (subtasks.length === 0) return 0;
-        const completedCount = subtasks.filter(
-            (subtask) =>
-                subtask.status === 'done' ||
-                subtask.status === 2 ||
-                subtask.status === 'archived' ||
-                subtask.status === 3
+        const completedCount = subtasks.filter((subtask) =>
+            isTaskCompleted(subtask.status)
         ).length;
         return Math.round((completedCount / subtasks.length) * 100);
     };
@@ -316,11 +314,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
         if (task.id) {
             try {
                 // Check if task is being completed (not uncompleted)
-                const isCompletingTask =
-                    task.status !== 'done' &&
-                    task.status !== 2 &&
-                    task.status !== 'archived' &&
-                    task.status !== 3;
+                const isCompletingTask = !isTaskCompleted(task.status);
 
                 const previousStatus = task.status;
 
@@ -411,7 +405,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     }
 
     // Check if task is in progress to apply pulsing border animation
-    const isInProgress = task.status === 'in_progress' || task.status === 1;
+    const isInProgress = isTaskInProgress(task.status);
 
     // Check if task is overdue (created yesterday or earlier and not completed)
     const isOverdue = isTaskOverdueInTodayPlan(task);
@@ -497,7 +491,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
             {/* Hide subtasks display for archived tasks */}
             {showSubtasks &&
                 (subtasks.length > 0 || loadingSubtasks) &&
-                !(task.status === 'archived' || task.status === 3) && (
+                !isTaskArchived(task.status) && (
                     <SubtasksDisplay
                         loadingSubtasks={loadingSubtasks}
                         subtasks={subtasks}

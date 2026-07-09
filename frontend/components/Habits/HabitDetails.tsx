@@ -24,6 +24,7 @@ import {
     TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import { TASK_STATUS_STRINGS } from '../../constants/taskStatus';
 
 const mapHabitToEditableValues = (task: Task) => ({
     name: task.name || '',
@@ -267,7 +268,7 @@ const HabitDetails: React.FC = () => {
                 habit_flexibility_mode: editableValues.habit_flexibility_mode,
                 recurrence_type: 'daily',
                 recurrence_interval: 1,
-                status: 'planned', // Show in today's plan
+                status: TASK_STATUS_STRINGS.PLANNED, // Show in today's plan
             };
 
             const created = await createHabit(habitData);

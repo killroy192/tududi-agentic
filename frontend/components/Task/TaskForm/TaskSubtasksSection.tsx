@@ -4,6 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Task } from '../../../entities/Task';
 import TaskPriorityIcon from '../../Shared/Icons/TaskPriorityIcon';
 import { toggleTaskCompletion } from '../../../utils/tasksService';
+import {
+    isTaskDone,
+    isTaskCompleted,
+    TASK_STATUS_STRINGS,
+} from '../../../constants/taskStatus';
+import { TASK_PRIORITY_STRINGS } from '../../../constants/taskPriority';
 
 interface TaskSubtasksSectionProps {
     parentTaskId: number;
@@ -47,8 +53,8 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
 
         const newSubtask: Task = {
             name: newSubtaskName.trim(),
-            status: 'not_started',
-            priority: 'low',
+            status: TASK_STATUS_STRINGS.NOT_STARTED,
+            priority: TASK_PRIORITY_STRINGS.LOW,
             today: false,
             parent_task_id: parentTaskId,
             isNew: true,
@@ -117,11 +123,10 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
     const handleToggleNewSubtaskCompletion = (index: number) => {
         const updatedSubtasks = subtasks.map((subtask, i) => {
             if (i === index) {
-                const isDone =
-                    subtask.status === 'done' || subtask.status === 2;
+                const isDone = isTaskDone(subtask.status);
                 const newStatus = isDone
-                    ? ('not_started' as const)
-                    : ('done' as const);
+                    ? TASK_STATUS_STRINGS.NOT_STARTED
+                    : TASK_STATUS_STRINGS.DONE;
                 const hasId =
                     subtask.id &&
                     !((subtask as any)._isNew || (subtask as any).isNew);
@@ -178,9 +183,13 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                 <div className="px-3 py-2.5 flex items-center space-x-3 overflow-hidden">
                                     <div className="flex-shrink-0">
                                         <TaskPriorityIcon
-                                            priority={subtask.priority || 'low'}
+                                            priority={
+                                                subtask.priority ||
+                                                TASK_PRIORITY_STRINGS.LOW
+                                            }
                                             status={
-                                                subtask.status || 'not_started'
+                                                subtask.status ||
+                                                TASK_STATUS_STRINGS.NOT_STARTED
                                             }
                                             onToggleCompletion={() => handleToggleSubtaskCompletion(subtask, index)}
                                         />
@@ -218,21 +227,19 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                         <div className="flex-shrink-0">
                                             <TaskPriorityIcon
                                                 priority={
-                                                    subtask.priority || 'low'
+                                                    subtask.priority ||
+                                                    TASK_PRIORITY_STRINGS.LOW
                                                 }
                                                 status={
                                                     subtask.status ||
-                                                    'not_started'
+                                                    TASK_STATUS_STRINGS.NOT_STARTED
                                                 }
                                                 onToggleCompletion={() => handleToggleSubtaskCompletion(subtask, index)}
                                             />
                                         </div>
                                         <span
                                             className={`text-sm flex-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 break-all ${
-                                                subtask.status === 'done' ||
-                                                subtask.status === 2 ||
-                                                subtask.status === 'archived' ||
-                                                subtask.status === 3
+                                                isTaskCompleted(subtask.status)
                                                     ? 'text-gray-500 dark:text-gray-400'
                                                     : 'text-gray-900 dark:text-gray-100'
                                             }`}

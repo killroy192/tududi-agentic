@@ -18,6 +18,11 @@ import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
 import { getStatusValue } from '../../../constants/taskStatus';
+import {
+    isLowPriority,
+    isMediumPriority,
+    isHighPriority,
+} from '../../../constants/taskPriority';
 
 interface TaskDetailsHeaderProps {
     task: Task;
@@ -198,11 +203,11 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                 ? priorityOverride
                 : task.priority;
 
-        if (priority === 'low' || priority === 0) {
+        if (isLowPriority(priority)) {
             return t('priority.low', 'Low');
-        } else if (priority === 'medium' || priority === 1) {
+        } else if (isMediumPriority(priority)) {
             return t('priority.medium', 'Medium');
-        } else if (priority === 'high' || priority === 2) {
+        } else if (isHighPriority(priority)) {
             return t('priority.high', 'High');
         }
         return t('priority.none', 'None');
@@ -218,11 +223,11 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
         const baseClass =
             'px-2 sm:px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 sm:gap-2 sm:ml-1 border';
 
-        if (priority === 'low' || priority === 0) {
+        if (isLowPriority(priority)) {
             return `${baseClass} border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30`;
-        } else if (priority === 'medium' || priority === 1) {
+        } else if (isMediumPriority(priority)) {
             return `${baseClass} border-yellow-500 text-yellow-600 dark:border-yellow-400 dark:text-yellow-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/30`;
-        } else if (priority === 'high' || priority === 2) {
+        } else if (isHighPriority(priority)) {
             return `${baseClass} border-red-500 text-red-600 dark:border-red-400 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30`;
         }
         return `${baseClass} border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60`;
@@ -241,11 +246,11 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                 ? priorityOverride
                 : task.priority;
 
-        if (priority === 'low' || priority === 0) {
+        if (isLowPriority(priority)) {
             return ArrowDownIcon;
-        } else if (priority === 'medium' || priority === 1) {
+        } else if (isMediumPriority(priority)) {
             return ArrowUpIcon;
-        } else if (priority === 'high' || priority === 2) {
+        } else if (isHighPriority(priority)) {
             return FireIcon;
         }
         return XMarkIcon;
@@ -257,11 +262,11 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                 ? priorityOverride
                 : task.priority;
 
-        if (priority === 'low' || priority === 0) {
+        if (isLowPriority(priority)) {
             return 'text-blue-500 dark:text-blue-400';
-        } else if (priority === 'medium' || priority === 1) {
+        } else if (isMediumPriority(priority)) {
             return 'text-yellow-500 dark:text-yellow-400';
-        } else if (priority === 'high' || priority === 2) {
+        } else if (isHighPriority(priority)) {
             return 'text-red-500 dark:text-red-400';
         }
         return 'text-gray-500 dark:text-gray-400';
@@ -388,9 +393,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                     </button>
                                                     <button
                                                         className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                                            task.priority ===
-                                                                'low' ||
-                                                            task.priority === 0
+                                                            isLowPriority(
+                                                                task.priority
+                                                            )
                                                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium'
                                                                 : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
                                                         }`}
@@ -411,18 +416,17 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                                 'Low'
                                                             )}
                                                         </span>
-                                                        {(task.priority ===
-                                                            'low' ||
-                                                            task.priority ===
-                                                                0) && (
+                                                        {isLowPriority(
+                                                            task.priority
+                                                        ) && (
                                                             <CheckIcon className="h-4 w-4" />
                                                         )}
                                                     </button>
                                                     <button
                                                         className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                                            task.priority ===
-                                                                'medium' ||
-                                                            task.priority === 1
+                                                            isMediumPriority(
+                                                                task.priority
+                                                            )
                                                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium'
                                                                 : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
                                                         }`}
@@ -443,18 +447,17 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                                 'Medium'
                                                             )}
                                                         </span>
-                                                        {(task.priority ===
-                                                            'medium' ||
-                                                            task.priority ===
-                                                                1) && (
+                                                        {isMediumPriority(
+                                                            task.priority
+                                                        ) && (
                                                             <CheckIcon className="h-4 w-4" />
                                                         )}
                                                     </button>
                                                     <button
                                                         className={`w-full text-left px-3 py-2 text-sm rounded-b-lg flex items-center gap-2 ${
-                                                            task.priority ===
-                                                                'high' ||
-                                                            task.priority === 2
+                                                            isHighPriority(
+                                                                task.priority
+                                                            )
                                                                 ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium'
                                                                 : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
                                                         }`}
@@ -475,10 +478,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                                 'High'
                                                             )}
                                                         </span>
-                                                        {(task.priority ===
-                                                            'high' ||
-                                                            task.priority ===
-                                                                2) && (
+                                                        {isHighPriority(
+                                                            task.priority
+                                                        ) && (
                                                             <CheckIcon className="h-4 w-4" />
                                                         )}
                                                     </button>

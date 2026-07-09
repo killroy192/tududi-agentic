@@ -48,6 +48,14 @@ import BannerEditModal from './BannerEditModal';
 import ProjectTasksSection from './ProjectTasksSection';
 import ProjectNotesSection from './ProjectNotesSection';
 import { useProjectMetrics } from './useProjectMetrics';
+import {
+    isTaskCompleted,
+    isTaskNotStarted,
+    isTaskInProgress,
+    isTaskWaiting,
+    isTaskDone,
+    isTaskArchived,
+} from '../../constants/taskStatus';
 
 const ProjectDetails: React.FC = () => {
     const UI_OPTIONS_KEY = 'ui_app_options';
@@ -598,22 +606,15 @@ const ProjectDetails: React.FC = () => {
         let filteredTasks: Task[];
 
         if (taskStatusFilter === 'completed') {
-            filteredTasks = tasks.filter(
-                (task) =>
-                    task.status === 'done' ||
-                    task.status === 'archived' ||
-                    task.status === 2 ||
-                    task.status === 3
+            filteredTasks = tasks.filter((task) =>
+                isTaskCompleted(task.status)
             );
         } else if (taskStatusFilter === 'active') {
             filteredTasks = tasks.filter(
                 (task) =>
-                    task.status === 'not_started' ||
-                    task.status === 'in_progress' ||
-                    task.status === 'waiting' ||
-                    task.status === 0 ||
-                    task.status === 1 ||
-                    task.status === 4
+                    isTaskNotStarted(task.status) ||
+                    isTaskInProgress(task.status) ||
+                    isTaskWaiting(task.status)
             );
         } else {
             // taskStatusFilter === 'all'
@@ -629,11 +630,11 @@ const ProjectDetails: React.FC = () => {
             );
         }
         const getStatusRank = (status: Task['status']) => {
-            if (status === 'in_progress' || status === 1) return 0;
-            if (status === 'not_started' || status === 0) return 1;
-            if (status === 'waiting' || status === 4) return 2;
-            if (status === 'done' || status === 2) return 3;
-            if (status === 'archived' || status === 3) return 4;
+            if (isTaskInProgress(status)) return 0;
+            if (isTaskNotStarted(status)) return 1;
+            if (isTaskWaiting(status)) return 2;
+            if (isTaskDone(status)) return 3;
+            if (isTaskArchived(status)) return 4;
             return 5;
         };
         return [...filteredTasks].sort((a, b) => {

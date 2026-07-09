@@ -9,6 +9,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { PriorityType } from '../../entities/Task';
 import { useTranslation } from 'react-i18next';
+import {
+    TASK_PRIORITY_STRINGS,
+    getPriorityString,
+} from '../../constants/taskPriority';
 
 interface PriorityDropdownProps {
     value: PriorityType;
@@ -30,21 +34,21 @@ const PriorityDropdown: React.FC<PriorityDropdownProps> = ({
             ),
         },
         {
-            value: 'low',
+            value: TASK_PRIORITY_STRINGS.LOW,
             label: t('priority.low', 'Low'),
             icon: (
                 <ArrowDownIcon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
             ),
         },
         {
-            value: 'medium',
+            value: TASK_PRIORITY_STRINGS.MEDIUM,
             label: t('priority.medium', 'Medium'),
             icon: (
                 <ArrowUpIcon className="w-5 h-5 text-orange-500 dark:text-orange-400" />
             ),
         },
         {
-            value: 'high',
+            value: TASK_PRIORITY_STRINGS.HIGH,
             label: t('priority.high', 'High'),
             icon: (
                 <FireIcon className="w-5 h-5 text-red-500 dark:text-red-400" />
@@ -111,10 +115,7 @@ const PriorityDropdown: React.FC<PriorityDropdownProps> = ({
 
     // Convert numeric priority to string if needed
     // Don't default to any value - allow null/undefined
-    const normalizedValue =
-        typeof value === 'number'
-            ? (['low', 'medium', 'high'][value] as PriorityType)
-            : value;
+    const normalizedValue = getPriorityString(value) as PriorityType;
 
     const selectedPriority = priorities.find(
         (p) => p.value === (normalizedValue || null)

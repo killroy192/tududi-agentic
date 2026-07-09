@@ -21,6 +21,7 @@ import { fetchTasks } from '../../utils/tasksService';
 import { updateArea } from '../../utils/areasService';
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from '../../utils/goalsService';
 import { updateProject } from '../../utils/projectsService';
+import { isTaskCompleted, isTaskDone } from '../../constants/taskStatus';
 import AreaModal from './AreaModal';
 import TaskList from '../Task/TaskList';
 
@@ -319,10 +320,10 @@ const AreaDetails: React.FC = () => {
         );
     }
 
-    const activeTasks = areaTasks.filter(
-        (t) => t.status !== 'done' && t.status !== 2 && t.status !== 'archived' && t.status !== 3
-    );
-    const completedTasks = areaTasks.filter((t) => t.status === 'done' || t.status === 2);
+    const activeTasks = areaTasks.filter((t) => !isTaskCompleted(t.status));
+    // Note: intentionally isTaskDone only (not isTaskCompleted) - archived tasks are
+    // excluded from both active and completed buckets here, matching prior behavior.
+    const completedTasks = areaTasks.filter((t) => isTaskDone(t.status));
 
     // Bucket projects into: under a goal / maintenance / unlinked
     const projectsByGoal = new Map<number, Project[]>();

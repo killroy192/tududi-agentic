@@ -8,6 +8,7 @@ import {
     isTaskInProgress,
     isTaskPlanned,
     isTaskWaiting,
+    isTaskCompleted,
 } from '../constants/taskStatus';
 import { StatusType } from '../entities/Task';
 
@@ -107,7 +108,7 @@ export const getCurrentLocale = (): Locale => {
  */
 export const isTaskPastDue = (task: {
     due_date?: string | null;
-    status: string | number;
+    status: StatusType | number;
     completed_at: string | null;
 }): boolean => {
     // If no due date, task is not past due
@@ -116,13 +117,7 @@ export const isTaskPastDue = (task: {
     }
 
     // If task is completed, it's not past due
-    if (
-        task.completed_at ||
-        task.status === 'done' ||
-        task.status === 2 ||
-        task.status === 'archived' ||
-        task.status === 3
-    ) {
+    if (task.completed_at || isTaskCompleted(task.status)) {
         return false;
     }
 
@@ -268,13 +263,7 @@ export const isTaskOverdueInTodayPlan = (task: {
     }
 
     // Only hide overdue badge if task is actually completed (done/archived)
-    if (
-        task.completed_at ||
-        task.status === 'done' ||
-        task.status === 2 ||
-        task.status === 'archived' ||
-        task.status === 3
-    ) {
+    if (task.completed_at || isTaskCompleted(task.status)) {
         return false;
     }
 

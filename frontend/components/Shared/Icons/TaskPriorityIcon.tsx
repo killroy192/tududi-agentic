@@ -1,9 +1,12 @@
 import React from 'react';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { StatusType } from '../../../entities/Task';
+import { isTaskCompleted } from '../../../constants/taskStatus';
+import { getPriorityString } from '../../../constants/taskPriority';
 
 interface TaskPriorityIconProps {
     priority: string | number | undefined;
-    status: string | number;
+    status: StatusType | number;
     onToggleCompletion?: () => void;
     testIdSuffix?: string;
 }
@@ -15,61 +18,28 @@ const TaskPriorityIcon: React.FC<TaskPriorityIconProps> = ({
     testIdSuffix = '',
 }) => {
     const getPriorityText = () => {
-        // Handle both string and numeric priority values
-        let priorityStr = priority;
-        if (typeof priority === 'number') {
-            const priorityNames = ['low', 'medium', 'high'];
-            priorityStr = priorityNames[priority];
-        }
-
-        switch (priorityStr) {
+        switch (getPriorityString(priority)) {
             case 'high':
-            case 2:
                 return 'High priority';
             case 'medium':
-            case 1:
                 return 'Medium priority';
             case 'low':
-            case 0:
                 return 'Low priority';
-            case null:
-            case undefined:
-            case '':
-                return ''; // No priority set
             default:
-                return ''; // Default to no priority text
+                return ''; // No priority set
         }
     };
 
     const getIconColor = () => {
-        if (
-            status === 'done' ||
-            status === 2 ||
-            status === 'archived' ||
-            status === 3
-        )
-            return 'text-green-500';
+        if (isTaskCompleted(status)) return 'text-green-500';
 
-        // Handle both string and numeric priority values
-        let priorityStr = priority;
-        if (typeof priority === 'number') {
-            const priorityNames = ['low', 'medium', 'high'];
-            priorityStr = priorityNames[priority];
-        }
-
-        switch (priorityStr) {
+        switch (getPriorityString(priority)) {
             case 'high':
-            case 2:
                 return 'text-red-500';
             case 'medium':
-            case 1:
                 return 'text-yellow-500';
             case 'low':
-            case 0:
                 return 'text-blue-500';
-            case null:
-            case undefined:
-            case '':
             default:
                 return 'text-gray-300'; // No priority - use gray
         }
@@ -85,12 +55,7 @@ const TaskPriorityIcon: React.FC<TaskPriorityIconProps> = ({
         }
     };
 
-    if (
-        status === 'done' ||
-        status === 2 ||
-        status === 'archived' ||
-        status === 3
-    ) {
+    if (isTaskCompleted(status)) {
         return (
             <CheckCircleIcon
                 className={`${colorClass} cursor-pointer flex-shrink-0 self-center transition-all duration-300 ease-in-out animate-scale-in w-7 h-7 md:w-6 md:h-6`}

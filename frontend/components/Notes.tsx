@@ -35,6 +35,7 @@ import { createProject } from '../utils/projectsService';
 import { ENABLE_NOTE_COLOR } from '../config/featureFlags';
 import { COLORS } from './Shared/ColorPicker';
 import NoteFocusMode from './Note/NoteFocusMode';
+import { TASK_PRIORITY_STRINGS } from '../constants/taskPriority';
 
 
 const shouldUseLightText = (hexColor: string | undefined): boolean => {
@@ -364,7 +365,7 @@ const Notes: React.FC = () => {
         try {
             const newProject = await createProject({
                 name,
-                priority: 'low',
+                priority: TASK_PRIORITY_STRINGS.LOW,
             });
             return newProject;
         } catch (error) {
@@ -1427,13 +1428,13 @@ const Notes: React.FC = () => {
                                           id: 1,
                                           name: 'Test Project 1',
                                           active: true,
-                                          priority: 'low',
+                                          priority: TASK_PRIORITY_STRINGS.LOW,
                                       },
                                       {
                                           id: 2,
                                           name: 'tududi',
                                           active: true,
-                                          priority: 'high',
+                                          priority: TASK_PRIORITY_STRINGS.HIGH,
                                       },
                                   ] as any)
                         }

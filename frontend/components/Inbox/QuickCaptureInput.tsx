@@ -28,6 +28,8 @@ import {
 import { useStore } from '../../store/useStore';
 import { isUrl, extractUrlTitle } from '../../utils/urlService';
 import { getApiPath } from '../../config/paths';
+import { TASK_STATUS_STRINGS } from '../../constants/taskStatus';
+import { TASK_PRIORITY_STRINGS } from '../../constants/taskPriority';
 import { getCsrfToken } from '../../utils/csrfService';
 import InboxSelectedChips from './InboxSelectedChips';
 import SuggestionsDropdown from './SuggestionsDropdown';
@@ -1101,8 +1103,8 @@ const QuickCaptureInput = React.forwardRef<
 
                         const newTask: Task = {
                             name: cleanedText,
-                            status: 'not_started',
-                            priority: 'low',
+                            status: TASK_STATUS_STRINGS.NOT_STARTED,
+                            priority: TASK_PRIORITY_STRINGS.LOW,
                             tags: taskTags,
                             project_uid: projectUid,
                             completed_at: null,
@@ -1294,7 +1296,7 @@ const QuickCaptureInput = React.forwardRef<
                                         }
                                         const newTask: Task = {
                                             name: cleaned,
-                                            status: 'not_started',
+                                            status: TASK_STATUS_STRINGS.NOT_STARTED,
                                             priority: null,
                                             tags: taskTags,
                                             Project: projectUid

@@ -32,6 +32,7 @@ import {
     isTaskInProgress,
     isTaskPlanned,
     isTaskWaiting,
+    isTaskCancelled,
 } from '../../constants/taskStatus';
 import { fetchProjects } from '../../utils/projectsService';
 import { Task } from '../../entities/Task';
@@ -809,13 +810,16 @@ const TasksToday: React.FC = () => {
                         isTaskInProgress(updatedTask.status) ||
                         isTaskPlanned(updatedTask.status) ||
                         isTaskWaiting(updatedTask.status);
-                    if (isInTodayPlan && updatedTask.status !== 'cancelled') {
+                    if (
+                        isInTodayPlan &&
+                        !isTaskCancelled(updatedTask.status)
+                    ) {
                         newMetrics.today_plan_tasks = updateOrAddTask(
                             newMetrics.today_plan_tasks,
                             updatedTask
                         );
                     }
-                    if (updatedTask.status === 'in_progress') {
+                    if (isTaskInProgress(updatedTask.status)) {
                         newMetrics.tasks_in_progress = updateOrAddTask(
                             newMetrics.tasks_in_progress,
                             updatedTask
@@ -824,7 +828,7 @@ const TasksToday: React.FC = () => {
                     // Check if task has a due date (and not already in today_plan_tasks or in_progress)
                     if (
                         updatedTask.due_date &&
-                        updatedTask.status !== 'cancelled' &&
+                        !isTaskCancelled(updatedTask.status) &&
                         !newMetrics.today_plan_tasks.some(
                             (t) => t.id === updatedTask.id
                         ) &&
@@ -1080,13 +1084,16 @@ const TasksToday: React.FC = () => {
                         isTaskInProgress(updatedTask.status) ||
                         isTaskPlanned(updatedTask.status) ||
                         isTaskWaiting(updatedTask.status);
-                    if (isInTodayPlan && updatedTask.status !== 'cancelled') {
+                    if (
+                        isInTodayPlan &&
+                        !isTaskCancelled(updatedTask.status)
+                    ) {
                         newMetrics.today_plan_tasks = updateOrAddTask(
                             newMetrics.today_plan_tasks,
                             updatedTask
                         );
                     }
-                    if (updatedTask.status === 'in_progress') {
+                    if (isTaskInProgress(updatedTask.status)) {
                         newMetrics.tasks_in_progress = updateOrAddTask(
                             newMetrics.tasks_in_progress,
                             updatedTask
@@ -1094,7 +1101,7 @@ const TasksToday: React.FC = () => {
                     }
                     if (
                         updatedTask.due_date &&
-                        updatedTask.status !== 'cancelled' &&
+                        !isTaskCancelled(updatedTask.status) &&
                         !newMetrics.today_plan_tasks.some(
                             (t) => t.id === updatedTask.id
                         ) &&

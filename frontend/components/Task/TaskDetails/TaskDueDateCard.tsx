@@ -12,6 +12,7 @@ import {
     getUserTimezone,
 } from '../../../utils/dateUtils';
 import { getCountryFromTimezone } from '../../../utils/localeUtils';
+import { isTaskCompleted } from '../../../constants/taskStatus';
 
 interface TaskDueDateCardProps {
     task: Task;
@@ -87,11 +88,7 @@ const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({
                         today.setHours(0, 0, 0, 0);
                         dueDate.setHours(0, 0, 0, 0);
                         const isCompleted =
-                            task.status === 'done' ||
-                            task.status === 2 ||
-                            task.status === 'archived' ||
-                            task.status === 3 ||
-                            task.completed_at;
+                            isTaskCompleted(task.status) || task.completed_at;
                         return dueDate < today && !isCompleted;
                     })()
                         ? 'border-red-500 dark:border-red-400'
@@ -141,10 +138,7 @@ const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({
                                 today.setHours(0, 0, 0, 0);
                                 dueDate.setHours(0, 0, 0, 0);
                                 const isCompleted =
-                                    task.status === 'done' ||
-                                    task.status === 2 ||
-                                    task.status === 'archived' ||
-                                    task.status === 3 ||
+                                    isTaskCompleted(task.status) ||
                                     task.completed_at;
                                 const overdue = dueDate < today && !isCompleted;
 

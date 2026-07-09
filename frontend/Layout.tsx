@@ -27,6 +27,7 @@ import { isAuthError } from './utils/authUtils';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiPath } from './config/paths';
 import { KeyboardShortcutsConfig } from './utils/keyboardShortcutsService';
+import { TASK_STATUS_STRINGS } from './constants/taskStatus';
 
 interface LayoutProps {
     currentUser: User;
@@ -101,7 +102,7 @@ const Layout: React.FC<LayoutProps> = ({
         try {
             const newTask = await createTaskInStore({
                 name: t('task.newTaskPlaceholder', 'New Task'),
-                status: 'not_started',
+                status: TASK_STATUS_STRINGS.NOT_STARTED,
                 completed_at: null,
             });
 

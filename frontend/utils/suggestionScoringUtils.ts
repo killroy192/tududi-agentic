@@ -1,5 +1,7 @@
 import { Task } from '../entities/Task';
 import { Project } from '../entities/Project';
+import { isTaskNotStarted, TASK_STATUS, TASK_STATUS_STRINGS } from '../constants/taskStatus';
+import { isLowPriority, isMediumPriority, isHighPriority } from '../constants/taskPriority';
 
 export type SuggestionReason =
     | 'due'
@@ -33,18 +35,19 @@ interface AreaStats {
 const FALLBACK_COLOR = '#6b7280';
 
 function getPriorityScore(priority: Task['priority']): number {
-    if (priority === 'high' || priority === 2) return 100;
-    if (priority === 'medium' || priority === 1) return 60;
-    if (priority === 'low' || priority === 0) return 30;
+    if (isHighPriority(priority)) return 100;
+    if (isMediumPriority(priority)) return 60;
+    if (isLowPriority(priority)) return 30;
     return 0;
 }
 
+// Note: this intentionally mirrors legacy behavior rather than isTaskWaiting/isTaskInProgress -
+// the numeric form only ever matched IN_PROGRESS (1), not WAITING (4), for pending status.
 function isPendingStatus(status: Task['status']): boolean {
     return (
-        status === 'not_started' ||
-        status === 'waiting' ||
-        status === (0 as any) ||
-        status === (1 as any)
+        isTaskNotStarted(status) ||
+        status === TASK_STATUS_STRINGS.WAITING ||
+        status === TASK_STATUS.IN_PROGRESS
     );
 }
 
@@ -236,10 +239,7 @@ export function scoreCandidate(
     }
 
     // High priority chip (no score change - score already captured in priority_score)
-    if (
-        reason === 'next_step' &&
-        (task.priority === 'high' || task.priority === 2)
-    ) {
+    if (reason === 'next_step' && isHighPriority(task.priority)) {
         reason = 'high';
     }
 
@@ -317,15 +317,15 @@ export function scoreCandidate(
 
 function hasPriority(task: Task): boolean {
     const p = task.priority;
-    return p === 'high' || p === 2 || p === 'medium' || p === 1 || p === 'low' || p === 0;
+    return isHighPriority(p) || isMediumPriority(p) || isLowPriority(p);
 }
 
 // Returns 0=high, 1=medium, 2=low, 3=none — used as the primary sort key.
 function priorityTier(task: Task): number {
     const p = task.priority;
-    if (p === 'high'   || p === 2) return 0;
-    if (p === 'medium' || p === 1) return 1;
-    if (p === 'low'    || p === 0) return 2;
+    if (isHighPriority(p)) return 0;
+    if (isMediumPriority(p)) return 1;
+    if (isLowPriority(p)) return 2;
     return 3;
 }
 

@@ -28,6 +28,7 @@ import { updateTag, deleteTag } from '../../utils/tagsService';
 import { getApiPath } from '../../config/paths';
 import { getCsrfToken } from '../../utils/csrfService';
 import { SortOption } from '../Shared/SortFilterButton';
+import { isTaskCompleted } from '../../constants/taskStatus';
 import IconSortDropdown from '../Shared/IconSortDropdown';
 
 const TagDetails: React.FC = () => {
@@ -134,20 +135,12 @@ const TagDetails: React.FC = () => {
 
         // Filter by completion status
         if (taskStatusFilter === 'completed') {
-            filteredTasks = tasks.filter(
-                (task: Task) =>
-                    task.status === 'done' ||
-                    task.status === 'archived' ||
-                    task.status === 2 ||
-                    task.status === 3
+            filteredTasks = tasks.filter((task: Task) =>
+                isTaskCompleted(task.status)
             );
         } else if (taskStatusFilter === 'active') {
             filteredTasks = tasks.filter(
-                (task: Task) =>
-                    task.status !== 'done' &&
-                    task.status !== 'archived' &&
-                    task.status !== 2 &&
-                    task.status !== 3
+                (task: Task) => !isTaskCompleted(task.status)
             );
         } else {
             filteredTasks = tasks;

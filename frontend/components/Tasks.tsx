@@ -21,7 +21,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { getApiPath } from '../config/paths';
 import { getCsrfToken } from '../utils/csrfService';
-import { isTaskActive } from '../constants/taskStatus';
+import {
+    isTaskActive,
+    isTaskCompleted,
+    TASK_STATUS_STRINGS,
+} from '../constants/taskStatus';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -88,14 +92,9 @@ const Tasks: React.FC = () => {
         let filteredTasks: Task[] = tasks;
 
         if (status === 'completed') {
-            filteredTasks = filteredTasks.filter((task: Task) => {
-                const isCompleted =
-                    task.status === 'done' ||
-                    task.status === 'archived' ||
-                    task.status === 2 ||
-                    task.status === 3;
-                return isCompleted;
-            });
+            filteredTasks = filteredTasks.filter((task: Task) =>
+                isTaskCompleted(task.status)
+            );
         } else if (status === 'active') {
             filteredTasks = filteredTasks.filter((task: Task) =>
                 isTaskActive(task.status)
@@ -881,7 +880,7 @@ const Tasks: React.FC = () => {
                                     onTaskCreate={async (taskName: string) =>
                                         await handleTaskCreate({
                                             name: taskName,
-                                            status: 'not_started',
+                                            status: TASK_STATUS_STRINGS.NOT_STARTED,
                                         })
                                     }
                                 />
