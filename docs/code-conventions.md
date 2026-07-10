@@ -1,6 +1,6 @@
 # Code Conventions & Patterns
 
-[← Back to Index](../CLAUDE.md)
+
 
 ---
 
@@ -506,4 +506,4 @@ const TaskItem = React.memo(({ task }) => {
 
 ---
 
-[← Back to Index](../CLAUDE.md)
+

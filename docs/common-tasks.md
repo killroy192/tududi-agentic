@@ -1,6 +1,6 @@
 # Common Tasks Reference
 
-[← Back to Index](../CLAUDE.md)
+
 
 Quick reference for frequently performed development tasks with complete file lists.
 
@@ -537,4 +537,4 @@ npm run build                      # Production build
 
 ---
 
-[← Back to Index](../CLAUDE.md)
+

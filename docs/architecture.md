@@ -1,6 +1,6 @@
 # Architecture Overview
 
-[← Back to Index](../CLAUDE.md)
+
 
 ---
 
@@ -324,4 +324,4 @@ Located in `/backend/modules/`, each follows consistent architecture:
 
 ---
 
-[← Back to Index](../CLAUDE.md)
+

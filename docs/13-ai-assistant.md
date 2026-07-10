@@ -1,7 +1,5 @@
 # AI Assistant
 
-[← Back to Index](../CLAUDE.md)
-
 ---
 
 ## Overview

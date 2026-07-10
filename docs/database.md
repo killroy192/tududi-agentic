@@ -1,6 +1,6 @@
 # Database & Migrations
 
-[← Back to Index](../CLAUDE.md)
+
 
 ---
 
@@ -729,4 +729,4 @@ recurring_parent_id: Links recurring instances to original pattern
 
 ---
 
-[← Back to Index](../CLAUDE.md)
+

@@ -1,6 +1,6 @@
 # Backend Module Architecture
 
-[← Back to Index](../CLAUDE.md)
+
 
 ---
 
@@ -646,4 +646,4 @@ When adding a new module, ensure:
 
 ---
 
-[← Back to Index](../CLAUDE.md)
+

@@ -1,7 +1,5 @@
 # Testing Requirements
 
-[← Back to Index](../CLAUDE.md)
-
 ---
 
 ## Test Organization
@@ -520,7 +518,3 @@ npm run format:fix
 ```bash
 npm run pre-push
 ```
-
----
-
-[← Back to Index](../CLAUDE.md)

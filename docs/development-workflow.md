@@ -1,6 +1,6 @@
 # Development Workflow
 
-[← Back to Index](../CLAUDE.md)
+
 
 ---
 
@@ -578,4 +578,4 @@ npm run frontend:dev
 
 ---
 
-[← Back to Index](../CLAUDE.md)
+

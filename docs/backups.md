@@ -1,6 +1,6 @@
 # Backups & Restoration
 
-[← Back to Index](../CLAUDE.md)
+
 
 ---
 
@@ -279,4 +279,3 @@ The automatic backup script is located at `/backend/cmd/start.sh` (lines 9-78).
 
 ---
 
-[← Back to Index](../CLAUDE.md)
