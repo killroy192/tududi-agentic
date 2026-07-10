@@ -49,6 +49,10 @@ export interface Task {
     habit_last_completion_at?: string;
     assigned_to?: string | null;
     involves?: string[];
+    // Tasks that must complete before this task can proceed
+    blockers?: TaskDependencyRef[];
+    // Tasks that this task is blocking
+    blocking?: TaskDependencyRef[];
     // Transient UI field set by suggestion scoring - never persisted or sent to server
     _suggestionMeta?: {
         score: number;
@@ -56,6 +60,14 @@ export interface Task {
         reasonLabel: string;
         reasonColor: string;
     };
+}
+
+// Lightweight reference to a related task used for blocker/blocked relationships
+export interface TaskDependencyRef {
+    uid: string;
+    name: string;
+    status: StatusType | number;
+    due_date?: string | null;
 }
 
 export type StatusType =

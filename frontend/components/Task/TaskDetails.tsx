@@ -12,7 +12,12 @@ import {
     fetchTaskByUid,
     fetchTaskNextIterations,
     fetchSubtasks,
+    fetchTaskDependencies,
+    addTaskDependency,
+    removeTaskDependency,
     TaskIteration,
+    TaskDependencies,
+    TaskDependencyRelationship,
     toggleTaskCompletion,
 } from '../../utils/tasksService';
 import { createProject } from '../../utils/projectsService';
@@ -33,6 +38,7 @@ import {
     TaskDeferUntilCard,
     TaskAttachmentsCard,
     TaskAssignedToCard,
+    TaskDependenciesCard,
 } from './TaskDetails/';
 import TaskAIInsights, { TaskAIInsightsHandle } from '../AI/TaskAIInsights';
 import {
@@ -163,6 +169,10 @@ const TaskDetails: React.FC = () => {
     const [activePill, setActivePill] = useState('overview');
     const [attachmentCount, setAttachmentCount] = useState(0);
     const [hasLoadedSubtasks, setHasLoadedSubtasks] = useState(false);
+    const [dependencies, setDependencies] = useState<TaskDependencies>({
+        blockers: [],
+        blocking: [],
+    });
 
     useEffect(() => {
         setEditedDueDate(task?.due_date || '');
@@ -538,6 +548,68 @@ const TaskDetails: React.FC = () => {
 
         loadAttachmentCount();
     }, [task?.uid]);
+
+    useEffect(() => {
+        const loadDependencies = async () => {
+            if (!task?.uid) {
+                return;
+            }
+            try {
+                const result = await fetchTaskDependencies(task.uid);
+                setDependencies(result);
+            } catch (error) {
+                console.error('Error loading task dependencies:', error);
+            }
+        };
+
+        loadDependencies();
+    }, [task?.uid]);
+
+    const handleAddDependency = async (
+        targetTaskUid: string,
+        relationship: TaskDependencyRelationship
+    ) => {
+        if (!task?.uid) return;
+        try {
+            const result = await addTaskDependency(
+                task.uid,
+                targetTaskUid,
+                relationship
+            );
+            setDependencies(result);
+        } catch (error) {
+            showErrorToast(
+                t(
+                    'task.dependencies.addError',
+                    'Failed to add task dependency.'
+                )
+            );
+            console.error('Error adding task dependency:', error);
+        }
+    };
+
+    const handleRemoveDependency = async (
+        targetTaskUid: string,
+        relationship: TaskDependencyRelationship
+    ) => {
+        if (!task?.uid) return;
+        try {
+            const result = await removeTaskDependency(
+                task.uid,
+                targetTaskUid,
+                relationship
+            );
+            setDependencies(result);
+        } catch (error) {
+            showErrorToast(
+                t(
+                    'task.dependencies.removeError',
+                    'Failed to remove task dependency.'
+                )
+            );
+            console.error('Error removing task dependency:', error);
+        }
+    };
 
     useEffect(() => {
         setHasLoadedSubtasks(false);
@@ -1290,6 +1362,13 @@ const TaskDetails: React.FC = () => {
                                     subtasks={pendingSubtasks}
                                     onSubtasksChange={setPendingSubtasks}
                                     onSave={handleSaveSubtasks}
+                                />
+                                <TaskDependenciesCard
+                                    task={task}
+                                    blockers={dependencies.blockers}
+                                    blocking={dependencies.blocking}
+                                    onAddDependency={handleAddDependency}
+                                    onRemoveDependency={handleRemoveDependency}
                                 />
                                 <TaskRecurrenceCard
                                     task={task}

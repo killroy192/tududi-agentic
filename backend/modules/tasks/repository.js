@@ -24,6 +24,25 @@ class TaskRepository {
         });
     }
 
+    async findByUidWithDependencies(uid, options = {}) {
+        return await this.model.findOne({
+            where: { uid },
+            include: [
+                {
+                    model: this.model,
+                    as: 'BlockerTasks',
+                    attributes: ['id', 'uid', 'name', 'status', 'due_date'],
+                },
+                {
+                    model: this.model,
+                    as: 'BlockingTasks',
+                    attributes: ['id', 'uid', 'name', 'status', 'due_date'],
+                },
+            ],
+            ...options,
+        });
+    }
+
     async findRecurringChildren(recurringParentId, options = {}) {
         const { where = {}, ...restOptions } = options;
         return await this.model.findAll({

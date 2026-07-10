@@ -80,6 +80,7 @@ const CalDAVRemoteCalendar = require('./caldav_remote_calendar')(sequelize);
 const CalendarToken = require('./calendar_token')(sequelize);
 const Goal = require('./goal')(sequelize);
 const Person = require('./person')(sequelize);
+const TaskDependency = require('./task_dependency')(sequelize);
 
 User.hasMany(Area, { foreignKey: 'user_id' });
 Area.belongsTo(User, { foreignKey: 'user_id' });
@@ -155,6 +156,39 @@ Tag.belongsToMany(Task, {
     through: 'tasks_tags',
     foreignKey: 'tag_id',
     otherKey: 'task_id',
+});
+
+// Task dependency (blocker/blocked) associations
+Task.hasMany(TaskDependency, {
+    foreignKey: 'blocker_task_id',
+    as: 'BlockingDependencies',
+});
+Task.hasMany(TaskDependency, {
+    foreignKey: 'blocked_task_id',
+    as: 'BlockedByDependencies',
+});
+TaskDependency.belongsTo(Task, {
+    foreignKey: 'blocker_task_id',
+    as: 'BlockerTask',
+});
+TaskDependency.belongsTo(Task, {
+    foreignKey: 'blocked_task_id',
+    as: 'BlockedTask',
+});
+
+// Tasks this task blocks (this task is the blocker)
+Task.belongsToMany(Task, {
+    through: TaskDependency,
+    foreignKey: 'blocker_task_id',
+    otherKey: 'blocked_task_id',
+    as: 'BlockingTasks',
+});
+// Tasks blocking this task (this task is blocked)
+Task.belongsToMany(Task, {
+    through: TaskDependency,
+    foreignKey: 'blocked_task_id',
+    otherKey: 'blocker_task_id',
+    as: 'BlockerTasks',
 });
 
 Note.belongsToMany(Tag, {
@@ -329,4 +363,5 @@ module.exports = {
     CalDAVRemoteCalendar,
     CalendarToken,
     Person,
+    TaskDependency,
 };

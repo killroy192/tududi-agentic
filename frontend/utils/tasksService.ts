@@ -1,5 +1,5 @@
 import { Metrics } from '../entities/Metrics';
-import { Task } from '../entities/Task';
+import { Task, TaskDependencyRef } from '../entities/Task';
 import {
     handleAuthResponse,
     getDefaultHeaders,
@@ -223,4 +223,70 @@ export const fetchTaskNextIterations = async (
     await handleAuthResponse(response, 'Failed to fetch task iterations.');
     const result = await response.json();
     return result.iterations || [];
+};
+
+export type TaskDependencyRelationship = 'blocks' | 'blocked_by';
+
+export interface TaskDependencies {
+    blockers: TaskDependencyRef[];
+    blocking: TaskDependencyRef[];
+}
+
+export const fetchTaskDependencies = async (
+    taskUid: string
+): Promise<TaskDependencies> => {
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(taskUid)}/dependencies`),
+        {
+            credentials: 'include',
+            headers: getDefaultHeaders(),
+        }
+    );
+
+    await handleAuthResponse(response, 'Failed to fetch task dependencies.');
+    return await response.json();
+};
+
+export const addTaskDependency = async (
+    taskUid: string,
+    targetTaskUid: string,
+    relationship: TaskDependencyRelationship
+): Promise<TaskDependencies> => {
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(taskUid)}/dependencies`),
+        {
+            method: 'POST',
+            credentials: 'include',
+            headers: await getPostHeadersWithCsrf(),
+            body: JSON.stringify({
+                target_task_uid: targetTaskUid,
+                relationship,
+            }),
+        }
+    );
+
+    await handleAuthResponse(response, 'Failed to add task dependency.');
+    return await response.json();
+};
+
+export const removeTaskDependency = async (
+    taskUid: string,
+    targetTaskUid: string,
+    relationship: TaskDependencyRelationship
+): Promise<TaskDependencies> => {
+    const response = await fetch(
+        getApiPath(
+            `task/${encodeURIComponent(taskUid)}/dependencies/${encodeURIComponent(
+                targetTaskUid
+            )}?relationship=${relationship}`
+        ),
+        {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: await getPostHeadersWithCsrf(),
+        }
+    );
+
+    await handleAuthResponse(response, 'Failed to remove task dependency.');
+    return await response.json();
 };

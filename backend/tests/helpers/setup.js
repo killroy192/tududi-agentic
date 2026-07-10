@@ -28,6 +28,7 @@ beforeEach(async () => {
             'notes',
             'inbox_items',
             'task_events',
+            'task_dependencies',
             'tasks_tags',
             'notes_tags',
             'projects_tags',

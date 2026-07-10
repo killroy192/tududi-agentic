@@ -8,6 +8,7 @@ const {
     getTaskTodayMoveCounts,
 } = require('../taskEventService');
 const taskRepository = require('../repository');
+const { getDependencies } = require('../operations/dependencies');
 
 // Sort tags alphabetically by name (case-insensitive)
 function sortTags(tags) {
@@ -77,6 +78,11 @@ async function serializeTask(
         recurringParentUid = parentTask?.uid || null;
     }
 
+    let dependencies = null;
+    if (options.includeDependencies && !taskJson.is_virtual_occurrence) {
+        dependencies = await getDependencies(task.id);
+    }
+
     return {
         ...taskWithoutSubtasks,
         name: displayName,
@@ -129,6 +135,12 @@ async function serializeTask(
                 : new Date(task.completed_at).toISOString()
             : null,
         today_move_count: todayMoveCount,
+        ...(dependencies
+            ? {
+                  blockers: dependencies.blockers,
+                  blocking: dependencies.blocking,
+              }
+            : {}),
     };
 }
 

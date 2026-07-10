@@ -74,6 +74,12 @@ const { getTaskMetrics } = require('./queries/metrics-computation');
 const { getSubtasks } = require('./operations/subtasks');
 
 const {
+    addDependency,
+    removeDependency,
+    getDependencies,
+} = require('./operations/dependencies');
+
+const {
     requireTaskReadAccess,
     requireTaskWriteAccess,
 } = require('./middleware/access');
@@ -109,7 +115,7 @@ async function getRecurringParentEndDate(recurringParentId, userId) {
     return parent.recurrence_end_date;
 }
 
-function expandRecurringTasks(
+async function expandRecurringTasks(
     tasks,
     maxDays = 7,
     statusFilter = null,
@@ -119,7 +125,7 @@ function expandRecurringTasks(
     const moment = require('moment-timezone');
     const now = moment.tz(userTimezone).startOf('day').toDate();
 
-    tasks.forEach((task) => {
+    for (const task of tasks) {
         const isRecurring =
             task.recurrence_type &&
             task.recurrence_type !== 'none' &&
@@ -127,7 +133,7 @@ function expandRecurringTasks(
 
         if (!isRecurring) {
             expandedTasks.push(task);
-            return;
+            continue;
         }
 
         console.log('[DEBUG] Processing recurring task:', {
@@ -149,7 +155,7 @@ function expandRecurringTasks(
                 '[DEBUG] Task is completed and filter is completed, showing actual task'
             );
             expandedTasks.push(task);
-            return;
+            continue;
         }
 
         let startFrom = task.due_date ? new Date(task.due_date) : now;
@@ -187,6 +193,20 @@ function expandRecurringTasks(
         );
         console.log('[DEBUG] Generated occurrences:', occurrences.length);
 
+        // Recurring templates can only be blockers (never blocked), so
+        // virtual occurrences inherit the template's "blocking" relationships
+        // for display purposes only.
+        let blocking = [];
+        try {
+            const dependencies = await getDependencies(task.id);
+            blocking = dependencies.blocking;
+        } catch (dependencyError) {
+            logError(
+                'Error loading blocking dependencies for recurring task:',
+                dependencyError
+            );
+        }
+
         occurrences.forEach((occurrence, index) => {
             const virtualTask = {
                 ...(task.toJSON ? task.toJSON() : task),
@@ -194,10 +214,11 @@ function expandRecurringTasks(
                 is_virtual_occurrence: true,
                 occurrence_index: index,
                 virtual_id: `${task.id}_occurrence_${index}`,
+                blocking,
             };
             expandedTasks.push(virtualTask);
         });
-    });
+    }
 
     return expandedTasks;
 }
@@ -269,7 +290,7 @@ router.get('/tasks', async (req, res) => {
             );
             const days = maxDays ? parseInt(maxDays, 10) : 7;
             const safeTimezone = getSafeTimezone(timezone);
-            tasks = expandRecurringTasks(
+            tasks = await expandRecurringTasks(
                 tasks,
                 days,
                 req.query.status,
@@ -510,7 +531,7 @@ router.post('/task', async (req, res) => {
         const serializedTask = await serializeTask(
             taskWithAssociations,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            { skipDisplayNameTransform: true, includeDependencies: true }
         );
 
         res.set({
@@ -546,7 +567,7 @@ router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
         const serializedTask = await serializeTask(
             task,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            { skipDisplayNameTransform: true, includeDependencies: true }
         );
 
         res.json(serializedTask);
@@ -896,7 +917,7 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
         const serializedTask = await serializeTask(
             taskWithAssociations,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            { skipDisplayNameTransform: true, includeDependencies: true }
         );
 
         res.json(serializedTask);
@@ -965,6 +986,13 @@ router.delete('/task/:uid', requireTaskWriteAccess, async (req, res) => {
             await sequelize.query('DELETE FROM tasks_tags WHERE task_id = ?', {
                 replacements: [taskId],
             });
+
+            await sequelize.query(
+                'DELETE FROM task_dependencies WHERE blocker_task_id = ? OR blocked_task_id = ?',
+                {
+                    replacements: [taskId, taskId],
+                }
+            );
 
             await taskRepository.clearRecurringParent(taskId);
 
@@ -1046,6 +1074,118 @@ router.get('/task/:uid/next-iterations', async (req, res) => {
         res.status(500).json({ error: 'Failed to get next iterations' });
     }
 });
+
+router.get(
+    '/task/:uid/dependencies',
+    requireTaskReadAccess,
+    async (req, res) => {
+        try {
+            const task = await taskRepository.findByUid(req.params.uid);
+
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found.' });
+            }
+
+            const dependencies = await getDependencies(task.id);
+            res.json(dependencies);
+        } catch (error) {
+            logError('Error fetching task dependencies:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+router.post(
+    '/task/:uid/dependencies',
+    requireTaskWriteAccess,
+    async (req, res) => {
+        try {
+            const { target_task_uid, relationship } = req.body;
+
+            if (!target_task_uid || !isValidUid(target_task_uid)) {
+                return res
+                    .status(400)
+                    .json({ error: 'A valid target_task_uid is required.' });
+            }
+
+            if (!['blocks', 'blocked_by'].includes(relationship)) {
+                return res.status(400).json({
+                    error:
+                        "relationship must be either 'blocks' or 'blocked_by'.",
+                });
+            }
+
+            const task = await taskRepository.findByUid(req.params.uid);
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found.' });
+            }
+
+            const targetTask = await taskRepository.findByUid(
+                target_task_uid
+            );
+            if (!targetTask) {
+                return res
+                    .status(404)
+                    .json({ error: 'Target task not found.' });
+            }
+
+            const [blockerId, blockedId] =
+                relationship === 'blocks'
+                    ? [task.id, targetTask.id]
+                    : [targetTask.id, task.id];
+
+            await addDependency(blockerId, blockedId, req.currentUser.id);
+
+            const dependencies = await getDependencies(task.id);
+            res.status(201).json(dependencies);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+);
+
+router.delete(
+    '/task/:uid/dependencies/:targetTaskUid',
+    requireTaskWriteAccess,
+    async (req, res) => {
+        try {
+            const { relationship } = req.query;
+
+            if (!['blocks', 'blocked_by'].includes(relationship)) {
+                return res.status(400).json({
+                    error:
+                        "relationship must be either 'blocks' or 'blocked_by'.",
+                });
+            }
+
+            const task = await taskRepository.findByUid(req.params.uid);
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found.' });
+            }
+
+            const targetTask = await taskRepository.findByUid(
+                req.params.targetTaskUid
+            );
+            if (!targetTask) {
+                return res
+                    .status(404)
+                    .json({ error: 'Target task not found.' });
+            }
+
+            const [blockerId, blockedId] =
+                relationship === 'blocks'
+                    ? [task.id, targetTask.id]
+                    : [targetTask.id, task.id];
+
+            await removeDependency(blockerId, blockedId, req.currentUser.id);
+
+            const dependencies = await getDependencies(task.id);
+            res.json(dependencies);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+);
 
 // Mount sub-routers for task-related routes
 router.use(attachmentsRouter);
