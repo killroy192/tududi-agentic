@@ -69,26 +69,51 @@ For the thinking behind tududi, read:
     - Background automatic synchronization
     - HTTP Basic Authentication for CalDAV clients
 
-## 🛠️ Getting Started
+## 🚧 Development
 
-Get up and running quickly with our comprehensive documentation:
-
-### Quick Start
-
-```bash
-docker pull chrisvel/tududi:latest
-
-docker run \
-  -e TUDUDI_USER_EMAIL=admin@example.com \
-  -e TUDUDI_USER_PASSWORD=your-secure-password \
-  -e TUDUDI_SESSION_SECRET=$(openssl rand -hex 64) \
-  -v ~/tududi_db:/app/backend/db \
-  -v ~/tududi_uploads:/app/backend/uploads \
-  -p 3002:3002 \
-  -d chrisvel/tududi:latest
+```sh
+npm i
+cp backend/.env.example backend/.env   # optional now — auto-created on start
+# edit backend/.env: TUDUDI_USER_EMAIL, TUDUDI_USER_PASSWORD, TUDUDI_SESSION_SECRET
+npm run start
+# Every day after
+npm run start
+# Optional demo data
+npm run db:seed
 ```
 
-Navigate to [http://localhost:3002](http://localhost:3002) and login with your credentials.
+Want to contribute or run Tududi from source? Check out our comprehensive development guide:
+
+**[Development Setup Guide](https://docs.tududi.com/#-development-setup)**
+
+Tududi provides a comprehensive REST API for integration with external tools and automation workflows.
+
+**Base URL:** `http://localhost:8080/api/v1`
+
+**Key Features:**
+- Complete CRUD operations for tasks, projects, notes, and areas
+- Personal API keys for secure access
+- Swagger documentation available at `/api-docs` (requires authentication)
+- Support for recurring tasks, subtasks, and tag management
+- Real-time task metrics and productivity insights
+
+**Authentication:** Uses session cookies or Bearer token authentication. Generate personal API keys through the web interface for programmatic access.
+
+**Quick Example:**
+```bash
+# Get all tasks
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+     http://localhost:3002/api/v1/tasks
+
+# Create a new task
+curl -X POST \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"name":"Complete API documentation","priority":"medium"}' \
+     http://localhost:3002/api/v1/task
+```
+
+For full API documentation, visit `/api-docs` after authentication or check the Swagger schema definitions in [`backend/config/swagger.js`](backend/config/swagger.js).
 
 ### Reverse Proxy Setup
 
@@ -195,57 +220,6 @@ Connect Tududi to external CalDAV servers like Nextcloud, Baikal, or other CalDA
 For detailed setup instructions, configuration options, and getting started guides, visit:
 
 **[docs.tududi.com](https://docs.tududi.com)**
-
-- **[Installation Guide](https://docs.tududi.com/getting-started/installation)** - Docker, development setup, and deployment
-- **[Configuration](https://docs.tududi.com/getting-started/configuration)** - Environment variables and advanced settings
-- **[First Steps](https://docs.tududi.com/getting-started/first-steps)** - Learn the basics and get productive
-- **[Project Sharing](https://docs.tududi.com/features/project-sharing)** - Collaborate with your team
-
-## 🚧 Development
-
-```sh
-npm i
-cp backend/.env.example backend/.env   # optional now — auto-created on start
-# edit backend/.env: TUDUDI_USER_EMAIL, TUDUDI_USER_PASSWORD, TUDUDI_SESSION_SECRET
-npm run start
-# Every day after
-npm run start
-# Optional demo data
-npm run db:seed
-```
-
-Want to contribute or run Tududi from source? Check out our comprehensive development guide:
-
-**[Development Setup Guide](https://docs.tududi.com/#-development-setup)**
-
-Tududi provides a comprehensive REST API for integration with external tools and automation workflows.
-
-**Base URL:** `http://localhost:8080/api/v1`
-
-**Key Features:**
-- Complete CRUD operations for tasks, projects, notes, and areas
-- Personal API keys for secure access
-- Swagger documentation available at `/api-docs` (requires authentication)
-- Support for recurring tasks, subtasks, and tag management
-- Real-time task metrics and productivity insights
-
-**Authentication:** Uses session cookies or Bearer token authentication. Generate personal API keys through the web interface for programmatic access.
-
-**Quick Example:**
-```bash
-# Get all tasks
-curl -H "Authorization: Bearer YOUR_API_KEY" \
-     http://localhost:3002/api/v1/tasks
-
-# Create a new task
-curl -X POST \
-     -H "Authorization: Bearer YOUR_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"name":"Complete API documentation","priority":"medium"}' \
-     http://localhost:3002/api/v1/task
-```
-
-For full API documentation, visit `/api-docs` after authentication or check the Swagger schema definitions in [`backend/config/swagger.js`](backend/config/swagger.js).
 
 # Screenshots
 
