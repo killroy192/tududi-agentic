@@ -63,7 +63,8 @@ const NoteFocusMode: React.FC<NoteFocusModeProps> = ({
             }
         };
         document.addEventListener('keydown', handleKeyDown, true);
-        return () => document.removeEventListener('keydown', handleKeyDown, true);
+        return () =>
+            document.removeEventListener('keydown', handleKeyDown, true);
     }, [isEditing, onExitEditing, onClose]);
 
     useEffect(() => {
@@ -96,7 +97,11 @@ const NoteFocusMode: React.FC<NoteFocusModeProps> = ({
                             {saveStatus === 'saving' && (
                                 <span
                                     className="text-blue-500 dark:text-blue-400 italic"
-                                    style={mutedColor ? { color: mutedColor } : undefined}
+                                    style={
+                                        mutedColor
+                                            ? { color: mutedColor }
+                                            : undefined
+                                    }
                                 >
                                     Saving...
                                 </span>
@@ -104,7 +109,11 @@ const NoteFocusMode: React.FC<NoteFocusModeProps> = ({
                             {saveStatus === 'saved' && (
                                 <span
                                     className="text-gray-400 dark:text-gray-500"
-                                    style={mutedColor ? { color: mutedColor } : undefined}
+                                    style={
+                                        mutedColor
+                                            ? { color: mutedColor }
+                                            : undefined
+                                    }
                                 >
                                     Saved
                                 </span>
@@ -112,7 +121,11 @@ const NoteFocusMode: React.FC<NoteFocusModeProps> = ({
                             {saveStatus === 'unsaved' && (
                                 <span
                                     className="text-amber-600 dark:text-amber-400"
-                                    style={mutedColor ? { color: mutedColor } : undefined}
+                                    style={
+                                        mutedColor
+                                            ? { color: mutedColor }
+                                            : undefined
+                                    }
                                 >
                                     Unsaved
                                 </span>
@@ -160,7 +173,9 @@ const NoteFocusMode: React.FC<NoteFocusModeProps> = ({
                                 }
                                 placeholder={t('notes.contentPlaceholderFocus')}
                                 className="w-full h-full min-h-[60vh] bg-transparent text-gray-900 dark:text-gray-100 border-none focus:outline-none focus:ring-0 resize-none text-lg leading-relaxed"
-                                style={textColor ? { color: textColor } : undefined}
+                                style={
+                                    textColor ? { color: textColor } : undefined
+                                }
                             />
                         </>
                     ) : (
@@ -181,7 +196,9 @@ const NoteFocusMode: React.FC<NoteFocusModeProps> = ({
                             <div
                                 onClick={onEditNote}
                                 className="cursor-pointer text-gray-900 dark:text-gray-100 text-lg leading-relaxed"
-                                style={textColor ? { color: textColor } : undefined}
+                                style={
+                                    textColor ? { color: textColor } : undefined
+                                }
                                 title={t('notes.clickToEdit')}
                             >
                                 <MarkdownRenderer

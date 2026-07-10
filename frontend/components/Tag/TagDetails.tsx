@@ -59,13 +59,9 @@ const TagDetails: React.FC = () => {
         if (!hasTag) return false;
 
         if (taskStatusFilter === 'active') {
-            return (
-                project.status !== 'done' && project.status !== 'cancelled'
-            );
+            return project.status !== 'done' && project.status !== 'cancelled';
         } else if (taskStatusFilter === 'completed') {
-            return (
-                project.status === 'done' || project.status === 'cancelled'
-            );
+            return project.status === 'done' || project.status === 'cancelled';
         }
         return true;
     });
@@ -114,7 +110,8 @@ const TagDetails: React.FC = () => {
 
     // State for note deletion
     const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
-    const [isNoteConfirmDialogOpen, setIsNoteConfirmDialogOpen] = useState<boolean>(false);
+    const [isNoteConfirmDialogOpen, setIsNoteConfirmDialogOpen] =
+        useState<boolean>(false);
 
     const { showSuccessToast, showErrorToast } = useToast();
     const navigate = useNavigate();
@@ -337,6 +334,10 @@ const TagDetails: React.FC = () => {
         }
     };
 
+    const handleTaskDuplicated = (newTask: Task) => {
+        setTasks((prevTasks) => [newTask, ...prevTasks]);
+    };
+
     const handleTaskCompletionToggle = (updatedTask: Task) => {
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
@@ -464,27 +465,48 @@ const TagDetails: React.FC = () => {
                 className="rounded-xl mb-8 overflow-hidden"
                 style={tag.color ? { backgroundColor: tag.color } : undefined}
             >
-                <div className={`p-6 ${tag.color ? '' : 'bg-gray-50 dark:bg-gray-900 rounded-xl'}`}>
+                <div
+                    className={`p-6 ${tag.color ? '' : 'bg-gray-50 dark:bg-gray-900 rounded-xl'}`}
+                >
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                            <p className={`text-xs font-medium uppercase tracking-widest mb-1 ${
-                                tag.color ? 'text-white/60' : 'text-gray-400 dark:text-gray-500'
-                            }`}>
+                            <p
+                                className={`text-xs font-medium uppercase tracking-widest mb-1 ${
+                                    tag.color
+                                        ? 'text-white/60'
+                                        : 'text-gray-400 dark:text-gray-500'
+                                }`}
+                            >
                                 {tag.tag_type === 'system'
                                     ? t('tags.systemTag', 'System Tag')
                                     : t('tags.tag', 'Tag')}
                             </p>
-                            <h1 className={`text-3xl font-light ${
-                                tag.color ? 'text-white' : 'text-gray-900 dark:text-gray-100'
-                            }`}>
+                            <h1
+                                className={`text-3xl font-light ${
+                                    tag.color
+                                        ? 'text-white'
+                                        : 'text-gray-900 dark:text-gray-100'
+                                }`}
+                            >
                                 {tag.name}
                             </h1>
-                            <div className={`mt-3 flex gap-4 text-xs ${
-                                tag.color ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
-                            }`}>
-                                <span>{tasks.length} {t('tasks.title', 'tasks')}</span>
-                                <span>{notes.length} {t('notes.title', 'notes')}</span>
-                                <span>{projects.length} {t('projects.title', 'projects')}</span>
+                            <div
+                                className={`mt-3 flex gap-4 text-xs ${
+                                    tag.color
+                                        ? 'text-white/70'
+                                        : 'text-gray-500 dark:text-gray-400'
+                                }`}
+                            >
+                                <span>
+                                    {tasks.length} {t('tasks.title', 'tasks')}
+                                </span>
+                                <span>
+                                    {notes.length} {t('notes.title', 'notes')}
+                                </span>
+                                <span>
+                                    {projects.length}{' '}
+                                    {t('projects.title', 'projects')}
+                                </span>
                             </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
@@ -510,20 +532,31 @@ const TagDetails: React.FC = () => {
                                                 ? 'text-white/80 hover:text-white hover:bg-white/10'
                                                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
                                         }`}
-                                        aria-label={t('tags.editTagAriaLabel', { tagName: tag.name })}
-                                        title={t('tags.editTagTitle', { tagName: tag.name })}
+                                        aria-label={t('tags.editTagAriaLabel', {
+                                            tagName: tag.name,
+                                        })}
+                                        title={t('tags.editTagTitle', {
+                                            tagName: tag.name,
+                                        })}
                                     >
                                         <PencilSquareIcon className="h-5 w-5" />
                                     </button>
                                     <button
-                                        onClick={() => setIsConfirmDialogOpen(true)}
+                                        onClick={() =>
+                                            setIsConfirmDialogOpen(true)
+                                        }
                                         className={`p-2 rounded-lg transition-colors ${
                                             tag.color
                                                 ? 'text-white/80 hover:text-white hover:bg-white/10'
                                                 : 'text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                                         }`}
-                                        aria-label={t('tags.deleteTagAriaLabel', { tagName: tag.name })}
-                                        title={t('tags.deleteTagTitle', { tagName: tag.name })}
+                                        aria-label={t(
+                                            'tags.deleteTagAriaLabel',
+                                            { tagName: tag.name }
+                                        )}
+                                        title={t('tags.deleteTagTitle', {
+                                            tagName: tag.name,
+                                        })}
                                     >
                                         <TrashIcon className="h-5 w-5" />
                                     </button>
@@ -546,7 +579,10 @@ const TagDetails: React.FC = () => {
                     <MagnifyingGlassIcon className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
                     <input
                         type="text"
-                        placeholder={t('tasks.searchPlaceholder', 'Search tasks...')}
+                        placeholder={t(
+                            'tasks.searchPlaceholder',
+                            'Search tasks...'
+                        )}
                         value={taskSearchQuery}
                         onChange={(e) => setTaskSearchQuery(e.target.value)}
                         className="w-full bg-transparent border-none focus:ring-0 focus:outline-none dark:text-white"
@@ -554,291 +590,290 @@ const TagDetails: React.FC = () => {
                 </div>
             </div>
 
-                {/* Tasks Section */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-light text-gray-700 dark:text-gray-300">
-                            {t('tasks.title')} ({displayTasks.length})
-                        </h3>
-                        <IconSortDropdown
-                            options={sortOptions}
-                            value={orderBy}
-                            onChange={handleSortChange}
-                            ariaLabel={t('tasks.sortTasks', 'Sort tasks')}
-                            title={t('tasks.sortTasks', 'Sort tasks')}
-                            dropdownLabel={t('tasks.sortBy', 'Sort by')}
-                            footerContent={
-                                <div className="space-y-3">
-                                    <div>
-                                        <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-                                            {t('tasks.groupBy', 'Group by')}
-                                        </div>
-                                        <div className="py-1">
-                                            {['none', 'project'].map((val) => (
+            {/* Tasks Section */}
+            <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-light text-gray-700 dark:text-gray-300">
+                        {t('tasks.title')} ({displayTasks.length})
+                    </h3>
+                    <IconSortDropdown
+                        options={sortOptions}
+                        value={orderBy}
+                        onChange={handleSortChange}
+                        ariaLabel={t('tasks.sortTasks', 'Sort tasks')}
+                        title={t('tasks.sortTasks', 'Sort tasks')}
+                        dropdownLabel={t('tasks.sortBy', 'Sort by')}
+                        footerContent={
+                            <div className="space-y-3">
+                                <div>
+                                    <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                                        {t('tasks.groupBy', 'Group by')}
+                                    </div>
+                                    <div className="py-1">
+                                        {['none', 'project'].map((val) => (
+                                            <button
+                                                key={val}
+                                                onClick={() =>
+                                                    handleGroupByChange(
+                                                        val as
+                                                            | 'none'
+                                                            | 'project'
+                                                    )
+                                                }
+                                                className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                                                    groupBy === val
+                                                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                }`}
+                                            >
+                                                <span>
+                                                    {val === 'project'
+                                                        ? t(
+                                                              'tasks.groupByProject',
+                                                              'Project'
+                                                          )
+                                                        : t(
+                                                              'tasks.grouping.none',
+                                                              'None'
+                                                          )}
+                                                </span>
+                                                {groupBy === val && (
+                                                    <CheckIcon className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-gray-200 dark:border-gray-700">
+                                        {t('tasks.show', 'Show')}
+                                    </div>
+                                    <div className="py-1 space-y-1">
+                                        {[
+                                            {
+                                                key: 'active',
+                                                label: t('tasks.open', 'Open'),
+                                            },
+                                            {
+                                                key: 'all',
+                                                label: t('tasks.all', 'All'),
+                                            },
+                                            {
+                                                key: 'completed',
+                                                label: t(
+                                                    'tasks.completed',
+                                                    'Completed'
+                                                ),
+                                            },
+                                        ].map((opt) => {
+                                            const isActive =
+                                                taskStatusFilter === opt.key;
+                                            return (
                                                 <button
-                                                    key={val}
+                                                    key={opt.key}
+                                                    type="button"
                                                     onClick={() =>
-                                                        handleGroupByChange(
-                                                            val as
-                                                                | 'none'
-                                                                | 'project'
+                                                        handleStatusChange(
+                                                            opt.key as
+                                                                | 'all'
+                                                                | 'active'
+                                                                | 'completed'
                                                         )
                                                     }
                                                     className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
-                                                        groupBy === val
+                                                        isActive
                                                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                                                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                                     }`}
                                                 >
-                                                    <span>
-                                                        {val === 'project'
-                                                            ? t(
-                                                                  'tasks.groupByProject',
-                                                                  'Project'
-                                                              )
-                                                            : t(
-                                                                  'tasks.grouping.none',
-                                                                  'None'
-                                                              )}
-                                                    </span>
-                                                    {groupBy === val && (
+                                                    <span>{opt.label}</span>
+                                                    {isActive && (
                                                         <CheckIcon className="h-4 w-4" />
                                                     )}
                                                 </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-gray-200 dark:border-gray-700">
-                                            {t('tasks.show', 'Show')}
-                                        </div>
-                                        <div className="py-1 space-y-1">
-                                            {[
-                                                {
-                                                    key: 'active',
-                                                    label: t(
-                                                        'tasks.open',
-                                                        'Open'
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'all',
-                                                    label: t(
-                                                        'tasks.all',
-                                                        'All'
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'completed',
-                                                    label: t(
-                                                        'tasks.completed',
-                                                        'Completed'
-                                                    ),
-                                                },
-                                            ].map((opt) => {
-                                                const isActive =
-                                                    taskStatusFilter ===
-                                                    opt.key;
-                                                return (
-                                                    <button
-                                                        key={opt.key}
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleStatusChange(
-                                                                opt.key as
-                                                                    | 'all'
-                                                                    | 'active'
-                                                                    | 'completed'
-                                                            )
-                                                        }
-                                                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
-                                                            isActive
-                                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                        }`}
-                                                    >
-                                                        <span>{opt.label}</span>
-                                                        {isActive && (
-                                                            <CheckIcon className="h-4 w-4" />
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-gray-200 dark:border-gray-700">
-                                            {t('tasks.direction', 'Direction')}
-                                        </div>
-                                        <div className="py-1">
-                                            {[
-                                                {
-                                                    key: 'asc',
-                                                    label: t(
-                                                        'tasks.ascending',
-                                                        'Ascending'
-                                                    ),
-                                                },
-                                                {
-                                                    key: 'desc',
-                                                    label: t(
-                                                        'tasks.descending',
-                                                        'Descending'
-                                                    ),
-                                                },
-                                            ].map((dir) => {
-                                                const currentDirection =
-                                                    orderBy.split(':')[1] ||
-                                                    'asc';
-                                                const isActive =
-                                                    currentDirection ===
-                                                    dir.key;
-                                                return (
-                                                    <button
-                                                        key={dir.key}
-                                                        onClick={() => {
-                                                            const [field] =
-                                                                orderBy.split(
-                                                                    ':'
-                                                                );
-                                                            handleSortChange(
-                                                                `${field}:${dir.key}`
-                                                            );
-                                                        }}
-                                                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
-                                                            isActive
-                                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                        }`}
-                                                    >
-                                                        <span>{dir.label}</span>
-                                                        {isActive && (
-                                                            <CheckIcon className="h-4 w-4" />
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                            }
-                        />
-                    </div>
-                    {displayTasks.length > 0 ? (
-                        groupBy === 'project' ? (
-                            <GroupedTaskList
-                                tasks={displayTasks}
-                                groupBy="project"
-                                onTaskUpdate={handleTaskUpdate}
-                                onTaskCompletionToggle={
-                                    handleTaskCompletionToggle
-                                }
-                                onTaskDelete={handleTaskDelete}
-                                projects={projectLookupList}
-                                hideProjectName={false}
-                                onToggleToday={undefined}
-                                showCompletedTasks={showCompletedTasks}
-                                searchQuery={taskSearchQuery}
-                            />
-                        ) : (
-                            <TaskList
-                                tasks={displayTasks}
-                                onTaskUpdate={handleTaskUpdate}
-                                onTaskCompletionToggle={
-                                    handleTaskCompletionToggle
-                                }
-                                onTaskDelete={handleTaskDelete}
-                                projects={projectLookupList}
-                                hideProjectName={false}
-                                onToggleToday={undefined}
-                                showCompletedTasks={showCompletedTasks}
-                            />
-                        )
-                    ) : (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {t('tasks.noTasksAvailable', 'No tasks available.')}
-                        </p>
-                    )}
-                </div>
-
-                {/* Notes Section */}
-                {notes.length > 0 && (
-                    <div className="mb-8">
-                        <h3 className="text-lg font-light text-gray-700 dark:text-gray-300 mb-4">
-                            {t('notes.title')} ({notes.length})
-                        </h3>
-                        <ul className="space-y-1">
-                            {notes.map((note) => {
-                                const noteTags = note.tags || note.Tags || [];
-                                const noteProject = note.project || note.Project;
-                                const hasMetadata = noteProject || noteTags.length > 0;
-
-                                return (
-                                    <li
-                                        key={note.uid}
-                                        className="bg-white dark:bg-gray-900 shadow rounded-lg px-4 py-2 flex justify-between items-start"
-                                        onMouseEnter={() =>
-                                            setHoveredNoteId(note.uid || null)
-                                        }
-                                        onMouseLeave={() => setHoveredNoteId(null)}
-                                    >
-                                        <div className="flex-grow overflow-hidden pr-4">
-                                            {/* Note Title */}
-                                            <Link
-                                                to={
-                                                    note.uid
-                                                        ? `/notes/${note.uid}-${note.title
-                                                              .toLowerCase()
-                                                              .replace(
-                                                                  /[^a-z0-9]+/g,
-                                                                  '-'
-                                                              )
-                                                              .replace(
-                                                                  /^-|-$/g,
-                                                                  ''
-                                                              )}`
-                                                        : '#'
-                                                }
-                                                className="text-md font-medium text-gray-900 dark:text-gray-300 hover:underline block"
-                                            >
-                                                {note.title}
-                                            </Link>
-                                            {/* Project and Tags below title - matching TaskHeader style */}
-                                            {hasMetadata && (
-                                                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {/* Project */}
-                                                    {noteProject && (
-                                                        <div className="flex items-center">
-                                                            <FolderOutlineIcon className="h-3 w-3 mr-1" />
-                                                            <Link
-                                                                to={
-                                                                    noteProject.uid
-                                                                        ? `/project/${noteProject.uid}-${noteProject.name
-                                                                              .toLowerCase()
-                                                                              .replace(
-                                                                                  /[^a-z0-9]+/g,
-                                                                                  '-'
-                                                                              )
-                                                                              .replace(
-                                                                                  /^-|-$/g,
-                                                                                  ''
-                                                                              )}`
-                                                                        : `/project/${noteProject.id}`
-                                                                }
-                                                                className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            >
-                                                                {noteProject.name}
-                                                            </Link>
-                                                        </div>
+                                <div>
+                                    <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-gray-200 dark:border-gray-700">
+                                        {t('tasks.direction', 'Direction')}
+                                    </div>
+                                    <div className="py-1">
+                                        {[
+                                            {
+                                                key: 'asc',
+                                                label: t(
+                                                    'tasks.ascending',
+                                                    'Ascending'
+                                                ),
+                                            },
+                                            {
+                                                key: 'desc',
+                                                label: t(
+                                                    'tasks.descending',
+                                                    'Descending'
+                                                ),
+                                            },
+                                        ].map((dir) => {
+                                            const currentDirection =
+                                                orderBy.split(':')[1] || 'asc';
+                                            const isActive =
+                                                currentDirection === dir.key;
+                                            return (
+                                                <button
+                                                    key={dir.key}
+                                                    onClick={() => {
+                                                        const [field] =
+                                                            orderBy.split(':');
+                                                        handleSortChange(
+                                                            `${field}:${dir.key}`
+                                                        );
+                                                    }}
+                                                    className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                                                        isActive
+                                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                    }`}
+                                                >
+                                                    <span>{dir.label}</span>
+                                                    {isActive && (
+                                                        <CheckIcon className="h-4 w-4" />
                                                     )}
-                                                    {/* Tags */}
-                                                    {noteTags.length > 0 && (
-                                                        <div className="flex items-center">
-                                                            <TagIcon className="h-3 w-3 mr-1" />
-                                                            <span>
-                                                                {noteTags.map((noteTag, index) => (
-                                                                    <React.Fragment key={noteTag.id || noteTag.name}>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    />
+                </div>
+                {displayTasks.length > 0 ? (
+                    groupBy === 'project' ? (
+                        <GroupedTaskList
+                            tasks={displayTasks}
+                            groupBy="project"
+                            onTaskUpdate={handleTaskUpdate}
+                            onTaskCompletionToggle={handleTaskCompletionToggle}
+                            onTaskDelete={handleTaskDelete}
+                            onTaskDuplicated={handleTaskDuplicated}
+                            projects={projectLookupList}
+                            hideProjectName={false}
+                            onToggleToday={undefined}
+                            showCompletedTasks={showCompletedTasks}
+                            searchQuery={taskSearchQuery}
+                        />
+                    ) : (
+                        <TaskList
+                            tasks={displayTasks}
+                            onTaskUpdate={handleTaskUpdate}
+                            onTaskCompletionToggle={handleTaskCompletionToggle}
+                            onTaskDelete={handleTaskDelete}
+                            onTaskDuplicated={handleTaskDuplicated}
+                            projects={projectLookupList}
+                            hideProjectName={false}
+                            onToggleToday={undefined}
+                            showCompletedTasks={showCompletedTasks}
+                        />
+                    )
+                ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {t('tasks.noTasksAvailable', 'No tasks available.')}
+                    </p>
+                )}
+            </div>
+
+            {/* Notes Section */}
+            {notes.length > 0 && (
+                <div className="mb-8">
+                    <h3 className="text-lg font-light text-gray-700 dark:text-gray-300 mb-4">
+                        {t('notes.title')} ({notes.length})
+                    </h3>
+                    <ul className="space-y-1">
+                        {notes.map((note) => {
+                            const noteTags = note.tags || note.Tags || [];
+                            const noteProject = note.project || note.Project;
+                            const hasMetadata =
+                                noteProject || noteTags.length > 0;
+
+                            return (
+                                <li
+                                    key={note.uid}
+                                    className="bg-white dark:bg-gray-900 shadow rounded-lg px-4 py-2 flex justify-between items-start"
+                                    onMouseEnter={() =>
+                                        setHoveredNoteId(note.uid || null)
+                                    }
+                                    onMouseLeave={() => setHoveredNoteId(null)}
+                                >
+                                    <div className="flex-grow overflow-hidden pr-4">
+                                        {/* Note Title */}
+                                        <Link
+                                            to={
+                                                note.uid
+                                                    ? `/notes/${note.uid}-${note.title
+                                                          .toLowerCase()
+                                                          .replace(
+                                                              /[^a-z0-9]+/g,
+                                                              '-'
+                                                          )
+                                                          .replace(
+                                                              /^-|-$/g,
+                                                              ''
+                                                          )}`
+                                                    : '#'
+                                            }
+                                            className="text-md font-medium text-gray-900 dark:text-gray-300 hover:underline block"
+                                        >
+                                            {note.title}
+                                        </Link>
+                                        {/* Project and Tags below title - matching TaskHeader style */}
+                                        {hasMetadata && (
+                                            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {/* Project */}
+                                                {noteProject && (
+                                                    <div className="flex items-center">
+                                                        <FolderOutlineIcon className="h-3 w-3 mr-1" />
+                                                        <Link
+                                                            to={
+                                                                noteProject.uid
+                                                                    ? `/project/${noteProject.uid}-${noteProject.name
+                                                                          .toLowerCase()
+                                                                          .replace(
+                                                                              /[^a-z0-9]+/g,
+                                                                              '-'
+                                                                          )
+                                                                          .replace(
+                                                                              /^-|-$/g,
+                                                                              ''
+                                                                          )}`
+                                                                    : `/project/${noteProject.id}`
+                                                            }
+                                                            className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
+                                                            onClick={(e) =>
+                                                                e.stopPropagation()
+                                                            }
+                                                        >
+                                                            {noteProject.name}
+                                                        </Link>
+                                                    </div>
+                                                )}
+                                                {/* Tags */}
+                                                {noteTags.length > 0 && (
+                                                    <div className="flex items-center">
+                                                        <TagIcon className="h-3 w-3 mr-1" />
+                                                        <span>
+                                                            {noteTags.map(
+                                                                (
+                                                                    noteTag,
+                                                                    index
+                                                                ) => (
+                                                                    <React.Fragment
+                                                                        key={
+                                                                            noteTag.id ||
+                                                                            noteTag.name
+                                                                        }
+                                                                    >
                                                                         <Link
                                                                             to={
                                                                                 noteTag.uid
@@ -855,99 +890,111 @@ const TagDetails: React.FC = () => {
                                                                                     : `/tag/${encodeURIComponent(noteTag.name)}`
                                                                             }
                                                                             className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
-                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            onClick={(
+                                                                                e
+                                                                            ) =>
+                                                                                e.stopPropagation()
+                                                                            }
                                                                         >
-                                                                            {noteTag.name}
+                                                                            {
+                                                                                noteTag.name
+                                                                            }
                                                                         </Link>
-                                                                        {index < noteTags.length - 1 && ', '}
+                                                                        {index <
+                                                                            noteTags.length -
+                                                                                1 &&
+                                                                            ', '}
                                                                     </React.Fragment>
-                                                                ))}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex space-x-2 pt-1">
-                                            <button
-                                                onClick={() => handleEditNote(note)}
-                                                className={`text-gray-500 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none transition-opacity ${hoveredNoteId === note.uid ? 'opacity-100' : 'opacity-0'}`}
-                                                aria-label={`Edit ${note.title}`}
-                                                title={`Edit ${note.title}`}
-                                            >
-                                                <PencilSquareIcon className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteNoteClick(note)}
-                                                className={`text-gray-500 hover:text-red-700 dark:hover:text-red-300 focus:outline-none transition-opacity ${hoveredNoteId === note.uid ? 'opacity-100' : 'opacity-0'}`}
-                                                aria-label={`Delete ${note.title}`}
-                                                title={`Delete ${note.title}`}
-                                            >
-                                                <TrashIcon className="h-5 w-5" />
-                                            </button>
-                                        </div>
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                                                                )
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex space-x-2 pt-1">
+                                        <button
+                                            onClick={() => handleEditNote(note)}
+                                            className={`text-gray-500 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none transition-opacity ${hoveredNoteId === note.uid ? 'opacity-100' : 'opacity-0'}`}
+                                            aria-label={`Edit ${note.title}`}
+                                            title={`Edit ${note.title}`}
+                                        >
+                                            <PencilSquareIcon className="h-5 w-5" />
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleDeleteNoteClick(note)
+                                            }
+                                            className={`text-gray-500 hover:text-red-700 dark:hover:text-red-300 focus:outline-none transition-opacity ${hoveredNoteId === note.uid ? 'opacity-100' : 'opacity-0'}`}
+                                            aria-label={`Delete ${note.title}`}
+                                            title={`Delete ${note.title}`}
+                                        >
+                                            <TrashIcon className="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
+
+            {/* Projects Section */}
+            {projects.length > 0 && (
+                <div className="mb-8">
+                    <h3 className="text-lg font-light text-gray-700 dark:text-gray-300 mb-4">
+                        {t('projects.title')} ({projects.length})
+                    </h3>
+                    <div className="flex flex-col space-y-1">
+                        {projects.map((project: Project) => {
+                            return (
+                                <ProjectItem
+                                    key={project.id}
+                                    project={project}
+                                    viewMode="list"
+                                    getCompletionPercentage={() =>
+                                        getCompletionPercentage(project)
+                                    }
+                                    activeDropdown={activeDropdown}
+                                    setActiveDropdown={setActiveDropdown}
+                                    handleEditProject={handleEditProject}
+                                    setProjectToDelete={setProjectToDelete}
+                                    setIsConfirmDialogOpen={
+                                        setIsConfirmDialogOpen
+                                    }
+                                    onOpenShare={(p) =>
+                                        setShareModal({
+                                            isOpen: true,
+                                            project: p,
+                                        })
+                                    }
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Empty State */}
+            {displayTasks.length === 0 &&
+                notes.length === 0 &&
+                projects.length === 0 && (
+                    <div className="text-center py-8">
+                        <TagIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                            {taskSearchQuery.trim()
+                                ? t(
+                                      'tasks.noTasksAvailable',
+                                      'No tasks available.'
+                                  )
+                                : t(
+                                      'tags.noItemsWithTag',
+                                      `No items found with the tag "${tag.name}"`
+                                  )}
+                        </p>
                     </div>
                 )}
-
-                {/* Projects Section */}
-                {projects.length > 0 && (
-                    <div className="mb-8">
-                        <h3 className="text-lg font-light text-gray-700 dark:text-gray-300 mb-4">
-                            {t('projects.title')} ({projects.length})
-                        </h3>
-                        <div className="flex flex-col space-y-1">
-                            {projects.map((project: Project) => {
-                                return (
-                                    <ProjectItem
-                                        key={project.id}
-                                        project={project}
-                                        viewMode="list"
-                                        getCompletionPercentage={() =>
-                                            getCompletionPercentage(project)
-                                        }
-                                        activeDropdown={activeDropdown}
-                                        setActiveDropdown={setActiveDropdown}
-                                        handleEditProject={handleEditProject}
-                                        setProjectToDelete={setProjectToDelete}
-                                        setIsConfirmDialogOpen={
-                                            setIsConfirmDialogOpen
-                                        }
-                                        onOpenShare={(p) =>
-                                            setShareModal({
-                                                isOpen: true,
-                                                project: p,
-                                            })
-                                        }
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Empty State */}
-                {displayTasks.length === 0 &&
-                    notes.length === 0 &&
-                    projects.length === 0 && (
-                        <div className="text-center py-8">
-                            <TagIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 dark:text-gray-400 text-lg">
-                                {taskSearchQuery.trim()
-                                    ? t(
-                                          'tasks.noTasksAvailable',
-                                          'No tasks available.'
-                                      )
-                                    : t(
-                                          'tags.noItemsWithTag',
-                                          `No items found with the tag "${tag.name}"`
-                                      )}
-                            </p>
-                        </div>
-                    )}
 
             {/* Tag Modal */}
             {isTagModalOpen && tag && (

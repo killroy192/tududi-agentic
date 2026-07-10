@@ -53,10 +53,7 @@ import KeyboardShortcutsTab from './tabs/KeyboardShortcutsTab';
 import McpTab from './tabs/McpTab';
 import CalDAVTab from './tabs/CalDAVTab';
 import { getDefaultConfig } from '../../utils/keyboardShortcutsService';
-import {
-    getFeatureFlags,
-    type FeatureFlags,
-} from '../../utils/featureFlags';
+import { getFeatureFlags, type FeatureFlags } from '../../utils/featureFlags';
 import type {
     ProfileSettingsProps,
     Profile,
@@ -529,19 +526,24 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         data.task_summary_frequency || 'daily',
                     features: {
                         task_intelligence_enabled:
-                            data.features?.task_intelligence_enabled !== undefined
+                            data.features?.task_intelligence_enabled !==
+                            undefined
                                 ? data.features.task_intelligence_enabled
                                 : true,
                         auto_suggest_next_actions_enabled:
-                            data.features?.auto_suggest_next_actions_enabled !== undefined
-                                ? data.features.auto_suggest_next_actions_enabled
+                            data.features?.auto_suggest_next_actions_enabled !==
+                            undefined
+                                ? data.features
+                                      .auto_suggest_next_actions_enabled
                                 : true,
                         productivity_assistant_enabled:
-                            data.features?.productivity_assistant_enabled !== undefined
+                            data.features?.productivity_assistant_enabled !==
+                            undefined
                                 ? data.features.productivity_assistant_enabled
                                 : true,
                         next_task_suggestion_enabled:
-                            data.features?.next_task_suggestion_enabled !== undefined
+                            data.features?.next_task_suggestion_enabled !==
+                            undefined
                                 ? data.features.next_task_suggestion_enabled
                                 : true,
                         ai_assistant_enabled:
@@ -1084,39 +1086,51 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             if (updatedProfile.features?.pomodoro_enabled !== undefined) {
                 window.dispatchEvent(
                     new CustomEvent('pomodoroSettingChanged', {
-                        detail: { enabled: updatedProfile.features.pomodoro_enabled },
+                        detail: {
+                            enabled: updatedProfile.features.pomodoro_enabled,
+                        },
                     })
                 );
             }
 
             if (updatedProfile.features?.eisenhower_enabled !== undefined) {
-                useStore.getState().userSettingsStore.setEisenhowerEnabled(
-                    updatedProfile.features.eisenhower_enabled
-                );
+                useStore
+                    .getState()
+                    .userSettingsStore.setEisenhowerEnabled(
+                        updatedProfile.features.eisenhower_enabled
+                    );
             }
 
             if (updatedProfile.features?.kanban_enabled !== undefined) {
-                useStore.getState().userSettingsStore.setKanbanEnabled(
-                    updatedProfile.features.kanban_enabled
-                );
+                useStore
+                    .getState()
+                    .userSettingsStore.setKanbanEnabled(
+                        updatedProfile.features.kanban_enabled
+                    );
             }
 
             if (updatedProfile.features?.habits_enabled !== undefined) {
-                useStore.getState().userSettingsStore.setHabitsEnabled(
-                    updatedProfile.features.habits_enabled
-                );
+                useStore
+                    .getState()
+                    .userSettingsStore.setHabitsEnabled(
+                        updatedProfile.features.habits_enabled
+                    );
             }
 
             if (updatedProfile.features?.calendar_enabled !== undefined) {
-                useStore.getState().userSettingsStore.setCalendarEnabled(
-                    updatedProfile.features.calendar_enabled
-                );
+                useStore
+                    .getState()
+                    .userSettingsStore.setCalendarEnabled(
+                        updatedProfile.features.calendar_enabled
+                    );
             }
 
             if (updatedProfile.features?.ai_assistant_enabled !== undefined) {
-                useStore.getState().userSettingsStore.setAiAssistantEnabled(
-                    updatedProfile.features.ai_assistant_enabled
-                );
+                useStore
+                    .getState()
+                    .userSettingsStore.setAiAssistantEnabled(
+                        updatedProfile.features.ai_assistant_enabled
+                    );
             }
 
             if (isPasswordChange) {
@@ -1349,7 +1363,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             features: {
                                                 ...prev.features,
                                                 pomodoro_enabled:
-                                                    !prev.features?.pomodoro_enabled,
+                                                    !prev.features
+                                                        ?.pomodoro_enabled,
                                             },
                                         }))
                                     }
@@ -1366,7 +1381,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             features: {
                                                 ...prev.features,
                                                 eisenhower_enabled:
-                                                    !prev.features?.eisenhower_enabled,
+                                                    !prev.features
+                                                        ?.eisenhower_enabled,
                                             },
                                         }))
                                     }
@@ -1379,12 +1395,14 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             features: {
                                                 ...prev.features,
                                                 kanban_enabled:
-                                                    !prev.features?.kanban_enabled,
+                                                    !prev.features
+                                                        ?.kanban_enabled,
                                             },
                                         }))
                                     }
                                     habitsEnabled={Boolean(
-                                        formData.features?.habits_enabled ?? true
+                                        formData.features?.habits_enabled ??
+                                            true
                                     )}
                                     onToggleHabits={() =>
                                         setFormData((prev) => ({
@@ -1392,7 +1410,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             features: {
                                                 ...prev.features,
                                                 habits_enabled:
-                                                    !prev.features?.habits_enabled,
+                                                    !prev.features
+                                                        ?.habits_enabled,
                                             },
                                         }))
                                     }
@@ -1405,7 +1424,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             features: {
                                                 ...prev.features,
                                                 calendar_enabled:
-                                                    !prev.features?.calendar_enabled,
+                                                    !prev.features
+                                                        ?.calendar_enabled,
                                             },
                                         }))
                                     }
@@ -1415,7 +1435,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             ...prev,
                                             features: {
                                                 ...prev.features,
-                                                [field]: !prev.features?.[field],
+                                                [field]:
+                                                    !prev.features?.[field],
                                             },
                                         }))
                                     }
@@ -1464,7 +1485,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                 />
 
                                 <KeyboardShortcutsTab
-                                    isActive={activeTab === 'keyboard-shortcuts'}
+                                    isActive={
+                                        activeTab === 'keyboard-shortcuts'
+                                    }
                                     config={formData.keyboard_shortcuts}
                                     onChange={(config) =>
                                         setFormData((prev) => ({

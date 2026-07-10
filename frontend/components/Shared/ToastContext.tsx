@@ -14,7 +14,10 @@ interface Toast {
 interface ToastContextProps {
     showSuccessToast: (message: string | React.ReactNode) => void;
     showErrorToast: (message: string | React.ReactNode) => void;
-    showUndoToast: (message: string | React.ReactNode, onUndo: () => void) => void;
+    showUndoToast: (
+        message: string | React.ReactNode,
+        onUndo: () => void
+    ) => void;
 }
 
 const ToastContext = createContext<ToastContextProps | undefined>(undefined);
@@ -59,7 +62,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     );
 
     return (
-        <ToastContext.Provider value={{ showSuccessToast, showErrorToast, showUndoToast }}>
+        <ToastContext.Provider
+            value={{ showSuccessToast, showErrorToast, showUndoToast }}
+        >
             {children}
             <div className="fixed top-20 right-4 z-50 space-y-2">
                 {toasts.map((toast, index) => (
@@ -68,7 +73,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
                         message={toast.message}
                         type={toast.type}
                         onClose={() => removeToast(toast.id)}
-                        onUndo={toast.onUndo ? () => { removeToast(toast.id); toast.onUndo!(); } : undefined}
+                        onUndo={
+                            toast.onUndo
+                                ? () => {
+                                      removeToast(toast.id);
+                                      toast.onUndo!();
+                                  }
+                                : undefined
+                        }
                         style={{ transform: `translateY(${index * 4}px)` }}
                     />
                 ))}

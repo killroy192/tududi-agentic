@@ -494,10 +494,7 @@ const ConflictResolver: React.FC<ConflictResolverProps> = ({
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                         >
-                            {t(
-                                'profile.conflictResolver.nextConflict',
-                                'Next'
-                            )}
+                            {t('profile.conflictResolver.nextConflict', 'Next')}
                             <ChevronRightIcon className="w-5 h-5 ml-1" />
                         </button>
                     </div>

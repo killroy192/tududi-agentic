@@ -59,8 +59,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         }
     };
 
-    const hasConflicts =
-        calendar.stats && calendar.stats.conflicts > 0;
+    const hasConflicts = calendar.stats && calendar.stats.conflicts > 0;
 
     return (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow">

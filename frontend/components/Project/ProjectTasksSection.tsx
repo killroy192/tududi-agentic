@@ -16,6 +16,7 @@ interface ProjectTasksSectionProps {
     onTaskUpdate: (task: Task) => Promise<void>;
     onTaskCompletionToggle: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
+    onTaskDuplicated?: (task: Task) => void;
     onToggleToday: (taskId: number, task?: Task) => Promise<void>;
     allProjects: Project[];
     showCompleted: boolean;
@@ -33,6 +34,7 @@ const ProjectTasksSection: React.FC<ProjectTasksSectionProps> = ({
     onTaskUpdate,
     onTaskCompletionToggle,
     onTaskDelete,
+    onTaskDuplicated,
     onToggleToday,
     allProjects,
     showCompleted,
@@ -66,6 +68,7 @@ const ProjectTasksSection: React.FC<ProjectTasksSectionProps> = ({
                             onTaskUpdate={onTaskUpdate}
                             onTaskCompletionToggle={onTaskCompletionToggle}
                             onTaskDelete={onTaskDelete}
+                            onTaskDuplicated={onTaskDuplicated}
                             projects={allProjects}
                             hideProjectName={true}
                             onToggleToday={onToggleToday}

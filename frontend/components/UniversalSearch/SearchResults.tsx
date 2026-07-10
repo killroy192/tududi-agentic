@@ -135,7 +135,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             case 'Task':
                 // Tasks use uid directly
                 if (result.uid) {
-                    navigate(`/task/${result.uid}`, { state: { from: location.pathname + location.search } });
+                    navigate(`/task/${result.uid}`, {
+                        state: { from: location.pathname + location.search },
+                    });
                 }
                 break;
             case 'Project': {

@@ -274,15 +274,24 @@ const AreaModal: React.FC<AreaModalProps> = ({
                                                 {/* Color Section */}
                                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 pb-4 px-4">
                                                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                                        {t('forms.color', 'Color')}
+                                                        {t(
+                                                            'forms.color',
+                                                            'Color'
+                                                        )}
                                                     </h3>
                                                     <ColorPicker
-                                                        value={formData.color || ''}
+                                                        value={
+                                                            formData.color || ''
+                                                        }
                                                         onChange={(color) =>
-                                                            setFormData((prev) => ({
-                                                                ...prev,
-                                                                color: color || '',
-                                                            }))
+                                                            setFormData(
+                                                                (prev) => ({
+                                                                    ...prev,
+                                                                    color:
+                                                                        color ||
+                                                                        '',
+                                                                })
+                                                            )
                                                         }
                                                     />
                                                 </div>

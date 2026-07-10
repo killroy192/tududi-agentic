@@ -155,10 +155,13 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
 
     const handleDelete = async (uid: string) => {
         try {
-            const response = await fetchWithCsrf(getApiPath(`notifications/${uid}`), {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+            const response = await fetchWithCsrf(
+                getApiPath(`notifications/${uid}`),
+                {
+                    method: 'DELETE',
+                    credentials: 'include',
+                }
+            );
             if (response.ok) {
                 setNotifications((prev) => prev.filter((n) => n.uid !== uid));
                 fetchUnreadCount();
@@ -216,7 +219,9 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
     const handleNotificationClick = (notification: Notification) => {
         if (notification.data?.taskUid) {
             setIsOpen(false);
-            navigate(`/task/${notification.data.taskUid}`, { state: { from: location.pathname + location.search } });
+            navigate(`/task/${notification.data.taskUid}`, {
+                state: { from: location.pathname + location.search },
+            });
         } else if (notification.data?.projectUid) {
             setIsOpen(false);
             navigate(`/project/${notification.data.projectUid}`);

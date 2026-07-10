@@ -365,6 +365,10 @@ const ProjectDetails: React.FC = () => {
         }
     };
 
+    const handleTaskDuplicated = (newTask: Task) => {
+        setTasks((prevTasks) => [newTask, ...prevTasks]);
+    };
+
     const handleTaskDelete = async (taskUid: string | undefined) => {
         if (!taskUid) return;
         await deleteTask(taskUid);
@@ -1071,6 +1075,9 @@ const ProjectDetails: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                            onTaskDuplicated={
+                                                handleTaskDuplicated
+                                            }
                                             onToggleToday={undefined}
                                             allProjects={allProjects}
                                             showCompleted={

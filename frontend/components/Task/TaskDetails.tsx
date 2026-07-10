@@ -68,7 +68,9 @@ const TaskDetails: React.FC = () => {
                 );
                 const store = useStore.getState();
                 store.tasksStore.setTasks(
-                    store.tasksStore.tasks.filter((t: Task) => t.uid !== taskUid)
+                    store.tasksStore.tasks.filter(
+                        (t: Task) => t.uid !== taskUid
+                    )
                 );
             }
         };
@@ -267,7 +269,7 @@ const TaskDetails: React.FC = () => {
                 recurrence_weekday:
                     recurrenceForm.recurrence_type === 'weekly' ||
                     recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_weekday ?? null
+                        ? (recurrenceForm.recurrence_weekday ?? null)
                         : null,
                 recurrence_weekdays:
                     recurrenceForm.recurrence_type === 'weekly'
@@ -275,11 +277,11 @@ const TaskDetails: React.FC = () => {
                         : null,
                 recurrence_month_day:
                     recurrenceForm.recurrence_type === 'monthly'
-                        ? recurrenceForm.recurrence_month_day ?? null
+                        ? (recurrenceForm.recurrence_month_day ?? null)
                         : null,
                 recurrence_week_of_month:
                     recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_week_of_month ?? null
+                        ? (recurrenceForm.recurrence_week_of_month ?? null)
                         : null,
                 completion_based: recurrenceForm.completion_based,
             };
@@ -1258,7 +1260,9 @@ const TaskDetails: React.FC = () => {
                     isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
                     onDismissOverdueAlert={handleDismissOverdueAlert}
                     onQuickStatusToggle={handleCompletionToggle}
-                    onAiInsightsClick={aiAssistantEnabled ? handleAiInsightsClick : undefined}
+                    onAiInsightsClick={
+                        aiAssistantEnabled ? handleAiInsightsClick : undefined
+                    }
                     aiInsightsActive={aiInsightsActive}
                     attachmentCount={attachmentCount}
                     autoEditTitle={isNewTask}
@@ -1269,9 +1273,11 @@ const TaskDetails: React.FC = () => {
                         <TaskAIInsights
                             ref={aiInsightsRef}
                             task={task}
-                            project={projectsStore.projects.find(
-                                (p: any) => p.id === task.project_id
-                            ) || null}
+                            project={
+                                projectsStore.projects.find(
+                                    (p: any) => p.id === task.project_id
+                                ) || null
+                            }
                             onActiveChange={setAiInsightsActive}
                         />
                     </div>
@@ -1382,7 +1388,6 @@ const TaskDetails: React.FC = () => {
                             />
                         </div>
                     )}
-
                 </div>
 
                 {isConfirmDialogOpen && taskToDelete && (

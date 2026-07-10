@@ -10,13 +10,18 @@ interface TaskAssignedToCardProps {
     onAssign: (personUid: string | null) => Promise<void>;
 }
 
-const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({ task, onAssign }) => {
+const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({
+    task,
+    onAssign,
+}) => {
     const [people, setPeople] = useState<Person[]>([]);
 
     useEffect(() => {
-        fetchPeople().catch(console.error).then((p) => {
-            if (p) setPeople(p);
-        });
+        fetchPeople()
+            .catch(console.error)
+            .then((p) => {
+                if (p) setPeople(p);
+            });
     }, []);
 
     return (

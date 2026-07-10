@@ -635,7 +635,10 @@ const QuickCaptureInput = React.forwardRef<
                 }
             }
 
-            return { left: inputRect.left + textWidth, top: inputRect.bottom + 4 };
+            return {
+                left: inputRect.left + textWidth,
+                top: inputRect.bottom + 4,
+            };
         };
 
         const handleChange = (
@@ -926,10 +929,8 @@ const QuickCaptureInput = React.forwardRef<
 
             if (hashtagMatch) {
                 const newText =
-                    beforeCursor.replace(
-                        /#([a-zA-Z0-9_]*)$/,
-                        `#${tagName} `
-                    ) + afterCursor;
+                    beforeCursor.replace(/#([a-zA-Z0-9_]*)$/, `#${tagName} `) +
+                    afterCursor;
                 setInputText(newText);
                 setShowTagSuggestions(false);
                 setFilteredTags([]);

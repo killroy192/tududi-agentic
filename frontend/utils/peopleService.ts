@@ -3,15 +3,19 @@ import { handleAuthResponse, getPostHeadersWithCsrf } from './authUtils';
 import { getApiPath } from '../config/paths';
 import { getCsrfToken } from './csrfService';
 
-export const fetchPeople = async (params: {
-    archived?: boolean;
-    sort?: string;
-    relationship_type?: string;
-} = {}): Promise<Person[]> => {
+export const fetchPeople = async (
+    params: {
+        archived?: boolean;
+        sort?: string;
+        relationship_type?: string;
+    } = {}
+): Promise<Person[]> => {
     const query = new URLSearchParams();
-    if (params.archived !== undefined) query.set('archived', String(params.archived));
+    if (params.archived !== undefined)
+        query.set('archived', String(params.archived));
     if (params.sort) query.set('sort', params.sort);
-    if (params.relationship_type) query.set('relationship_type', params.relationship_type);
+    if (params.relationship_type)
+        query.set('relationship_type', params.relationship_type);
 
     const url = query.toString() ? `people?${query.toString()}` : 'people';
     const response = await fetch(getApiPath(url), {

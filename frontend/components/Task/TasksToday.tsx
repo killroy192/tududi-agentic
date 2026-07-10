@@ -215,7 +215,9 @@ const TasksToday: React.FC = () => {
             ...(metrics.tasks_overdue || []),
             ...(metrics.today_plan_tasks || []),
             ...(metrics.tasks_completed_today || []),
-        ].forEach((t: Task) => { if (t.id != null) excludedIds.add(t.id); });
+        ].forEach((t: Task) => {
+            if (t.id != null) excludedIds.add(t.id);
+        });
 
         const candidateTasks = storeTasks.filter(
             (t: Task) => t.id != null && !excludedIds.has(t.id)
@@ -240,7 +242,13 @@ const TasksToday: React.FC = () => {
     const getCompletionTrend = () => {
         const todayCount = metrics.tasks_completed_today.length;
         if (metrics.weekly_completions.length === 0) {
-            return { direction: 'same', difference: 0, percentage: 0, todayCount, averageCount: 0 };
+            return {
+                direction: 'same',
+                difference: 0,
+                percentage: 0,
+                todayCount,
+                averageCount: 0,
+            };
         }
         const totalCompleted = metrics.weekly_completions.reduce(
             (sum: number, c: { count: number }) => sum + c.count,
@@ -249,17 +257,37 @@ const TasksToday: React.FC = () => {
         const averageCount = totalCompleted / 7;
         let percentage = 0;
         if (averageCount > 0) {
-            percentage = Math.round(((todayCount - averageCount) / averageCount) * 100);
+            percentage = Math.round(
+                ((todayCount - averageCount) / averageCount) * 100
+            );
         } else if (todayCount > 0) {
             percentage = 100;
         }
         const diff = (n: number) => Math.round(n * 10) / 10;
         if (todayCount > averageCount) {
-            return { direction: 'up', difference: diff(todayCount - averageCount), percentage: Math.abs(percentage), todayCount, averageCount: diff(averageCount) };
+            return {
+                direction: 'up',
+                difference: diff(todayCount - averageCount),
+                percentage: Math.abs(percentage),
+                todayCount,
+                averageCount: diff(averageCount),
+            };
         } else if (todayCount < averageCount) {
-            return { direction: 'down', difference: diff(averageCount - todayCount), percentage: Math.abs(percentage), todayCount, averageCount: diff(averageCount) };
+            return {
+                direction: 'down',
+                difference: diff(averageCount - todayCount),
+                percentage: Math.abs(percentage),
+                todayCount,
+                averageCount: diff(averageCount),
+            };
         }
-        return { direction: 'same', difference: 0, percentage: 0, todayCount, averageCount: diff(averageCount) };
+        return {
+            direction: 'same',
+            difference: 0,
+            percentage: 0,
+            todayCount,
+            averageCount: diff(averageCount),
+        };
     };
 
     // Track mounting state to prevent state updates after unmount
@@ -552,14 +580,16 @@ const TasksToday: React.FC = () => {
 
                         // Set productivity assistant setting
                         setProductivityAssistantEnabled(
-                            userFeatures.productivity_assistant_enabled !== undefined
+                            userFeatures.productivity_assistant_enabled !==
+                                undefined
                                 ? userFeatures.productivity_assistant_enabled
                                 : true
                         );
 
                         // Set next task suggestion setting
                         setNextTaskSuggestionEnabled(
-                            userFeatures.next_task_suggestion_enabled !== undefined
+                            userFeatures.next_task_suggestion_enabled !==
+                                undefined
                                 ? userFeatures.next_task_suggestion_enabled
                                 : true
                         );
@@ -598,27 +628,38 @@ const TasksToday: React.FC = () => {
                             showDailyQuote: true,
                         };
                         // Back-fill keys missing from stored settings
-                        if (settings.showAreaBalance === undefined) settings.showAreaBalance = true;
-                        if (settings.showActiveProjects === undefined) settings.showActiveProjects = true;
-                        if (settings.showDailyBrief === undefined) settings.showDailyBrief = false;
+                        if (settings.showAreaBalance === undefined)
+                            settings.showAreaBalance = true;
+                        if (settings.showActiveProjects === undefined)
+                            settings.showActiveProjects = true;
+                        if (settings.showDailyBrief === undefined)
+                            settings.showDailyBrief = false;
 
                         // Store profile settings
                         const currentProfileSettings = {
                             productivity_assistant_enabled:
-                                userFeatures.productivity_assistant_enabled === true,
+                                userFeatures.productivity_assistant_enabled ===
+                                true,
                             next_task_suggestion_enabled:
-                                userFeatures.next_task_suggestion_enabled === true,
+                                userFeatures.next_task_suggestion_enabled ===
+                                true,
                             ai_assistant_enabled:
                                 userFeatures.ai_assistant_enabled === true,
                         };
                         setProfileSettings(currentProfileSettings);
 
                         // Sync with profile features
-                        if (userFeatures.productivity_assistant_enabled !== undefined) {
+                        if (
+                            userFeatures.productivity_assistant_enabled !==
+                            undefined
+                        ) {
                             settings.showProductivity =
                                 userFeatures.productivity_assistant_enabled;
                         }
-                        if (userFeatures.next_task_suggestion_enabled !== undefined) {
+                        if (
+                            userFeatures.next_task_suggestion_enabled !==
+                            undefined
+                        ) {
                             settings.showNextTaskSuggestion =
                                 userFeatures.next_task_suggestion_enabled;
                         }
@@ -1000,191 +1041,196 @@ const TasksToday: React.FC = () => {
         []
     );
 
-    const updateTaskInState = useCallback(
-        (updatedTask: Task): void => {
-            if (!isMounted.current) return;
+    const handleTaskDuplicated = useCallback((newTask: Task) => {
+        if (!isMounted.current) return;
+        useStore
+            .getState()
+            .tasksStore.setTasks([
+                newTask,
+                ...useStore.getState().tasksStore.tasks,
+            ]);
+    }, []);
 
-            console.log('[updateTaskInState] Called with task:', {
-                id: updatedTask.id,
-                uid: updatedTask.uid,
-                name: updatedTask.name,
-                status: updatedTask.status,
-                completed_at: updatedTask.completed_at,
-            });
+    const updateTaskInState = useCallback((updatedTask: Task): void => {
+        if (!isMounted.current) return;
 
-            setMetrics((prevMetrics) => {
-                const newMetrics = { ...prevMetrics };
+        console.log('[updateTaskInState] Called with task:', {
+            id: updatedTask.id,
+            uid: updatedTask.uid,
+            name: updatedTask.name,
+            status: updatedTask.status,
+            completed_at: updatedTask.completed_at,
+        });
 
-                const removeTask = (list: Task[]) =>
-                    list.filter((task) => task.id !== updatedTask.id);
+        setMetrics((prevMetrics) => {
+            const newMetrics = { ...prevMetrics };
 
-                const updateOrAddTask = (list: Task[], taskToProcess: Task) => {
-                    const existingIndex = list.findIndex(
-                        (task) => task.id === taskToProcess.id
+            const removeTask = (list: Task[]) =>
+                list.filter((task) => task.id !== updatedTask.id);
+
+            const updateOrAddTask = (list: Task[], taskToProcess: Task) => {
+                const existingIndex = list.findIndex(
+                    (task) => task.id === taskToProcess.id
+                );
+                if (existingIndex > -1) {
+                    return list.map((task, index) =>
+                        index === existingIndex
+                            ? {
+                                  ...task,
+                                  ...taskToProcess,
+                                  subtasks:
+                                      taskToProcess.subtasks ||
+                                      task.subtasks ||
+                                      [],
+                              }
+                            : task
                     );
-                    if (existingIndex > -1) {
-                        return list.map((task, index) =>
-                            index === existingIndex
-                                ? {
-                                      ...task,
-                                      ...taskToProcess,
-                                      subtasks:
-                                          taskToProcess.subtasks ||
-                                          task.subtasks ||
-                                          [],
-                                  }
-                                : task
-                        );
-                    } else {
-                        return [...list, taskToProcess];
-                    }
-                };
-
-                newMetrics.today_plan_tasks = removeTask(
-                    newMetrics.today_plan_tasks || []
-                );
-                newMetrics.suggested_tasks = removeTask(
-                    newMetrics.suggested_tasks || []
-                );
-                newMetrics.tasks_due_today = removeTask(
-                    newMetrics.tasks_due_today || []
-                );
-                newMetrics.tasks_overdue = removeTask(
-                    newMetrics.tasks_overdue || []
-                );
-                newMetrics.tasks_in_progress = removeTask(
-                    newMetrics.tasks_in_progress || []
-                );
-                newMetrics.tasks_completed_today = removeTask(
-                    newMetrics.tasks_completed_today || []
-                );
-
-                if (isTaskDone(updatedTask.status)) {
-                    if (updatedTask.completed_at) {
-                        const completedDate = new Date(
-                            updatedTask.completed_at
-                        );
-                        const today = new Date();
-                        if (
-                            format(completedDate, 'yyyy-MM-dd') ===
-                            format(today, 'yyyy-MM-dd')
-                        ) {
-                            newMetrics.tasks_completed_today = updateOrAddTask(
-                                newMetrics.tasks_completed_today,
-                                updatedTask
-                            );
-                        }
-                    }
                 } else {
-                    const isInTodayPlan =
-                        isTaskInProgress(updatedTask.status) ||
-                        isTaskPlanned(updatedTask.status) ||
-                        isTaskWaiting(updatedTask.status);
-                    if (isInTodayPlan && updatedTask.status !== 'cancelled') {
-                        newMetrics.today_plan_tasks = updateOrAddTask(
-                            newMetrics.today_plan_tasks,
-                            updatedTask
-                        );
-                    }
-                    if (updatedTask.status === 'in_progress') {
-                        newMetrics.tasks_in_progress = updateOrAddTask(
-                            newMetrics.tasks_in_progress,
-                            updatedTask
-                        );
-                    }
-                    if (
-                        updatedTask.due_date &&
-                        updatedTask.status !== 'cancelled' &&
-                        !newMetrics.today_plan_tasks.some(
-                            (t) => t.id === updatedTask.id
-                        ) &&
-                        !newMetrics.tasks_in_progress.some(
-                            (t) => t.id === updatedTask.id
-                        )
-                    ) {
-                        const todayStr = getTodayDateString();
-                        const dueDateStr = (updatedTask.due_date || '').split(
-                            'T'
-                        )[0];
+                    return [...list, taskToProcess];
+                }
+            };
 
-                        if (dueDateStr === todayStr) {
-                            newMetrics.tasks_due_today = updateOrAddTask(
-                                newMetrics.tasks_due_today,
-                                updatedTask
-                            );
-                        } else if (dueDateStr < todayStr) {
-                            newMetrics.tasks_overdue = updateOrAddTask(
-                                newMetrics.tasks_overdue,
-                                updatedTask
-                            );
-                        }
-                    }
-                    const notInTodayPlan =
-                        !isTaskInProgress(updatedTask.status) &&
-                        !isTaskPlanned(updatedTask.status) &&
-                        !isTaskWaiting(updatedTask.status);
-                    const isSuggested =
-                        notInTodayPlan &&
-                        !updatedTask.project_id &&
-                        !updatedTask.due_date;
-                    const isActive = isTaskActive(updatedTask.status);
+            newMetrics.today_plan_tasks = removeTask(
+                newMetrics.today_plan_tasks || []
+            );
+            newMetrics.suggested_tasks = removeTask(
+                newMetrics.suggested_tasks || []
+            );
+            newMetrics.tasks_due_today = removeTask(
+                newMetrics.tasks_due_today || []
+            );
+            newMetrics.tasks_overdue = removeTask(
+                newMetrics.tasks_overdue || []
+            );
+            newMetrics.tasks_in_progress = removeTask(
+                newMetrics.tasks_in_progress || []
+            );
+            newMetrics.tasks_completed_today = removeTask(
+                newMetrics.tasks_completed_today || []
+            );
 
+            if (isTaskDone(updatedTask.status)) {
+                if (updatedTask.completed_at) {
+                    const completedDate = new Date(updatedTask.completed_at);
+                    const today = new Date();
                     if (
-                        isSuggested &&
-                        isActive &&
-                        !newMetrics.today_plan_tasks.some(
-                            (t) => t.id === updatedTask.id
-                        ) &&
-                        !newMetrics.tasks_due_today.some(
-                            (t) => t.id === updatedTask.id
-                        ) &&
-                        !newMetrics.tasks_in_progress.some(
-                            (t) => t.id === updatedTask.id
-                        )
+                        format(completedDate, 'yyyy-MM-dd') ===
+                        format(today, 'yyyy-MM-dd')
                     ) {
-                        newMetrics.suggested_tasks = updateOrAddTask(
-                            newMetrics.suggested_tasks,
+                        newMetrics.tasks_completed_today = updateOrAddTask(
+                            newMetrics.tasks_completed_today,
                             updatedTask
                         );
                     }
                 }
+            } else {
+                const isInTodayPlan =
+                    isTaskInProgress(updatedTask.status) ||
+                    isTaskPlanned(updatedTask.status) ||
+                    isTaskWaiting(updatedTask.status);
+                if (isInTodayPlan && updatedTask.status !== 'cancelled') {
+                    newMetrics.today_plan_tasks = updateOrAddTask(
+                        newMetrics.today_plan_tasks,
+                        updatedTask
+                    );
+                }
+                if (updatedTask.status === 'in_progress') {
+                    newMetrics.tasks_in_progress = updateOrAddTask(
+                        newMetrics.tasks_in_progress,
+                        updatedTask
+                    );
+                }
+                if (
+                    updatedTask.due_date &&
+                    updatedTask.status !== 'cancelled' &&
+                    !newMetrics.today_plan_tasks.some(
+                        (t) => t.id === updatedTask.id
+                    ) &&
+                    !newMetrics.tasks_in_progress.some(
+                        (t) => t.id === updatedTask.id
+                    )
+                ) {
+                    const todayStr = getTodayDateString();
+                    const dueDateStr = (updatedTask.due_date || '').split(
+                        'T'
+                    )[0];
 
-                newMetrics.total_open_tasks =
-                    newMetrics.today_plan_tasks.length +
-                    newMetrics.suggested_tasks.length +
-                    newMetrics.tasks_due_today.length +
-                    newMetrics.tasks_overdue.length +
-                    newMetrics.tasks_in_progress.length;
+                    if (dueDateStr === todayStr) {
+                        newMetrics.tasks_due_today = updateOrAddTask(
+                            newMetrics.tasks_due_today,
+                            updatedTask
+                        );
+                    } else if (dueDateStr < todayStr) {
+                        newMetrics.tasks_overdue = updateOrAddTask(
+                            newMetrics.tasks_overdue,
+                            updatedTask
+                        );
+                    }
+                }
+                const notInTodayPlan =
+                    !isTaskInProgress(updatedTask.status) &&
+                    !isTaskPlanned(updatedTask.status) &&
+                    !isTaskWaiting(updatedTask.status);
+                const isSuggested =
+                    notInTodayPlan &&
+                    !updatedTask.project_id &&
+                    !updatedTask.due_date;
+                const isActive = isTaskActive(updatedTask.status);
 
-                console.log('[updateTaskInState] Task placement:', {
-                    taskId: updatedTask.id,
-                    isInCompleted: newMetrics.tasks_completed_today.some(
+                if (
+                    isSuggested &&
+                    isActive &&
+                    !newMetrics.today_plan_tasks.some(
                         (t) => t.id === updatedTask.id
-                    ),
-                    isInTodayPlan: newMetrics.today_plan_tasks.some(
+                    ) &&
+                    !newMetrics.tasks_due_today.some(
                         (t) => t.id === updatedTask.id
-                    ),
-                    isInSuggested: newMetrics.suggested_tasks.some(
+                    ) &&
+                    !newMetrics.tasks_in_progress.some(
                         (t) => t.id === updatedTask.id
-                    ),
-                    isInDueToday: newMetrics.tasks_due_today.some(
-                        (t) => t.id === updatedTask.id
-                    ),
-                    isInOverdue: newMetrics.tasks_overdue.some(
-                        (t) => t.id === updatedTask.id
-                    ),
-                    isInProgress: newMetrics.tasks_in_progress.some(
-                        (t) => t.id === updatedTask.id
-                    ),
-                });
+                    )
+                ) {
+                    newMetrics.suggested_tasks = updateOrAddTask(
+                        newMetrics.suggested_tasks,
+                        updatedTask
+                    );
+                }
+            }
 
-                return newMetrics;
+            newMetrics.total_open_tasks =
+                newMetrics.today_plan_tasks.length +
+                newMetrics.suggested_tasks.length +
+                newMetrics.tasks_due_today.length +
+                newMetrics.tasks_overdue.length +
+                newMetrics.tasks_in_progress.length;
+
+            console.log('[updateTaskInState] Task placement:', {
+                taskId: updatedTask.id,
+                isInCompleted: newMetrics.tasks_completed_today.some(
+                    (t) => t.id === updatedTask.id
+                ),
+                isInTodayPlan: newMetrics.today_plan_tasks.some(
+                    (t) => t.id === updatedTask.id
+                ),
+                isInSuggested: newMetrics.suggested_tasks.some(
+                    (t) => t.id === updatedTask.id
+                ),
+                isInDueToday: newMetrics.tasks_due_today.some(
+                    (t) => t.id === updatedTask.id
+                ),
+                isInOverdue: newMetrics.tasks_overdue.some(
+                    (t) => t.id === updatedTask.id
+                ),
+                isInProgress: newMetrics.tasks_in_progress.some(
+                    (t) => t.id === updatedTask.id
+                ),
             });
 
-            useStore.getState().tasksStore.updateTaskInStore(updatedTask);
-        },
-        []
-    );
+            return newMetrics;
+        });
+
+        useStore.getState().tasksStore.updateTaskInStore(updatedTask);
+    }, []);
 
     const handleTaskCompletionToggle = useCallback(
         async (updatedTask: Task): Promise<void> => {
@@ -1325,9 +1371,17 @@ const TasksToday: React.FC = () => {
                                                 ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300'
                                                 : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
                                         }`}
-                                        aria-pressed={todaySettings.showDailyBrief}
-                                        aria-label={t('aiAssistant.dailyBriefTitle', 'AI Daily Brief')}
-                                        title={t('aiAssistant.dailyBriefTitle', 'AI Daily Brief')}
+                                        aria-pressed={
+                                            todaySettings.showDailyBrief
+                                        }
+                                        aria-label={t(
+                                            'aiAssistant.dailyBriefTitle',
+                                            'AI Daily Brief'
+                                        )}
+                                        title={t(
+                                            'aiAssistant.dailyBriefTitle',
+                                            'AI Daily Brief'
+                                        )}
                                     >
                                         <SparklesIcon className="h-5 w-5" />
                                     </button>
@@ -1392,11 +1446,17 @@ const TasksToday: React.FC = () => {
                 </div>
 
                 {/* AI Daily Brief - top of page, kept mounted once opened to preserve content */}
-                {isSettingsLoaded && profileSettings.ai_assistant_enabled && hasBriefMounted && (
-                    <div className={todaySettings.showDailyBrief ? '' : 'hidden'}>
-                        <DailyAssistant />
-                    </div>
-                )}
+                {isSettingsLoaded &&
+                    profileSettings.ai_assistant_enabled &&
+                    hasBriefMounted && (
+                        <div
+                            className={
+                                todaySettings.showDailyBrief ? '' : 'hidden'
+                            }
+                        >
+                            <DailyAssistant />
+                        </div>
+                    )}
 
                 {/* Overview Stats + Weekly Chart */}
                 {isSettingsLoaded && todaySettings.showMetrics && (
@@ -1410,17 +1470,25 @@ const TasksToday: React.FC = () => {
                                 <div className="flex flex-col items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20 p-2.5 gap-1">
                                     <div className="flex items-center gap-1.5 leading-none">
                                         <ClipboardDocumentListIcon className="h-4 w-4 text-blue-400 dark:text-blue-500 flex-shrink-0" />
-                                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none">{metrics.total_open_tasks}</span>
+                                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none">
+                                            {metrics.total_open_tasks}
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{t('tasks.total')}</span>
+                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                        {t('tasks.total')}
+                                    </span>
                                 </div>
                                 {/* In Progress */}
                                 <div className="flex flex-col items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/20 p-2.5 gap-1">
                                     <div className="flex items-center gap-1.5 leading-none">
                                         <ArrowPathIcon className="h-4 w-4 text-green-400 dark:text-green-500 flex-shrink-0" />
-                                        <span className="text-2xl font-bold text-green-600 dark:text-green-400 leading-none">{metrics.tasks_in_progress_count}</span>
+                                        <span className="text-2xl font-bold text-green-600 dark:text-green-400 leading-none">
+                                            {metrics.tasks_in_progress_count}
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{t('tasks.inProgress')}</span>
+                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                        {t('tasks.inProgress')}
+                                    </span>
                                 </div>
                                 {/* Active Projects */}
                                 <div className="flex flex-col items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-900/20 p-2.5 gap-1">
@@ -1429,53 +1497,110 @@ const TasksToday: React.FC = () => {
                                         <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 leading-none">
                                             {Array.isArray(localProjects)
                                                 ? localProjects.filter(
-                                                      (p) => p.status && ['planned', 'in_progress', 'waiting'].includes(p.status)
+                                                      (p) =>
+                                                          p.status &&
+                                                          [
+                                                              'planned',
+                                                              'in_progress',
+                                                              'waiting',
+                                                          ].includes(p.status)
                                                   ).length
                                                 : 0}
                                         </span>
                                     </div>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{t('projects.active')}</span>
+                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                        {t('projects.active')}
+                                    </span>
                                 </div>
                                 {/* Due Today */}
                                 {(() => {
-                                    const hasDue = metrics.tasks_due_today.length > 0;
+                                    const hasDue =
+                                        metrics.tasks_due_today.length > 0;
                                     return (
-                                        <div className={`flex flex-col items-center justify-center rounded-lg p-2.5 gap-1 ${hasDue ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800/40'}`}>
+                                        <div
+                                            className={`flex flex-col items-center justify-center rounded-lg p-2.5 gap-1 ${hasDue ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800/40'}`}
+                                        >
                                             <div className="flex items-center gap-1.5 leading-none">
-                                                <CalendarDaysIcon className={`h-4 w-4 flex-shrink-0 ${hasDue ? 'text-red-400 dark:text-red-500' : 'text-gray-400 dark:text-gray-500'}`} />
-                                                <span className={`text-2xl font-bold leading-none ${hasDue ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>{metrics.tasks_due_today.length}</span>
+                                                <CalendarDaysIcon
+                                                    className={`h-4 w-4 flex-shrink-0 ${hasDue ? 'text-red-400 dark:text-red-500' : 'text-gray-400 dark:text-gray-500'}`}
+                                                />
+                                                <span
+                                                    className={`text-2xl font-bold leading-none ${hasDue ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}
+                                                >
+                                                    {
+                                                        metrics.tasks_due_today
+                                                            .length
+                                                    }
+                                                </span>
                                             </div>
-                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{t('tasks.dueToday')}</span>
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                                {t('tasks.dueToday')}
+                                            </span>
                                         </div>
                                     );
                                 })()}
                                 {/* Overdue */}
                                 {(() => {
-                                    const hasOverdue = metrics.tasks_overdue.length > 0;
+                                    const hasOverdue =
+                                        metrics.tasks_overdue.length > 0;
                                     return (
-                                        <div className={`flex flex-col items-center justify-center rounded-lg p-2.5 gap-1 ${hasOverdue ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-gray-50 dark:bg-gray-800/40'}`}>
+                                        <div
+                                            className={`flex flex-col items-center justify-center rounded-lg p-2.5 gap-1 ${hasOverdue ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-gray-50 dark:bg-gray-800/40'}`}
+                                        >
                                             <div className="flex items-center gap-1.5 leading-none">
-                                                <ExclamationTriangleIcon className={`h-4 w-4 flex-shrink-0 ${hasOverdue ? 'text-orange-400 dark:text-orange-500' : 'text-gray-400 dark:text-gray-500'}`} />
-                                                <span className={`text-2xl font-bold leading-none ${hasOverdue ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400'}`}>{metrics.tasks_overdue.length}</span>
+                                                <ExclamationTriangleIcon
+                                                    className={`h-4 w-4 flex-shrink-0 ${hasOverdue ? 'text-orange-400 dark:text-orange-500' : 'text-gray-400 dark:text-gray-500'}`}
+                                                />
+                                                <span
+                                                    className={`text-2xl font-bold leading-none ${hasOverdue ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400'}`}
+                                                >
+                                                    {
+                                                        metrics.tasks_overdue
+                                                            .length
+                                                    }
+                                                </span>
                                             </div>
-                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{t('tasks.overdue', 'Overdue')}</span>
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                                {t('tasks.overdue', 'Overdue')}
+                                            </span>
                                         </div>
                                     );
                                 })()}
                                 {/* Completed Today */}
                                 {(() => {
                                     const trend = getCompletionTrend();
-                                    const hasDone = metrics.tasks_completed_today.length > 0;
+                                    const hasDone =
+                                        metrics.tasks_completed_today.length >
+                                        0;
                                     return (
-                                        <div className={`flex flex-col items-center justify-center rounded-lg p-2.5 gap-1 ${hasDone ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-gray-50 dark:bg-gray-800/40'}`}>
+                                        <div
+                                            className={`flex flex-col items-center justify-center rounded-lg p-2.5 gap-1 ${hasDone ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-gray-50 dark:bg-gray-800/40'}`}
+                                        >
                                             <div className="flex items-center gap-1.5 leading-none">
-                                                <CheckCircleIcon className={`h-4 w-4 flex-shrink-0 ${hasDone ? 'text-emerald-400 dark:text-emerald-500' : 'text-gray-400 dark:text-gray-500'}`} />
-                                                <span className={`text-2xl font-bold ${hasDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'}`}>{metrics.tasks_completed_today.length}</span>
+                                                <CheckCircleIcon
+                                                    className={`h-4 w-4 flex-shrink-0 ${hasDone ? 'text-emerald-400 dark:text-emerald-500' : 'text-gray-400 dark:text-gray-500'}`}
+                                                />
+                                                <span
+                                                    className={`text-2xl font-bold ${hasDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'}`}
+                                                >
+                                                    {
+                                                        metrics
+                                                            .tasks_completed_today
+                                                            .length
+                                                    }
+                                                </span>
                                                 {trend.direction === 'up' && (
                                                     <div className="relative group/tip">
                                                         <ArrowUpIcon className="h-3 w-3 text-emerald-500" />
                                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                                            {t('dashboard.betterThanAverage', '{{percentage}}% more than average', { percentage: trend.percentage })}
+                                                            {t(
+                                                                'dashboard.betterThanAverage',
+                                                                '{{percentage}}% more than average',
+                                                                {
+                                                                    percentage:
+                                                                        trend.percentage,
+                                                                }
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
@@ -1483,12 +1608,24 @@ const TasksToday: React.FC = () => {
                                                     <div className="relative group/tip">
                                                         <ArrowDownIcon className="h-3 w-3 text-red-400" />
                                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                                            {t('dashboard.worseThanAverage', '{{percentage}}% less than average', { percentage: trend.percentage })}
+                                                            {t(
+                                                                'dashboard.worseThanAverage',
+                                                                '{{percentage}}% less than average',
+                                                                {
+                                                                    percentage:
+                                                                        trend.percentage,
+                                                                }
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{t('tasks.completedToday', 'Completed Today')}</span>
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                                {t(
+                                                    'tasks.completedToday',
+                                                    'Completed Today'
+                                                )}
+                                            </span>
                                         </div>
                                     );
                                 })()}
@@ -1596,6 +1733,7 @@ const TasksToday: React.FC = () => {
                                         )}
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={localProjects}
                                         onToggleToday={undefined}
                                         onTaskCompletionToggle={
@@ -1695,6 +1833,9 @@ const TasksToday: React.FC = () => {
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
                                             }
+                                            onTaskDuplicated={
+                                                handleTaskDuplicated
+                                            }
                                         />
 
                                         {/* Load More Buttons for Planned Tasks */}
@@ -1785,6 +1926,7 @@ const TasksToday: React.FC = () => {
                                         )}
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={localProjects}
                                         onToggleToday={undefined}
                                         onTaskCompletionToggle={
@@ -1859,7 +2001,10 @@ const TasksToday: React.FC = () => {
                     <div className="mt-2 mb-6">
                         {isEmptyDay && (
                             <p className="text-sm text-gray-400 dark:text-gray-500 mb-3 italic">
-                                {t('tasks.noPlanYet', 'No plan yet - here are some ideas:')}
+                                {t(
+                                    'tasks.noPlanYet',
+                                    'No plan yet - here are some ideas:'
+                                )}
                             </p>
                         )}
                         <div
@@ -1892,6 +2037,7 @@ const TasksToday: React.FC = () => {
                                         handleTaskCompletionToggle
                                     }
                                     onTaskDelete={handleTaskDelete}
+                                    onTaskDuplicated={handleTaskDuplicated}
                                     projects={localProjects}
                                     onToggleToday={undefined}
                                     showSuggestionChips={true}
@@ -1908,7 +2054,12 @@ const TasksToday: React.FC = () => {
                                             }
                                             className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                         >
-                                            {Math.min(5, sortedSuggestedTasks.length - suggestedDisplayLimit)} more
+                                            {Math.min(
+                                                5,
+                                                sortedSuggestedTasks.length -
+                                                    suggestedDisplayLimit
+                                            )}{' '}
+                                            more
                                         </button>
                                     </div>
                                 )}
@@ -1956,6 +2107,9 @@ const TasksToday: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                            onTaskDuplicated={
+                                                handleTaskDuplicated
+                                            }
                                             projects={localProjects}
                                             onToggleToday={undefined}
                                             showCompletedTasks={true}

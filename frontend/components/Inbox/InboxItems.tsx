@@ -244,7 +244,9 @@ const InboxItems: React.FC = () => {
             }
 
             if (options.navigateAfterCreate && createdTask.uid) {
-                navigate(`/task/${createdTask.uid}`, { state: { from: location.pathname + location.search } });
+                navigate(`/task/${createdTask.uid}`, {
+                    state: { from: location.pathname + location.search },
+                });
             }
 
             return createdTask;
@@ -332,7 +334,8 @@ const InboxItems: React.FC = () => {
             const updatedProjects = await fetchProjects();
             setProjects(updatedProjects);
 
-            const { setProjects: setGlobalProjects } = useStore.getState().projectsStore;
+            const { setProjects: setGlobalProjects } =
+                useStore.getState().projectsStore;
             setGlobalProjects(updatedProjects);
 
             if (currentConversionItemUid !== null) {
@@ -452,12 +455,22 @@ const InboxItems: React.FC = () => {
                             </p>
                             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
                                 <span>
-                                    <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono">#tag</code>
-                                    {' '}{t('inbox.shortcutTag', 'to label with a tag')}
+                                    <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono">
+                                        #tag
+                                    </code>{' '}
+                                    {t(
+                                        'inbox.shortcutTag',
+                                        'to label with a tag'
+                                    )}
                                 </span>
                                 <span>
-                                    <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono">+Project</code>
-                                    {' '}{t('inbox.shortcutProject', 'to assign to a project')}
+                                    <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono">
+                                        +Project
+                                    </code>{' '}
+                                    {t(
+                                        'inbox.shortcutProject',
+                                        'to assign to a project'
+                                    )}
                                 </span>
                             </div>
                         </div>

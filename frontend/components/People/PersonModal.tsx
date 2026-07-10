@@ -17,9 +17,14 @@ const RELATIONSHIP_TYPES: { value: RelationshipType; label: string }[] = [
     { value: 'other', label: 'Other' },
 ];
 
-const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) => {
+const PersonModal: React.FC<PersonModalProps> = ({
+    person,
+    onSave,
+    onClose,
+}) => {
     const [name, setName] = useState('');
-    const [relationshipType, setRelationshipType] = useState<RelationshipType>('other');
+    const [relationshipType, setRelationshipType] =
+        useState<RelationshipType>('other');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [notes, setNotes] = useState('');
@@ -27,7 +32,11 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) =>
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [relationshipOpen, setRelationshipOpen] = useState(false);
-    const [relationshipPos, setRelationshipPos] = useState({ top: 0, left: 0, width: 0 });
+    const [relationshipPos, setRelationshipPos] = useState({
+        top: 0,
+        left: 0,
+        width: 0,
+    });
     const relationshipRef = useRef<HTMLDivElement>(null);
     const relationshipMenuRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +62,11 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) =>
     const handleRelationshipToggle = () => {
         if (!relationshipOpen && relationshipRef.current) {
             const rect = relationshipRef.current.getBoundingClientRect();
-            setRelationshipPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+            setRelationshipPos({
+                top: rect.bottom + 4,
+                left: rect.left,
+                width: rect.width,
+            });
         }
         setRelationshipOpen((o) => !o);
     };
@@ -91,7 +104,8 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) =>
             });
             onClose();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : 'Failed to save person';
+            const msg =
+                err instanceof Error ? err.message : 'Failed to save person';
             setError(msg);
         } finally {
             setSaving(false);
@@ -146,7 +160,9 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) =>
                                 className="inline-flex justify-between w-full px-3 py-2 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none"
                             >
                                 <span>
-                                    {RELATIONSHIP_TYPES.find((r) => r.value === relationshipType)?.label ?? 'Other'}
+                                    {RELATIONSHIP_TYPES.find(
+                                        (r) => r.value === relationshipType
+                                    )?.label ?? 'Other'}
                                 </span>
                                 <ChevronDownIcon className="w-4 h-4 text-gray-500 dark:text-gray-300 ml-2 mt-0.5" />
                             </button>
@@ -166,11 +182,14 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) =>
                                                 key={rt.value}
                                                 type="button"
                                                 onClick={() => {
-                                                    setRelationshipType(rt.value);
+                                                    setRelationshipType(
+                                                        rt.value
+                                                    );
                                                     setRelationshipOpen(false);
                                                 }}
                                                 className={`flex items-center px-4 py-2 text-sm w-full first:rounded-t-md last:rounded-b-md ${
-                                                    rt.value === relationshipType
+                                                    rt.value ===
+                                                    relationshipType
                                                         ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                                                         : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
                                                 }`}
@@ -243,7 +262,11 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onSave, onClose }) =>
                             disabled={saving}
                             className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                         >
-                            {saving ? 'Saving...' : person ? 'Save Changes' : 'Create Person'}
+                            {saving
+                                ? 'Saving...'
+                                : person
+                                  ? 'Save Changes'
+                                  : 'Create Person'}
                         </button>
                     </div>
                 </form>

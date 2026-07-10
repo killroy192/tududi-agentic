@@ -61,7 +61,10 @@ export const updateProfile = async (
     await handleAuthResponse(response, 'Failed to update profile.');
     const updatedProfile = await response.json();
 
-    if (profileData.features && 'task_intelligence_enabled' in profileData.features) {
+    if (
+        profileData.features &&
+        'task_intelligence_enabled' in profileData.features
+    ) {
         localStorage.removeItem('taskIntelligenceEnabled');
     }
 

@@ -10,7 +10,11 @@ import {
     FolderIcon,
     ClockIcon,
 } from '@heroicons/react/24/outline';
-import { fetchDailyBrief, fetchCachedBrief, DailyBrief } from '../../utils/aiAssistantService';
+import {
+    fetchDailyBrief,
+    fetchCachedBrief,
+    DailyBrief,
+} from '../../utils/aiAssistantService';
 
 function isBriefFromToday(generatedAt: string): boolean {
     const briefDate = new Date(generatedAt);
@@ -71,7 +75,9 @@ const DailyAssistant: React.FC = () => {
                     {brief && (
                         <span className="text-xs text-gray-400 dark:text-gray-500">
                             {t('aiAssistant.generatedAt', {
-                                time: new Date(brief.generated_at).toLocaleTimeString([], {
+                                time: new Date(
+                                    brief.generated_at
+                                ).toLocaleTimeString([], {
                                     hour: '2-digit',
                                     minute: '2-digit',
                                 }),
@@ -92,7 +98,9 @@ const DailyAssistant: React.FC = () => {
                     ) : (
                         <>
                             <SparklesIcon className="h-3 w-3" />
-                            {brief ? t('aiAssistant.regenerate') : t('aiAssistant.generate')}
+                            {brief
+                                ? t('aiAssistant.regenerate')
+                                : t('aiAssistant.generate')}
                         </>
                     )}
                 </button>
@@ -104,7 +112,9 @@ const DailyAssistant: React.FC = () => {
                     <ClockIcon className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
                     <span className="text-xs text-amber-700 dark:text-amber-400">
                         {t('aiAssistant.pastBriefWarning', {
-                            date: new Date(brief.generated_at).toLocaleDateString([], {
+                            date: new Date(
+                                brief.generated_at
+                            ).toLocaleDateString([], {
                                 weekday: 'long',
                                 month: 'short',
                                 day: 'numeric',
@@ -130,7 +140,10 @@ const DailyAssistant: React.FC = () => {
                         <div className="h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg" />
                         <div className="space-y-2">
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="flex items-center gap-2">
+                                <div
+                                    key={i}
+                                    className="flex items-center gap-2"
+                                >
                                     <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
                                     <div className="h-3 bg-gray-100 dark:bg-gray-700/60 rounded flex-1" />
                                     <div className="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-16" />
@@ -168,36 +181,41 @@ const DailyAssistant: React.FC = () => {
                                     </span>
                                 </div>
                                 <ol className="space-y-2">
-                                    {(brief.priority_actions ?? []).map((item, i) => (
-                                        <li key={i} className="flex items-start gap-2.5">
-                                            <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold flex items-center justify-center leading-none">
-                                                {i + 1}
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug">
-                                                    {item.action}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                                    {item.project && (
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 dark:text-blue-400">
-                                                            <FolderIcon className="h-2.5 w-2.5" />
-                                                            {item.project}
-                                                        </span>
-                                                    )}
-                                                    {item.reason && (
-                                                        <span className="text-xs text-gray-400 dark:text-gray-500">
-                                                            {item.reason}
-                                                        </span>
+                                    {(brief.priority_actions ?? []).map(
+                                        (item, i) => (
+                                            <li
+                                                key={i}
+                                                className="flex items-start gap-2.5"
+                                            >
+                                                <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold flex items-center justify-center leading-none">
+                                                    {i + 1}
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug">
+                                                        {item.action}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                        {item.project && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                                                                <FolderIcon className="h-2.5 w-2.5" />
+                                                                {item.project}
+                                                            </span>
+                                                        )}
+                                                        {item.reason && (
+                                                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                                {item.reason}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {item.suggestion && (
+                                                        <p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400 italic leading-snug">
+                                                            {item.suggestion}
+                                                        </p>
                                                     )}
                                                 </div>
-                                                {item.suggestion && (
-                                                    <p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400 italic leading-snug">
-                                                        {item.suggestion}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </li>
-                                    ))}
+                                            </li>
+                                        )
+                                    )}
                                 </ol>
                             </div>
                         )}
@@ -211,11 +229,16 @@ const DailyAssistant: React.FC = () => {
                                         {t('aiAssistant.watchOut')}
                                     </p>
                                     <ul className="space-y-0.5">
-                                        {(brief.watch_out ?? []).map((item, i) => (
-                                            <li key={i} className="text-sm text-amber-900 dark:text-amber-200">
-                                                {item}
-                                            </li>
-                                        ))}
+                                        {(brief.watch_out ?? []).map(
+                                            (item, i) => (
+                                                <li
+                                                    key={i}
+                                                    className="text-sm text-amber-900 dark:text-amber-200"
+                                                >
+                                                    {item}
+                                                </li>
+                                            )
+                                        )}
                                     </ul>
                                 </div>
                             </div>

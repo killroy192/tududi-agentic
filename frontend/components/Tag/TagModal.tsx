@@ -150,7 +150,11 @@ const TagModal: React.FC<TagModalProps> = ({
         if (!tag) {
             return formData.name.trim() !== '' || !!formData.color;
         }
-        return formData.name !== tag.name || formData.pinned !== tag.pinned || formData.color !== tag.color;
+        return (
+            formData.name !== tag.name ||
+            formData.pinned !== tag.pinned ||
+            formData.color !== tag.color
+        );
     };
 
     // Use ref to store hasUnsavedChanges so it's always current in the event handler
@@ -228,7 +232,9 @@ const TagModal: React.FC<TagModalProps> = ({
                                             value={formData.name}
                                             onChange={handleChange}
                                             required
-                                            readOnly={tag?.tag_type === 'system'}
+                                            readOnly={
+                                                tag?.tag_type === 'system'
+                                            }
                                             className={`block w-full text-xl font-semibold bg-transparent text-black dark:text-white border-none focus:outline-none shadow-sm py-2 ${
                                                 tag?.tag_type === 'system'
                                                     ? 'cursor-default opacity-70'
@@ -260,8 +266,14 @@ const TagModal: React.FC<TagModalProps> = ({
                                         >
                                             <MapPinIcon className="h-3.5 w-3.5" />
                                             {formData.pinned
-                                                ? t('tags.pinned', 'Pinned for quick access')
-                                                : t('tags.pinTag', 'Pin for quick access')}
+                                                ? t(
+                                                      'tags.pinned',
+                                                      'Pinned for quick access'
+                                                  )
+                                                : t(
+                                                      'tags.pinTag',
+                                                      'Pin for quick access'
+                                                  )}
                                         </button>
                                     </div>
 
@@ -288,16 +300,19 @@ const TagModal: React.FC<TagModalProps> = ({
                         <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex items-center justify-between sm:rounded-b-lg">
                             {/* Left side: Delete and Cancel */}
                             <div className="flex items-center space-x-3">
-                                {tag && tag.uid && onDelete && tag.tag_type !== 'system' && (
-                                    <button
-                                        type="button"
-                                        onClick={handleDeleteTag}
-                                        className="p-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none transition duration-150 ease-in-out"
-                                        title={t('common.delete', 'Delete')}
-                                    >
-                                        <TrashIcon className="h-4 w-4" />
-                                    </button>
-                                )}
+                                {tag &&
+                                    tag.uid &&
+                                    onDelete &&
+                                    tag.tag_type !== 'system' && (
+                                        <button
+                                            type="button"
+                                            onClick={handleDeleteTag}
+                                            className="p-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none transition duration-150 ease-in-out"
+                                            title={t('common.delete', 'Delete')}
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                    )}
                                 <button
                                     type="button"
                                     onClick={handleClose}

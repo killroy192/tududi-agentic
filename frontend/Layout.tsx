@@ -60,7 +60,8 @@ const Layout: React.FC<LayoutProps> = ({
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
-    const [keyboardShortcuts, setKeyboardShortcuts] = useState<KeyboardShortcutsConfig | null>(null);
+    const [keyboardShortcuts, setKeyboardShortcuts] =
+        useState<KeyboardShortcutsConfig | null>(null);
 
     // Fetch keyboard shortcuts from profile
     useEffect(() => {
@@ -109,7 +110,12 @@ const Layout: React.FC<LayoutProps> = ({
                 if (window.innerWidth < 1024) {
                     setIsSidebarOpen(false);
                 }
-                navigate(`/task/${newTask.uid}`, { state: { isNew: true, from: location.pathname + location.search } });
+                navigate(`/task/${newTask.uid}`, {
+                    state: {
+                        isNew: true,
+                        from: location.pathname + location.search,
+                    },
+                });
             } else {
                 throw new Error('New task missing UID');
             }

@@ -23,7 +23,10 @@ const DEFAULT_COLORS = [
     '#84cc16',
 ];
 
-const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => {
+const CalendarForm: React.FC<CalendarFormProps> = ({
+    onComplete,
+    onCancel,
+}) => {
     const { t } = useTranslation();
     const { showSuccessToast, showErrorToast } = useToast();
 
@@ -38,7 +41,11 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
         authType: 'basic' as 'basic' | 'bearer',
         syncDirection: 'bidirectional' as 'bidirectional' | 'pull' | 'push',
         syncInterval: 15,
-        conflictResolution: 'manual' as 'last_write_wins' | 'local_wins' | 'remote_wins' | 'manual',
+        conflictResolution: 'manual' as
+            | 'last_write_wins'
+            | 'local_wins'
+            | 'remote_wins'
+            | 'manual',
         enabled: true,
     });
 
@@ -100,12 +107,18 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
     };
 
     const handleTestConnection = async () => {
-        if (!formData.serverUrl.trim() || !formData.calendarPath.trim() ||
-            !formData.username.trim() || !formData.password.trim()) {
-            showErrorToast(t(
-                'profile.caldavWizard.fillServerDetails',
-                'Please fill in all server connection details first'
-            ));
+        if (
+            !formData.serverUrl.trim() ||
+            !formData.calendarPath.trim() ||
+            !formData.username.trim() ||
+            !formData.password.trim()
+        ) {
+            showErrorToast(
+                t(
+                    'profile.caldavWizard.fillServerDetails',
+                    'Please fill in all server connection details first'
+                )
+            );
             return;
         }
 
@@ -217,33 +230,52 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+        <form
+            onSubmit={handleSubmit}
+            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6"
+        >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="lg:col-span-2">
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        {t('profile.caldavWizard.calendarSettings', 'Calendar Settings')}
+                        {t(
+                            'profile.caldavWizard.calendarSettings',
+                            'Calendar Settings'
+                        )}
                     </h4>
                 </div>
 
                 <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t('profile.caldavWizard.calendarName', 'Calendar name')}{' '}
+                        {t(
+                            'profile.caldavWizard.calendarName',
+                            'Calendar name'
+                        )}{' '}
                         <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
                         value={formData.calendarName}
                         onChange={(e) => {
-                            setFormData({ ...formData, calendarName: e.target.value });
+                            setFormData({
+                                ...formData,
+                                calendarName: e.target.value,
+                            });
                             setErrors({ ...errors, calendarName: '' });
                         }}
                         className={`block w-full border rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
-                            errors.calendarName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                            errors.calendarName
+                                ? 'border-red-500'
+                                : 'border-gray-300 dark:border-gray-600'
                         }`}
-                        placeholder={t('profile.caldavWizard.calendarNamePlaceholder', 'e.g., Work Tasks')}
+                        placeholder={t(
+                            'profile.caldavWizard.calendarNamePlaceholder',
+                            'e.g., Work Tasks'
+                        )}
                     />
                     {errors.calendarName && (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.calendarName}</p>
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            {errors.calendarName}
+                        </p>
                     )}
                 </div>
 
@@ -257,11 +289,17 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                     <textarea
                         value={formData.calendarDescription}
                         onChange={(e) =>
-                            setFormData({ ...formData, calendarDescription: e.target.value })
+                            setFormData({
+                                ...formData,
+                                calendarDescription: e.target.value,
+                            })
                         }
                         rows={2}
                         className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
-                        placeholder={t('profile.caldavWizard.descriptionPlaceholder', 'Optional description')}
+                        placeholder={t(
+                            'profile.caldavWizard.descriptionPlaceholder',
+                            'Optional description'
+                        )}
                     />
                 </div>
 
@@ -274,7 +312,12 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                             <button
                                 key={color}
                                 type="button"
-                                onClick={() => setFormData({ ...formData, calendarColor: color })}
+                                onClick={() =>
+                                    setFormData({
+                                        ...formData,
+                                        calendarColor: color,
+                                    })
+                                }
                                 className={`w-10 h-10 rounded-full border-4 transition-all ${
                                     formData.calendarColor === color
                                         ? 'border-gray-400 dark:border-gray-500 scale-110'
@@ -288,7 +331,10 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
 
                 <div className="lg:col-span-2 border-t border-gray-200 dark:border-gray-700 pt-6">
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        {t('profile.caldavWizard.serverSettings', 'Server Settings')}
+                        {t(
+                            'profile.caldavWizard.serverSettings',
+                            'Server Settings'
+                        )}
                     </h4>
                 </div>
 
@@ -301,40 +347,61 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                         type="url"
                         value={formData.serverUrl}
                         onChange={(e) => {
-                            setFormData({ ...formData, serverUrl: e.target.value });
+                            setFormData({
+                                ...formData,
+                                serverUrl: e.target.value,
+                            });
                             setErrors({ ...errors, serverUrl: '' });
                             setTestResult(null);
                         }}
                         className={`block w-full border rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
-                            errors.serverUrl ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                            errors.serverUrl
+                                ? 'border-red-500'
+                                : 'border-gray-300 dark:border-gray-600'
                         }`}
-                        placeholder={t('profile.caldavWizard.serverUrlPlaceholder')}
+                        placeholder={t(
+                            'profile.caldavWizard.serverUrlPlaceholder'
+                        )}
                     />
                     {errors.serverUrl && (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.serverUrl}</p>
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            {errors.serverUrl}
+                        </p>
                     )}
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t('profile.caldavWizard.calendarPath', 'Calendar path')}{' '}
+                        {t(
+                            'profile.caldavWizard.calendarPath',
+                            'Calendar path'
+                        )}{' '}
                         <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
                         value={formData.calendarPath}
                         onChange={(e) => {
-                            setFormData({ ...formData, calendarPath: e.target.value });
+                            setFormData({
+                                ...formData,
+                                calendarPath: e.target.value,
+                            });
                             setErrors({ ...errors, calendarPath: '' });
                             setTestResult(null);
                         }}
                         className={`block w-full border rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
-                            errors.calendarPath ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                            errors.calendarPath
+                                ? 'border-red-500'
+                                : 'border-gray-300 dark:border-gray-600'
                         }`}
-                        placeholder={t('profile.caldavWizard.calendarPathPlaceholder')}
+                        placeholder={t(
+                            'profile.caldavWizard.calendarPathPlaceholder'
+                        )}
                     />
                     {errors.calendarPath && (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.calendarPath}</p>
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            {errors.calendarPath}
+                        </p>
                     )}
                 </div>
 
@@ -347,17 +414,24 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                         type="text"
                         value={formData.username}
                         onChange={(e) => {
-                            setFormData({ ...formData, username: e.target.value });
+                            setFormData({
+                                ...formData,
+                                username: e.target.value,
+                            });
                             setErrors({ ...errors, username: '' });
                             setTestResult(null);
                         }}
                         className={`block w-full border rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
-                            errors.username ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                            errors.username
+                                ? 'border-red-500'
+                                : 'border-gray-300 dark:border-gray-600'
                         }`}
                         autoComplete="username"
                     />
                     {errors.username && (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.username}</p>
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            {errors.username}
+                        </p>
                     )}
                 </div>
 
@@ -370,23 +444,33 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                         type="password"
                         value={formData.password}
                         onChange={(e) => {
-                            setFormData({ ...formData, password: e.target.value });
+                            setFormData({
+                                ...formData,
+                                password: e.target.value,
+                            });
                             setErrors({ ...errors, password: '' });
                             setTestResult(null);
                         }}
                         className={`block w-full border rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
-                            errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                            errors.password
+                                ? 'border-red-500'
+                                : 'border-gray-300 dark:border-gray-600'
                         }`}
                         autoComplete="current-password"
                     />
                     {errors.password && (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.password}</p>
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            {errors.password}
+                        </p>
                     )}
                 </div>
 
                 <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t('profile.caldavWizard.authType', 'Authentication type')}
+                        {t(
+                            'profile.caldavWizard.authType',
+                            'Authentication type'
+                        )}
                     </label>
                     <select
                         value={formData.authType}
@@ -402,7 +486,10 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                             {t('profile.caldavWizard.basicAuth', 'Basic Auth')}
                         </option>
                         <option value="bearer">
-                            {t('profile.caldavWizard.bearerAuth', 'Bearer Token')}
+                            {t(
+                                'profile.caldavWizard.bearerAuth',
+                                'Bearer Token'
+                            )}
                         </option>
                     </select>
                 </div>
@@ -420,7 +507,10 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                     >
                         {isTesting
                             ? t('profile.caldavWizard.testing', 'Testing...')
-                            : t('profile.caldavWizard.testConnection', 'Test Connection')}
+                            : t(
+                                  'profile.caldavWizard.testConnection',
+                                  'Test Connection'
+                              )}
                     </button>
 
                     {testResult && (
@@ -444,45 +534,68 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                     )}
 
                     {errors.connection && (
-                        <p className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.connection}</p>
+                        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                            {errors.connection}
+                        </p>
                     )}
                 </div>
 
                 <div className="lg:col-span-2 border-t border-gray-200 dark:border-gray-700 pt-6">
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        {t('profile.caldavWizard.syncSettings', 'Sync Settings')}
+                        {t(
+                            'profile.caldavWizard.syncSettings',
+                            'Sync Settings'
+                        )}
                     </h4>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t('profile.caldavWizard.syncDirection', 'Sync direction')}
+                        {t(
+                            'profile.caldavWizard.syncDirection',
+                            'Sync direction'
+                        )}
                     </label>
                     <select
                         value={formData.syncDirection}
                         onChange={(e) =>
                             setFormData({
                                 ...formData,
-                                syncDirection: e.target.value as 'bidirectional' | 'pull' | 'push',
+                                syncDirection: e.target.value as
+                                    | 'bidirectional'
+                                    | 'pull'
+                                    | 'push',
                             })
                         }
                         className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="bidirectional">
-                            {t('profile.caldavWizard.bidirectional', 'Bidirectional (sync both ways)')}
+                            {t(
+                                'profile.caldavWizard.bidirectional',
+                                'Bidirectional (sync both ways)'
+                            )}
                         </option>
                         <option value="pull">
-                            {t('profile.caldavWizard.pullOnly', 'Pull only (from server to Tududi)')}
+                            {t(
+                                'profile.caldavWizard.pullOnly',
+                                'Pull only (from server to Tududi)'
+                            )}
                         </option>
                         <option value="push">
-                            {t('profile.caldavWizard.pushOnly', 'Push only (from Tududi to server)')}
+                            {t(
+                                'profile.caldavWizard.pushOnly',
+                                'Push only (from Tududi to server)'
+                            )}
                         </option>
                     </select>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t('profile.caldavWizard.syncInterval', 'Sync interval (minutes)')}
+                        {t(
+                            'profile.caldavWizard.syncInterval',
+                            'Sync interval (minutes)'
+                        )}
                     </label>
                     <input
                         type="number"
@@ -498,13 +611,19 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                         className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {t('profile.caldavWizard.syncIntervalHelp', 'How often to automatically sync (5-1440 minutes)')}
+                        {t(
+                            'profile.caldavWizard.syncIntervalHelp',
+                            'How often to automatically sync (5-1440 minutes)'
+                        )}
                     </p>
                 </div>
 
                 <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t('profile.caldavWizard.conflictPolicy', 'Conflict resolution')}
+                        {t(
+                            'profile.caldavWizard.conflictPolicy',
+                            'Conflict resolution'
+                        )}
                     </label>
                     <select
                         value={formData.conflictResolution}
@@ -521,16 +640,28 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                         className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="manual">
-                            {t('profile.caldavWizard.manual', 'Ask me (manual resolution)')}
+                            {t(
+                                'profile.caldavWizard.manual',
+                                'Ask me (manual resolution)'
+                            )}
                         </option>
                         <option value="last_write_wins">
-                            {t('profile.caldavWizard.lastWriteWins', 'Last modified wins (automatic)')}
+                            {t(
+                                'profile.caldavWizard.lastWriteWins',
+                                'Last modified wins (automatic)'
+                            )}
                         </option>
                         <option value="local_wins">
-                            {t('profile.caldavWizard.localWins', 'Local always wins')}
+                            {t(
+                                'profile.caldavWizard.localWins',
+                                'Local always wins'
+                            )}
                         </option>
                         <option value="remote_wins">
-                            {t('profile.caldavWizard.remoteWins', 'Remote always wins')}
+                            {t(
+                                'profile.caldavWizard.remoteWins',
+                                'Remote always wins'
+                            )}
                         </option>
                     </select>
                 </div>
@@ -541,12 +672,18 @@ const CalendarForm: React.FC<CalendarFormProps> = ({ onComplete, onCancel }) => 
                             type="checkbox"
                             checked={formData.enabled}
                             onChange={(e) =>
-                                setFormData({ ...formData, enabled: e.target.checked })
+                                setFormData({
+                                    ...formData,
+                                    enabled: e.target.checked,
+                                })
                             }
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {t('profile.editCalendar.enableSync', 'Enable synchronization')}
+                            {t(
+                                'profile.editCalendar.enableSync',
+                                'Enable synchronization'
+                            )}
                         </span>
                     </label>
                 </div>

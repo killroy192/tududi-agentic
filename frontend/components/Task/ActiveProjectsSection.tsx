@@ -80,7 +80,16 @@ const ActiveProjectsSection: React.FC<Props> = ({ projects }) => {
                     else risk = 'green';
                 }
 
-                return { project: p, areaName, areaColor, pct, done, total, daysLeft, risk };
+                return {
+                    project: p,
+                    areaName,
+                    areaColor,
+                    pct,
+                    done,
+                    total,
+                    daysLeft,
+                    risk,
+                };
             })
             .sort((a, b) => {
                 if (a.daysLeft === null && b.daysLeft === null) return 0;
@@ -102,7 +111,16 @@ const ActiveProjectsSection: React.FC<Props> = ({ projects }) => {
 
             <div className="space-y-3">
                 {rows.map(
-                    ({ project, areaName, areaColor, pct, done, total, daysLeft, risk }) => (
+                    ({
+                        project,
+                        areaName,
+                        areaColor,
+                        pct,
+                        done,
+                        total,
+                        daysLeft,
+                        risk,
+                    }) => (
                         <div
                             key={project.id}
                             className="group cursor-pointer"

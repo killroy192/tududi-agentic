@@ -20,7 +20,10 @@ const PersonAvatar: React.FC<{ person: Person | null; size?: 'sm' | 'md' }> = ({
             className={`inline-block ${dim} rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600`}
             style={
                 person?.color
-                    ? { backgroundColor: person.color, borderColor: person.color }
+                    ? {
+                          backgroundColor: person.color,
+                          borderColor: person.color,
+                      }
                     : {}
             }
         />
@@ -44,7 +47,10 @@ const PersonDropdown: React.FC<PersonDropdownProps> = ({
     const handleToggle = () => {
         if (!isOpen && dropdownRef.current) {
             const rect = dropdownRef.current.getBoundingClientRect();
-            const menuHeight = Math.min((activePeople.length + 1) * 40 + 8, 240);
+            const menuHeight = Math.min(
+                (activePeople.length + 1) * 40 + 8,
+                240
+            );
             const spaceBelow = window.innerHeight - rect.bottom;
             const openUpward = spaceBelow < menuHeight && rect.top > spaceBelow;
             setPosition({
@@ -75,11 +81,15 @@ const PersonDropdown: React.FC<PersonDropdownProps> = ({
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
         }
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen]);
 
     return (
-        <div ref={dropdownRef} className="relative inline-block text-left w-full">
+        <div
+            ref={dropdownRef}
+            className="relative inline-block text-left w-full"
+        >
             <button
                 type="button"
                 className="inline-flex justify-between w-full px-3 py-2 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -87,7 +97,13 @@ const PersonDropdown: React.FC<PersonDropdownProps> = ({
             >
                 <span className="flex items-center space-x-2">
                     <PersonAvatar person={selectedPerson} />
-                    <span className={selectedPerson ? '' : 'text-gray-400 dark:text-gray-500'}>
+                    <span
+                        className={
+                            selectedPerson
+                                ? ''
+                                : 'text-gray-400 dark:text-gray-500'
+                        }
+                    >
                         {selectedPerson ? selectedPerson.name : placeholder}
                     </span>
                 </span>
@@ -146,11 +162,12 @@ const PersonDropdown: React.FC<PersonDropdownProps> = ({
                             >
                                 <PersonAvatar person={p} size="md" />
                                 <span>{p.name}</span>
-                                {p.relationship_type && p.relationship_type !== 'other' && (
-                                    <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">
-                                        {p.relationship_type}
-                                    </span>
-                                )}
+                                {p.relationship_type &&
+                                    p.relationship_type !== 'other' && (
+                                        <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">
+                                            {p.relationship_type}
+                                        </span>
+                                    )}
                             </button>
                         ))}
                         {activePeople.length === 0 && (

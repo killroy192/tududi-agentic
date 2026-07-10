@@ -26,9 +26,7 @@ const ConnectedAccounts: React.FC<ConnectedAccountsProps> = ({
     const [identities, setIdentities] = useState<OIDCIdentity[]>([]);
     const [loading, setLoading] = useState(true);
     const [unlinkingId, setUnlinkingId] = useState<number | null>(null);
-    const [confirmUnlinkId, setConfirmUnlinkId] = useState<number | null>(
-        null
-    );
+    const [confirmUnlinkId, setConfirmUnlinkId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -100,9 +98,7 @@ const ConnectedAccounts: React.FC<ConnectedAccountsProps> = ({
             setConfirmUnlinkId(null);
         } catch (err) {
             setError(
-                err instanceof Error
-                    ? err.message
-                    : 'Failed to unlink account'
+                err instanceof Error ? err.message : 'Failed to unlink account'
             );
         } finally {
             setUnlinkingId(null);

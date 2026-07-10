@@ -95,7 +95,8 @@ const SaveViewModal: React.FC<SaveViewModalProps> = ({
                             htmlFor="viewName"
                             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                         >
-                            {t('views.viewNameLabel')} <span className="text-red-500">*</span>
+                            {t('views.viewNameLabel')}{' '}
+                            <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -122,13 +123,27 @@ const SaveViewModal: React.FC<SaveViewModalProps> = ({
                         </p>
                         <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
                             {filters.length > 0 && (
-                                <li>• {t('views.filtersLabel')} {filters.join(', ')}</li>
+                                <li>
+                                    • {t('views.filtersLabel')}{' '}
+                                    {filters.join(', ')}
+                                </li>
                             )}
                             {searchQuery && (
-                                <li>• {t('views.searchLabel')} &quot;{searchQuery}&quot;</li>
+                                <li>
+                                    • {t('views.searchLabel')} &quot;
+                                    {searchQuery}&quot;
+                                </li>
                             )}
-                            {priority && <li>• {t('views.priorityLabel')} {priority}</li>}
-                            {due && <li>• {t('views.dueLabel')} {due}</li>}
+                            {priority && (
+                                <li>
+                                    • {t('views.priorityLabel')} {priority}
+                                </li>
+                            )}
+                            {due && (
+                                <li>
+                                    • {t('views.dueLabel')} {due}
+                                </li>
+                            )}
                         </ul>
                     </div>
 
@@ -145,7 +160,9 @@ const SaveViewModal: React.FC<SaveViewModalProps> = ({
                             disabled={isLoading}
                             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-md transition-colors"
                         >
-                            {isLoading ? t('common.saving') : t('views.saveView')}
+                            {isLoading
+                                ? t('common.saving')
+                                : t('views.saveView')}
                         </button>
                     </div>
                 </form>

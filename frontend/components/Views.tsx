@@ -53,7 +53,10 @@ const Views: React.FC = () => {
                 justOpenedRef.current = false;
                 return;
             }
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
                 setDropdownOpen(null);
             }
         };
@@ -66,12 +69,15 @@ const Views: React.FC = () => {
                 document.removeEventListener('mousedown', handleClickOutside);
             };
         }
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside);
     }, [dropdownOpen]);
 
     const fetchViews = async () => {
         try {
-            const response = await fetch(getApiPath('views'), { credentials: 'include' });
+            const response = await fetch(getApiPath('views'), {
+                credentials: 'include',
+            });
             if (response.ok) {
                 const data = await response.json();
                 const normalized: View[] = data.map((view: View) => ({
@@ -92,11 +98,14 @@ const Views: React.FC = () => {
     const handleDeleteView = async () => {
         if (!viewToDelete) return;
         try {
-            const response = await fetch(getApiPath(`views/${viewToDelete.uid}`), {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: { 'x-csrf-token': await getCsrfToken() },
-            });
+            const response = await fetch(
+                getApiPath(`views/${viewToDelete.uid}`),
+                {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'x-csrf-token': await getCsrfToken() },
+                }
+            );
             if (response.ok) {
                 setViews(views.filter((v) => v.uid !== viewToDelete.uid));
                 window.dispatchEvent(new CustomEvent('viewUpdated'));
@@ -171,7 +180,11 @@ const Views: React.FC = () => {
                                 : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                         aria-expanded={isSearchExpanded}
-                        title={isSearchExpanded ? t('common.hideSearch', 'Hide search') : t('common.search', 'Search views')}
+                        title={
+                            isSearchExpanded
+                                ? t('common.hideSearch', 'Hide search')
+                                : t('common.search', 'Search views')
+                        }
                     >
                         <MagnifyingGlassIcon className="h-5 w-5 text-gray-600 dark:text-gray-200" />
                     </button>
@@ -180,7 +193,9 @@ const Views: React.FC = () => {
                 {/* Collapsible search */}
                 <div
                     className={`transition-all duration-300 ease-in-out ${
-                        isSearchExpanded ? 'max-h-24 opacity-100 mb-4' : 'max-h-0 opacity-0 mb-0'
+                        isSearchExpanded
+                            ? 'max-h-24 opacity-100 mb-4'
+                            : 'max-h-0 opacity-0 mb-0'
                     } overflow-hidden`}
                 >
                     <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm px-4 py-3">
@@ -197,7 +212,9 @@ const Views: React.FC = () => {
 
                 {/* Views grid */}
                 {filteredViews.length === 0 ? (
-                    <p className="text-gray-700 dark:text-gray-300">{t('views.noViewsFound')}</p>
+                    <p className="text-gray-700 dark:text-gray-300">
+                        {t('views.noViewsFound')}
+                    </p>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {filteredViews.map((view) => (
@@ -209,13 +226,20 @@ const Views: React.FC = () => {
                                 }`}
                             >
                                 {/* Three-dot dropdown */}
-                                <div className="absolute top-2 right-2 z-10" ref={dropdownRef}>
+                                <div
+                                    className="absolute top-2 right-2 z-10"
+                                    ref={dropdownRef}
+                                >
                                     <button
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            const next = dropdownOpen === view.uid ? null : view.uid;
-                                            if (next !== null) justOpenedRef.current = true;
+                                            const next =
+                                                dropdownOpen === view.uid
+                                                    ? null
+                                                    : view.uid;
+                                            if (next !== null)
+                                                justOpenedRef.current = true;
                                             setDropdownOpen(next);
                                         }}
                                         className="focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -234,7 +258,9 @@ const Views: React.FC = () => {
                                                 }}
                                                 className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 w-full text-left rounded-t-md"
                                             >
-                                                {view.is_pinned ? t('views.unpinView') : t('views.pinView')}
+                                                {view.is_pinned
+                                                    ? t('views.unpinView')
+                                                    : t('views.pinView')}
                                             </button>
                                             <button
                                                 onClick={(e) => {
@@ -265,7 +291,8 @@ const Views: React.FC = () => {
                                         {view.tags.length > 0 && (
                                             <div className="flex flex-wrap gap-1.5 justify-center mb-2">
                                                 {view.tags.map((tag) => {
-                                                    const color = getTagColor(tag);
+                                                    const color =
+                                                        getTagColor(tag);
                                                     return (
                                                         <span
                                                             key={tag}
@@ -274,7 +301,14 @@ const Views: React.FC = () => {
                                                                     ? 'px-2 py-0.5 rounded text-[10px] font-medium text-white'
                                                                     : 'px-2 py-0.5 bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200 rounded text-[10px] font-medium'
                                                             }
-                                                            style={color ? { backgroundColor: color } : undefined}
+                                                            style={
+                                                                color
+                                                                    ? {
+                                                                          backgroundColor:
+                                                                              color,
+                                                                      }
+                                                                    : undefined
+                                                            }
                                                         >
                                                             {tag}
                                                         </span>
@@ -284,13 +318,24 @@ const Views: React.FC = () => {
                                         )}
 
                                         {/* Filter summary */}
-                                        {(view.search_query || view.priority || view.due || view.defer || view.filters.length > 0) && (
+                                        {(view.search_query ||
+                                            view.priority ||
+                                            view.due ||
+                                            view.defer ||
+                                            view.filters.length > 0) && (
                                             <p className="text-[10px] text-gray-400 dark:text-gray-500 line-clamp-1">
                                                 {[
-                                                    view.search_query && `"${view.search_query}"`,
+                                                    view.search_query &&
+                                                        `"${view.search_query}"`,
                                                     view.priority,
-                                                    view.due?.replace(/_/g, ' '),
-                                                    view.defer?.replace(/_/g, ' '),
+                                                    view.due?.replace(
+                                                        /_/g,
+                                                        ' '
+                                                    ),
+                                                    view.defer?.replace(
+                                                        /_/g,
+                                                        ' '
+                                                    ),
                                                     ...view.filters,
                                                 ]
                                                     .filter(Boolean)
@@ -304,17 +349,27 @@ const Views: React.FC = () => {
                                 <div className="rounded-b-xl flex items-stretch divide-x bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 divide-gray-200 dark:divide-gray-600">
                                     {[
                                         {
-                                            icon: <FunnelIcon className="h-3.5 w-3.5" />,
+                                            icon: (
+                                                <FunnelIcon className="h-3.5 w-3.5" />
+                                            ),
                                             count: filterCount(view),
-                                            label: t('views.filters', 'filters'),
+                                            label: t(
+                                                'views.filters',
+                                                'filters'
+                                            ),
                                         },
                                         {
-                                            icon: <TagIcon className="h-3.5 w-3.5" />,
+                                            icon: (
+                                                <TagIcon className="h-3.5 w-3.5" />
+                                            ),
                                             count: view.tags.length,
                                             label: t('tags.title', 'tags'),
                                         },
                                     ].map(({ icon, count, label }) => (
-                                        <div key={label} className="flex-1 flex flex-col items-center py-3 gap-1">
+                                        <div
+                                            key={label}
+                                            className="flex-1 flex flex-col items-center py-3 gap-1"
+                                        >
                                             <span className="text-base font-semibold leading-none text-gray-700 dark:text-gray-200">
                                                 {count}
                                             </span>
@@ -333,7 +388,9 @@ const Views: React.FC = () => {
                 {isConfirmDialogOpen && viewToDelete && (
                     <ConfirmDialog
                         title={t('views.deleteView')}
-                        message={t('views.confirmDelete', { viewName: viewToDelete.name })}
+                        message={t('views.confirmDelete', {
+                            viewName: viewToDelete.name,
+                        })}
                         onConfirm={handleDeleteView}
                         onCancel={() => {
                             setIsConfirmDialogOpen(false);

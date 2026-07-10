@@ -36,7 +36,6 @@ import { ENABLE_NOTE_COLOR } from '../config/featureFlags';
 import { COLORS } from './Shared/ColorPicker';
 import NoteFocusMode from './Note/NoteFocusMode';
 
-
 const shouldUseLightText = (hexColor: string | undefined): boolean => {
     if (!hexColor) return false;
 
@@ -570,7 +569,10 @@ const Notes: React.FC = () => {
                                             {note.color && (
                                                 <span
                                                     className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-1 ring-black/30 dark:ring-white/30"
-                                                    style={{ backgroundColor: note.color }}
+                                                    style={{
+                                                        backgroundColor:
+                                                            note.color,
+                                                    }}
                                                 />
                                             )}
                                             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
@@ -631,7 +633,9 @@ const Notes: React.FC = () => {
                                                 })
                                             }
                                             onClick={(e) => e.stopPropagation()}
-                                            placeholder={t('notes.titlePlaceholder')}
+                                            placeholder={t(
+                                                'notes.titlePlaceholder'
+                                            )}
                                             className="w-full bg-transparent text-gray-900 dark:text-gray-100 border-none focus:outline-none focus:ring-0 pt-5 mb-4 block"
                                             style={{
                                                 color: editingNoteColor
@@ -773,127 +777,129 @@ const Notes: React.FC = () => {
                                         >
                                             <ArrowsPointingOutIcon className="h-5 w-5" />
                                         </button>
-                                    <div
-                                        className="relative"
-                                        ref={noteOptionsDropdownRef}
-                                    >
-                                        <button
-                                            onClick={() =>
-                                                setShowNoteOptionsDropdown(
-                                                    !showNoteOptionsDropdown
-                                                )
-                                            }
-                                            className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                            style={{
-                                                color: editingNoteColor
-                                                    ? shouldUseLightText(
-                                                          editingNoteColor
-                                                      )
-                                                        ? '#e0e0e0'
-                                                        : '#333333'
-                                                    : undefined,
-                                            }}
-                                            aria-label={t('notes.noteOptions')}
+                                        <div
+                                            className="relative"
+                                            ref={noteOptionsDropdownRef}
                                         >
-                                            <EllipsisVerticalIcon className="h-5 w-5" />
-                                        </button>
-                                        {showNoteOptionsDropdown && (
-                                            <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                                                {ENABLE_NOTE_COLOR && (
-                                                    <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
-                                                        <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                                                            Background Color
-                                                        </div>
-                                                        <div className="grid grid-cols-5 gap-2">
-                                                            {COLORS.map(
-                                                                (
-                                                                    colorOption
-                                                                ) => (
-                                                                    <button
-                                                                        key={
-                                                                            colorOption.value
-                                                                        }
-                                                                        onClick={() =>
-                                                                            handleColorChange(
-                                                                                colorOption.value,
-                                                                                editingNote
-                                                                            )
-                                                                        }
-                                                                        className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 flex items-center justify-center ${
-                                                                            editingNote.color ===
-                                                                            colorOption.value
-                                                                                ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800'
-                                                                                : 'border-gray-300 dark:border-gray-600'
-                                                                        }`}
-                                                                        style={{
-                                                                            backgroundColor:
-                                                                                colorOption.value ||
-                                                                                '#ffffff',
-                                                                        }}
-                                                                        title={
-                                                                            colorOption.name
-                                                                        }
-                                                                        aria-label={`Set background to ${colorOption.name}`}
-                                                                    >
-                                                                        {!colorOption.value && (
-                                                                            <XMarkIcon className="h-5 w-5 text-gray-400" />
-                                                                        )}
-                                                                    </button>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                            <button
+                                                onClick={() =>
+                                                    setShowNoteOptionsDropdown(
+                                                        !showNoteOptionsDropdown
+                                                    )
+                                                }
+                                                className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                style={{
+                                                    color: editingNoteColor
+                                                        ? shouldUseLightText(
+                                                              editingNoteColor
+                                                          )
+                                                            ? '#e0e0e0'
+                                                            : '#333333'
+                                                        : undefined,
+                                                }}
+                                                aria-label={t(
+                                                    'notes.noteOptions'
                                                 )}
-                                                <div className="py-1">
-                                                    <button
-                                                        onClick={() => {
-                                                            if (
-                                                                editingNote.title
-                                                            ) {
-                                                                handleSaveInlineNote();
-                                                            } else {
-                                                                setShowDiscardDialog(
-                                                                    true
-                                                                );
-                                                            }
-                                                            setShowNoteOptionsDropdown(
-                                                                false
-                                                            );
-                                                        }}
-                                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    >
-                                                        <PencilIcon className="h-4 w-4" />
-                                                        {t(
-                                                            'notes.save',
-                                                            'Save'
-                                                        )}
-                                                    </button>
-                                                    {editingNote.uid && (
+                                            >
+                                                <EllipsisVerticalIcon className="h-5 w-5" />
+                                            </button>
+                                            {showNoteOptionsDropdown && (
+                                                <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                                                    {ENABLE_NOTE_COLOR && (
+                                                        <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
+                                                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                                                                Background Color
+                                                            </div>
+                                                            <div className="grid grid-cols-5 gap-2">
+                                                                {COLORS.map(
+                                                                    (
+                                                                        colorOption
+                                                                    ) => (
+                                                                        <button
+                                                                            key={
+                                                                                colorOption.value
+                                                                            }
+                                                                            onClick={() =>
+                                                                                handleColorChange(
+                                                                                    colorOption.value,
+                                                                                    editingNote
+                                                                                )
+                                                                            }
+                                                                            className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                                                                                editingNote.color ===
+                                                                                colorOption.value
+                                                                                    ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800'
+                                                                                    : 'border-gray-300 dark:border-gray-600'
+                                                                            }`}
+                                                                            style={{
+                                                                                backgroundColor:
+                                                                                    colorOption.value ||
+                                                                                    '#ffffff',
+                                                                            }}
+                                                                            title={
+                                                                                colorOption.name
+                                                                            }
+                                                                            aria-label={`Set background to ${colorOption.name}`}
+                                                                        >
+                                                                            {!colorOption.value && (
+                                                                                <XMarkIcon className="h-5 w-5 text-gray-400" />
+                                                                            )}
+                                                                        </button>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div className="py-1">
                                                         <button
                                                             onClick={() => {
-                                                                setNoteToDelete(
-                                                                    editingNote
-                                                                );
-                                                                setIsConfirmDialogOpen(
-                                                                    true
-                                                                );
+                                                                if (
+                                                                    editingNote.title
+                                                                ) {
+                                                                    handleSaveInlineNote();
+                                                                } else {
+                                                                    setShowDiscardDialog(
+                                                                        true
+                                                                    );
+                                                                }
                                                                 setShowNoteOptionsDropdown(
                                                                     false
                                                                 );
                                                             }}
-                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                                                         >
-                                                            <TrashIcon className="h-4 w-4" />
+                                                            <PencilIcon className="h-4 w-4" />
                                                             {t(
-                                                                'notes.delete',
-                                                                'Delete'
+                                                                'notes.save',
+                                                                'Save'
                                                             )}
                                                         </button>
-                                                    )}
+                                                        {editingNote.uid && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setNoteToDelete(
+                                                                        editingNote
+                                                                    );
+                                                                    setIsConfirmDialogOpen(
+                                                                        true
+                                                                    );
+                                                                    setShowNoteOptionsDropdown(
+                                                                        false
+                                                                    );
+                                                                }}
+                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                            >
+                                                                <TrashIcon className="h-4 w-4" />
+                                                                {t(
+                                                                    'notes.delete',
+                                                                    'Delete'
+                                                                )}
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -977,7 +983,9 @@ const Notes: React.FC = () => {
                                             })
                                         }
                                         onClick={(e) => e.stopPropagation()}
-                                        placeholder={t('notes.contentPlaceholder')}
+                                        placeholder={t(
+                                            'notes.contentPlaceholder'
+                                        )}
                                         className="w-full h-full min-h-[300px] bg-transparent text-gray-900 dark:text-gray-100 border-none focus:outline-none focus:ring-0 resize-none py-4"
                                         style={{
                                             color: editingNoteColor
@@ -1165,119 +1173,121 @@ const Notes: React.FC = () => {
                                         >
                                             <ArrowsPointingOutIcon className="h-5 w-5" />
                                         </button>
-                                    <div
-                                        className="relative"
-                                        ref={noteOptionsDropdownRef}
-                                    >
-                                        <button
-                                            onClick={() =>
-                                                setShowNoteOptionsDropdown(
-                                                    !showNoteOptionsDropdown
-                                                )
-                                            }
-                                            className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                            style={{
-                                                color: previewNoteColor
-                                                    ? shouldUseLightText(
-                                                          previewNoteColor
-                                                      )
-                                                        ? '#e0e0e0'
-                                                        : '#333333'
-                                                    : undefined,
-                                            }}
-                                            aria-label={t('notes.noteOptions')}
+                                        <div
+                                            className="relative"
+                                            ref={noteOptionsDropdownRef}
                                         >
-                                            <EllipsisVerticalIcon className="h-5 w-5" />
-                                        </button>
-                                        {showNoteOptionsDropdown && (
-                                            <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                                                {ENABLE_NOTE_COLOR && (
-                                                    <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
-                                                        <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                                                            Background Color
-                                                        </div>
-                                                        <div className="grid grid-cols-5 gap-2">
-                                                            {COLORS.map(
-                                                                (
-                                                                    colorOption
-                                                                ) => (
-                                                                    <button
-                                                                        key={
-                                                                            colorOption.value
-                                                                        }
-                                                                        onClick={() =>
-                                                                            handleColorChange(
-                                                                                colorOption.value,
-                                                                                previewNote
-                                                                            )
-                                                                        }
-                                                                        className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 flex items-center justify-center ${
-                                                                            previewNote.color ===
-                                                                            colorOption.value
-                                                                                ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800'
-                                                                                : 'border-gray-300 dark:border-gray-600'
-                                                                        }`}
-                                                                        style={{
-                                                                            backgroundColor:
-                                                                                colorOption.value ||
-                                                                                '#ffffff',
-                                                                        }}
-                                                                        title={
-                                                                            colorOption.name
-                                                                        }
-                                                                        aria-label={`Set background to ${colorOption.name}`}
-                                                                    >
-                                                                        {!colorOption.value && (
-                                                                            <XMarkIcon className="h-5 w-5 text-gray-400" />
-                                                                        )}
-                                                                    </button>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                            <button
+                                                onClick={() =>
+                                                    setShowNoteOptionsDropdown(
+                                                        !showNoteOptionsDropdown
+                                                    )
+                                                }
+                                                className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                style={{
+                                                    color: previewNoteColor
+                                                        ? shouldUseLightText(
+                                                              previewNoteColor
+                                                          )
+                                                            ? '#e0e0e0'
+                                                            : '#333333'
+                                                        : undefined,
+                                                }}
+                                                aria-label={t(
+                                                    'notes.noteOptions'
                                                 )}
-                                                <div className="py-1">
-                                                    <button
-                                                        onClick={() => {
-                                                            handleEditNote(
-                                                                previewNote
-                                                            );
-                                                            setShowNoteOptionsDropdown(
-                                                                false
-                                                            );
-                                                        }}
-                                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    >
-                                                        <PencilIcon className="h-4 w-4" />
-                                                        {t(
-                                                            'notes.edit',
-                                                            'Edit'
-                                                        )}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setNoteToDelete(
-                                                                previewNote
-                                                            );
-                                                            setIsConfirmDialogOpen(
-                                                                true
-                                                            );
-                                                            setShowNoteOptionsDropdown(
-                                                                false
-                                                            );
-                                                        }}
-                                                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    >
-                                                        <TrashIcon className="h-4 w-4" />
-                                                        {t(
-                                                            'notes.delete',
-                                                            'Delete'
-                                                        )}
-                                                    </button>
+                                            >
+                                                <EllipsisVerticalIcon className="h-5 w-5" />
+                                            </button>
+                                            {showNoteOptionsDropdown && (
+                                                <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                                                    {ENABLE_NOTE_COLOR && (
+                                                        <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
+                                                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                                                                Background Color
+                                                            </div>
+                                                            <div className="grid grid-cols-5 gap-2">
+                                                                {COLORS.map(
+                                                                    (
+                                                                        colorOption
+                                                                    ) => (
+                                                                        <button
+                                                                            key={
+                                                                                colorOption.value
+                                                                            }
+                                                                            onClick={() =>
+                                                                                handleColorChange(
+                                                                                    colorOption.value,
+                                                                                    previewNote
+                                                                                )
+                                                                            }
+                                                                            className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                                                                                previewNote.color ===
+                                                                                colorOption.value
+                                                                                    ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800'
+                                                                                    : 'border-gray-300 dark:border-gray-600'
+                                                                            }`}
+                                                                            style={{
+                                                                                backgroundColor:
+                                                                                    colorOption.value ||
+                                                                                    '#ffffff',
+                                                                            }}
+                                                                            title={
+                                                                                colorOption.name
+                                                                            }
+                                                                            aria-label={`Set background to ${colorOption.name}`}
+                                                                        >
+                                                                            {!colorOption.value && (
+                                                                                <XMarkIcon className="h-5 w-5 text-gray-400" />
+                                                                            )}
+                                                                        </button>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div className="py-1">
+                                                        <button
+                                                            onClick={() => {
+                                                                handleEditNote(
+                                                                    previewNote
+                                                                );
+                                                                setShowNoteOptionsDropdown(
+                                                                    false
+                                                                );
+                                                            }}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                        >
+                                                            <PencilIcon className="h-4 w-4" />
+                                                            {t(
+                                                                'notes.edit',
+                                                                'Edit'
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setNoteToDelete(
+                                                                    previewNote
+                                                                );
+                                                                setIsConfirmDialogOpen(
+                                                                    true
+                                                                );
+                                                                setShowNoteOptionsDropdown(
+                                                                    false
+                                                                );
+                                                            }}
+                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                        >
+                                                            <TrashIcon className="h-4 w-4" />
+                                                            {t(
+                                                                'notes.delete',
+                                                                'Delete'
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

@@ -7,7 +7,11 @@ import {
     isTaskPlanned,
     isTaskWaiting,
 } from '../../constants/taskStatus';
-import { parseDateString, getTodayDateString, toLocalDateString } from '../../utils/dateUtils';
+import {
+    parseDateString,
+    getTodayDateString,
+    toLocalDateString,
+} from '../../utils/dateUtils';
 
 // Check if task is in today's plan (has active status)
 const isTaskInTodayPlan = (task: Task): boolean =>

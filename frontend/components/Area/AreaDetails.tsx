@@ -19,7 +19,12 @@ import { Goal, GoalStatus, GoalHorizon } from '../../entities/Goal';
 import { Task } from '../../entities/Task';
 import { fetchTasks } from '../../utils/tasksService';
 import { updateArea } from '../../utils/areasService';
-import { fetchGoals, createGoal, updateGoal, deleteGoal } from '../../utils/goalsService';
+import {
+    fetchGoals,
+    createGoal,
+    updateGoal,
+    deleteGoal,
+} from '../../utils/goalsService';
 import { updateProject } from '../../utils/projectsService';
 import AreaModal from './AreaModal';
 import TaskList from '../Task/TaskList';
@@ -109,7 +114,9 @@ const AreaDetails: React.FC = () => {
         if (!area?.uid) return;
         setLoadingTasks(true);
         try {
-            const result = await fetchTasks(`?area_uid=${area.uid}&type=all&status=all`);
+            const result = await fetchTasks(
+                `?area_uid=${area.uid}&type=all&status=all`
+            );
             setAreaTasks(result.tasks || []);
         } catch {
             setAreaTasks([]);
@@ -149,13 +156,25 @@ const AreaDetails: React.FC = () => {
     });
 
     const handleTaskUpdate = async (updatedTask: Task) => {
-        setAreaTasks((prev) => prev.map((t) => (t.uid === updatedTask.uid ? updatedTask : t)));
-        tasksStore.setTasks(tasksStore.tasks.map((t: Task) => (t.uid === updatedTask.uid ? updatedTask : t)));
+        setAreaTasks((prev) =>
+            prev.map((t) => (t.uid === updatedTask.uid ? updatedTask : t))
+        );
+        tasksStore.setTasks(
+            tasksStore.tasks.map((t: Task) =>
+                t.uid === updatedTask.uid ? updatedTask : t
+            )
+        );
+    };
+
+    const handleTaskDuplicated = (newTask: Task) => {
+        setAreaTasks((prev) => [newTask, ...prev]);
     };
 
     const handleTaskDelete = (taskUid: string) => {
         setAreaTasks((prev) => prev.filter((t) => t.uid !== taskUid));
-        tasksStore.setTasks(tasksStore.tasks.filter((t: Task) => t.uid !== taskUid));
+        tasksStore.setTasks(
+            tasksStore.tasks.filter((t: Task) => t.uid !== taskUid)
+        );
     };
 
     const handleAreaSave = async (areaData: Partial<Area>) => {
@@ -165,16 +184,26 @@ const AreaDetails: React.FC = () => {
             description: areaData.description,
             color: areaData.color,
         });
-        areasStore.setAreas(areasStore.areas.map((a: Area) => (a.uid === result.uid ? result : a)));
+        areasStore.setAreas(
+            areasStore.areas.map((a: Area) =>
+                a.uid === result.uid ? result : a
+            )
+        );
         setArea(result);
         setIsEditModalOpen(false);
-        const slug = result.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const slug = result.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
         navigate(`/area/${result.uid}-${slug}`, { replace: true });
     };
 
     const getProjectLink = (project: Project) => {
         if (project.uid) {
-            const slug = project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const slug = project.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
             return `/project/${project.uid}-${slug}`;
         }
         return `/project/${project.id}`;
@@ -214,7 +243,9 @@ const AreaDetails: React.FC = () => {
                     target_date: goalForm.target_date || null,
                     status: goalForm.status,
                 });
-                setGoals((prev) => prev.map((g) => (g.uid === editingGoalUid ? goal : g)));
+                setGoals((prev) =>
+                    prev.map((g) => (g.uid === editingGoalUid ? goal : g))
+                );
             } else {
                 const { goal } = await createGoal({
                     area_id: area.id!,
@@ -234,7 +265,12 @@ const AreaDetails: React.FC = () => {
 
     const handleDeleteGoal = async (goal: Goal) => {
         if (!goal.uid) return;
-        if (!window.confirm(`Drop goal "${goal.title}"? Projects under it will become unlinked.`)) return;
+        if (
+            !window.confirm(
+                `Drop goal "${goal.title}"? Projects under it will become unlinked.`
+            )
+        )
+            return;
         await deleteGoal(goal.uid);
         setGoals((prev) => prev.filter((g) => g.uid !== goal.uid));
     };
@@ -248,15 +284,29 @@ const AreaDetails: React.FC = () => {
     };
 
     const handleLinkToGoal = async (project: Project, goal: Goal) => {
-        console.log('[handleLinkToGoal]', { projectUid: project.uid, goalId: goal.id, goalUid: goal.uid });
+        console.log('[handleLinkToGoal]', {
+            projectUid: project.uid,
+            goalId: goal.id,
+            goalUid: goal.uid,
+        });
         if (!project.uid || !goal.id) {
-            console.warn('[handleLinkToGoal] early return – missing uid or goal.id', { projectUid: project.uid, goalId: goal.id });
+            console.warn(
+                '[handleLinkToGoal] early return – missing uid or goal.id',
+                { projectUid: project.uid, goalId: goal.id }
+            );
             return;
         }
         try {
-            const saved = await updateProject(project.uid, { goal_id: goal.id, is_maintenance: false });
-            console.log('[handleLinkToGoal] server response goal_id:', saved.goal_id);
-            const savedGoalId = saved.goal_id ?? (saved as any).Goal?.id ?? null;
+            const saved = await updateProject(project.uid, {
+                goal_id: goal.id,
+                is_maintenance: false,
+            });
+            console.log(
+                '[handleLinkToGoal] server response goal_id:',
+                saved.goal_id
+            );
+            const savedGoalId =
+                saved.goal_id ?? (saved as any).Goal?.id ?? null;
             patchProjectInStore(project.uid, {
                 goal_id: savedGoalId,
                 is_maintenance: saved.is_maintenance ?? false,
@@ -269,7 +319,10 @@ const AreaDetails: React.FC = () => {
     const handleMarkMaintenance = async (project: Project) => {
         if (!project.uid) return;
         try {
-            const saved = await updateProject(project.uid, { goal_id: null, is_maintenance: true });
+            const saved = await updateProject(project.uid, {
+                goal_id: null,
+                is_maintenance: true,
+            });
             patchProjectInStore(project.uid, {
                 goal_id: saved.goal_id ?? null,
                 is_maintenance: saved.is_maintenance ?? true,
@@ -282,7 +335,10 @@ const AreaDetails: React.FC = () => {
     const handleUnmarkMaintenance = async (project: Project) => {
         if (!project.uid) return;
         try {
-            const saved = await updateProject(project.uid, { is_maintenance: false, goal_id: null });
+            const saved = await updateProject(project.uid, {
+                is_maintenance: false,
+                goal_id: null,
+            });
             patchProjectInStore(project.uid, {
                 is_maintenance: saved.is_maintenance ?? false,
                 goal_id: saved.goal_id ?? null,
@@ -297,7 +353,11 @@ const AreaDetails: React.FC = () => {
         if (!window.confirm(`Remove "${project.name}" from this area?`)) return;
         try {
             await updateProject(project.uid, { area_id: null });
-            patchProjectInStore(project.uid, { area_id: null, goal_id: null, is_maintenance: false });
+            patchProjectInStore(project.uid, {
+                area_id: null,
+                goal_id: null,
+                is_maintenance: false,
+            });
         } catch (err) {
             console.error('Failed to remove project from area:', err);
         }
@@ -320,9 +380,15 @@ const AreaDetails: React.FC = () => {
     }
 
     const activeTasks = areaTasks.filter(
-        (t) => t.status !== 'done' && t.status !== 2 && t.status !== 'archived' && t.status !== 3
+        (t) =>
+            t.status !== 'done' &&
+            t.status !== 2 &&
+            t.status !== 'archived' &&
+            t.status !== 3
     );
-    const completedTasks = areaTasks.filter((t) => t.status === 'done' || t.status === 2);
+    const completedTasks = areaTasks.filter(
+        (t) => t.status === 'done' || t.status === 2
+    );
 
     // Bucket projects into: under a goal / maintenance / unlinked
     const projectsByGoal = new Map<number, Project[]>();
@@ -353,31 +419,54 @@ const AreaDetails: React.FC = () => {
                 className="rounded-xl mb-8 overflow-hidden"
                 style={area.color ? { backgroundColor: area.color } : undefined}
             >
-                <div className={`p-6 ${area.color ? '' : 'bg-gray-50 dark:bg-gray-900 rounded-xl'}`}>
+                <div
+                    className={`p-6 ${area.color ? '' : 'bg-gray-50 dark:bg-gray-900 rounded-xl'}`}
+                >
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                            <p className={`text-xs font-medium uppercase tracking-widest mb-1 ${
-                                area.color ? 'text-white/60' : 'text-gray-400 dark:text-gray-500'
-                            }`}>
+                            <p
+                                className={`text-xs font-medium uppercase tracking-widest mb-1 ${
+                                    area.color
+                                        ? 'text-white/60'
+                                        : 'text-gray-400 dark:text-gray-500'
+                                }`}
+                            >
                                 Area
                             </p>
                             <h1
                                 className={`text-3xl font-light uppercase tracking-wide ${
-                                    area.color ? 'text-white' : 'text-gray-900 dark:text-gray-100'
+                                    area.color
+                                        ? 'text-white'
+                                        : 'text-gray-900 dark:text-gray-100'
                                 }`}
                             >
                                 {area.name}
                             </h1>
                             {area.description && (
-                                <p className={`mt-2 text-sm ${area.color ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'}`}>
+                                <p
+                                    className={`mt-2 text-sm ${area.color ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'}`}
+                                >
                                     {area.description}
                                 </p>
                             )}
-                            <div className={`mt-3 flex gap-4 text-xs ${area.color ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>
-                                <span>{areaProjects.length} {t('areas.projects', 'projects')}</span>
-                                <span>{activeTasks.length} {t('areas.tasks', 'tasks')}</span>
+                            <div
+                                className={`mt-3 flex gap-4 text-xs ${area.color ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}
+                            >
+                                <span>
+                                    {areaProjects.length}{' '}
+                                    {t('areas.projects', 'projects')}
+                                </span>
+                                <span>
+                                    {activeTasks.length}{' '}
+                                    {t('areas.tasks', 'tasks')}
+                                </span>
                                 {goals.length > 0 && (
-                                    <span>{activeGoals.length} active {activeGoals.length === 1 ? 'goal' : 'goals'}</span>
+                                    <span>
+                                        {activeGoals.length} active{' '}
+                                        {activeGoals.length === 1
+                                            ? 'goal'
+                                            : 'goals'}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -400,7 +489,10 @@ const AreaDetails: React.FC = () => {
             {tooManyGoals && (
                 <div className="mb-6 flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-700 dark:text-amber-400">
                     <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
-                    <span>{activeGoals.length} active goals. Goals work best at 3-5. Achieve or pause one?</span>
+                    <span>
+                        {activeGoals.length} active goals. Goals work best at
+                        3-5. Achieve or pause one?
+                    </span>
                 </div>
             )}
 
@@ -408,7 +500,9 @@ const AreaDetails: React.FC = () => {
                 {/* Goals spine + projects */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="flex items-center justify-between mb-1">
-                        <h2 className="text-lg font-light text-gray-700 dark:text-gray-300">Goals</h2>
+                        <h2 className="text-lg font-light text-gray-700 dark:text-gray-300">
+                            Goals
+                        </h2>
                         <button
                             onClick={openNewGoalForm}
                             className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
@@ -425,39 +519,86 @@ const AreaDetails: React.FC = () => {
                                 type="text"
                                 placeholder={t('areas.goalTitlePlaceholder')}
                                 value={goalForm.title}
-                                onChange={(e) => setGoalForm((f) => f ? { ...f, title: e.target.value } : f)}
+                                onChange={(e) =>
+                                    setGoalForm((f) =>
+                                        f ? { ...f, title: e.target.value } : f
+                                    )
+                                }
                                 className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md py-1.5 px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             />
                             <input
                                 type="text"
                                 placeholder={t('areas.goalWhyPlaceholder')}
                                 value={goalForm.why}
-                                onChange={(e) => setGoalForm((f) => f ? { ...f, why: e.target.value } : f)}
+                                onChange={(e) =>
+                                    setGoalForm((f) =>
+                                        f ? { ...f, why: e.target.value } : f
+                                    )
+                                }
                                 className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md py-1.5 px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             />
                             <div className="flex gap-2">
                                 <select
                                     value={goalForm.horizon}
-                                    onChange={(e) => setGoalForm((f) => f ? { ...f, horizon: e.target.value as GoalHorizon } : f)}
+                                    onChange={(e) =>
+                                        setGoalForm((f) =>
+                                            f
+                                                ? {
+                                                      ...f,
+                                                      horizon: e.target
+                                                          .value as GoalHorizon,
+                                                  }
+                                                : f
+                                        )
+                                    }
                                     className="flex-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md py-1.5 px-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 >
-                                    <option value="season">{t('areas.horizonSeason')}</option>
-                                    <option value="year">{t('areas.horizonYear')}</option>
+                                    <option value="season">
+                                        {t('areas.horizonSeason')}
+                                    </option>
+                                    <option value="year">
+                                        {t('areas.horizonYear')}
+                                    </option>
                                 </select>
                                 <select
                                     value={goalForm.status}
-                                    onChange={(e) => setGoalForm((f) => f ? { ...f, status: e.target.value as GoalStatus } : f)}
+                                    onChange={(e) =>
+                                        setGoalForm((f) =>
+                                            f
+                                                ? {
+                                                      ...f,
+                                                      status: e.target
+                                                          .value as GoalStatus,
+                                                  }
+                                                : f
+                                        )
+                                    }
                                     className="flex-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md py-1.5 px-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 >
-                                    {(Object.keys(STATUS_LABELS) as GoalStatus[]).map((s) => (
-                                        <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                                    {(
+                                        Object.keys(
+                                            STATUS_LABELS
+                                        ) as GoalStatus[]
+                                    ).map((s) => (
+                                        <option key={s} value={s}>
+                                            {STATUS_LABELS[s]}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
                             <input
                                 type="date"
                                 value={goalForm.target_date}
-                                onChange={(e) => setGoalForm((f) => f ? { ...f, target_date: e.target.value } : f)}
+                                onChange={(e) =>
+                                    setGoalForm((f) =>
+                                        f
+                                            ? {
+                                                  ...f,
+                                                  target_date: e.target.value,
+                                              }
+                                            : f
+                                    )
+                                }
                                 className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md py-1.5 px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             />
                             <div className="flex gap-2 justify-end">
@@ -469,49 +610,69 @@ const AreaDetails: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={saveGoal}
-                                    disabled={savingGoal || !goalForm.title.trim()}
+                                    disabled={
+                                        savingGoal || !goalForm.title.trim()
+                                    }
                                     className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50"
                                 >
-                                    {savingGoal ? 'Saving…' : editingGoalUid ? 'Update' : 'Add goal'}
+                                    {savingGoal
+                                        ? 'Saving…'
+                                        : editingGoalUid
+                                          ? 'Update'
+                                          : 'Add goal'}
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {loadingGoals ? (
-                        <p className="text-sm text-gray-400 dark:text-gray-500">Loading goals…</p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500">
+                            Loading goals…
+                        </p>
                     ) : (
                         <div className="space-y-4">
                             {/* Empty state: only when there are no goals AND no projects at all */}
-                            {goals.length === 0 && areaProjects.length === 0 && !goalForm && (
-                                <p className="text-sm text-gray-400 dark:text-gray-500">
-                                    No goals yet. Add a goal to group projects by outcome.
-                                </p>
-                            )}
+                            {goals.length === 0 &&
+                                areaProjects.length === 0 &&
+                                !goalForm && (
+                                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                                        No goals yet. Add a goal to group
+                                        projects by outcome.
+                                    </p>
+                                )}
 
                             {/* Active goals */}
-                            {goals.filter((g) => g.status === 'active').map((goal) => (
-                                <GoalBucket
-                                    key={goal.uid || goal.id}
-                                    goal={goal}
-                                    projects={projectsByGoal.get(goal.id!) || []}
-                                    areaColor={area.color}
-                                    getProjectLink={getProjectLink}
-                                    onEdit={() => openEditGoalForm(goal)}
-                                    onDelete={() => handleDeleteGoal(goal)}
-                                />
-                            ))}
+                            {goals
+                                .filter((g) => g.status === 'active')
+                                .map((goal) => (
+                                    <GoalBucket
+                                        key={goal.uid || goal.id}
+                                        goal={goal}
+                                        projects={
+                                            projectsByGoal.get(goal.id!) || []
+                                        }
+                                        areaColor={area.color}
+                                        getProjectLink={getProjectLink}
+                                        onEdit={() => openEditGoalForm(goal)}
+                                        onDelete={() => handleDeleteGoal(goal)}
+                                    />
+                                ))}
 
                             {/* Maintenance bucket */}
                             {maintenanceProjects.length > 0 && (
                                 <div>
                                     <div className="flex items-center gap-2 mb-2">
                                         <WrenchScrewdriverIcon className="h-4 w-4 text-gray-400" />
-                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Maintenance</span>
+                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                            Maintenance
+                                        </span>
                                         <span className="relative group/tip">
                                             <InformationCircleIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600 cursor-help" />
                                             <span className="pointer-events-none absolute left-5 top-0 z-10 w-52 rounded-md bg-gray-800 px-2.5 py-1.5 text-xs text-white opacity-0 group-hover/tip:opacity-100 transition-opacity shadow-lg">
-                                                Maintenance projects keep things running. They&apos;re ongoing work without a specific goal or end date.
+                                                Maintenance projects keep things
+                                                running. They&apos;re ongoing
+                                                work without a specific goal or
+                                                end date.
                                             </span>
                                         </span>
                                     </div>
@@ -525,7 +686,9 @@ const AreaDetails: React.FC = () => {
                                                     key={p.uid || p.id}
                                                     project={p}
                                                     getLink={getProjectLink}
-                                                    onUnmark={handleUnmarkMaintenance}
+                                                    onUnmark={
+                                                        handleUnmarkMaintenance
+                                                    }
                                                 />
                                             ))}
                                         </div>
@@ -534,24 +697,45 @@ const AreaDetails: React.FC = () => {
                             )}
 
                             {/* Inactive goals */}
-                            {goals.filter((g) => g.status !== 'active').length > 0 && (
+                            {goals.filter((g) => g.status !== 'active').length >
+                                0 && (
                                 <details className="mt-2">
                                     <summary className="text-xs text-gray-400 dark:text-gray-500 cursor-pointer select-none">
-                                        Inactive goals ({goals.filter((g) => g.status !== 'active').length})
+                                        Inactive goals (
+                                        {
+                                            goals.filter(
+                                                (g) => g.status !== 'active'
+                                            ).length
+                                        }
+                                        )
                                     </summary>
                                     <div className="mt-2 space-y-3">
-                                        {goals.filter((g) => g.status !== 'active').map((goal) => (
-                                            <GoalBucket
-                                                key={goal.uid || goal.id}
-                                                goal={goal}
-                                                projects={projectsByGoal.get(goal.id!) || []}
-                                                areaColor={area.color}
-                                                getProjectLink={getProjectLink}
-                                                onEdit={() => openEditGoalForm(goal)}
-                                                onDelete={() => handleDeleteGoal(goal)}
-                                                dimmed
-                                            />
-                                        ))}
+                                        {goals
+                                            .filter(
+                                                (g) => g.status !== 'active'
+                                            )
+                                            .map((goal) => (
+                                                <GoalBucket
+                                                    key={goal.uid || goal.id}
+                                                    goal={goal}
+                                                    projects={
+                                                        projectsByGoal.get(
+                                                            goal.id!
+                                                        ) || []
+                                                    }
+                                                    areaColor={area.color}
+                                                    getProjectLink={
+                                                        getProjectLink
+                                                    }
+                                                    onEdit={() =>
+                                                        openEditGoalForm(goal)
+                                                    }
+                                                    onDelete={() =>
+                                                        handleDeleteGoal(goal)
+                                                    }
+                                                    dimmed
+                                                />
+                                            ))}
                                     </div>
                                 </details>
                             )}
@@ -570,17 +754,25 @@ const AreaDetails: React.FC = () => {
                                             Projects
                                         </p>
                                         <div className="space-y-2">
-                                        {unlinkedProjects.map((p) => (
-                                            <UnlinkedProjectRow
-                                                key={p.uid || p.id}
-                                                project={p}
-                                                goals={goals.filter((g) => g.status === 'active')}
-                                                getLink={getProjectLink}
-                                                onLinkToGoal={handleLinkToGoal}
-                                                onMarkMaintenance={handleMarkMaintenance}
-                                                onDrop={handleDropProject}
-                                            />
-                                        ))}
+                                            {unlinkedProjects.map((p) => (
+                                                <UnlinkedProjectRow
+                                                    key={p.uid || p.id}
+                                                    project={p}
+                                                    goals={goals.filter(
+                                                        (g) =>
+                                                            g.status ===
+                                                            'active'
+                                                    )}
+                                                    getLink={getProjectLink}
+                                                    onLinkToGoal={
+                                                        handleLinkToGoal
+                                                    }
+                                                    onMarkMaintenance={
+                                                        handleMarkMaintenance
+                                                    }
+                                                    onDrop={handleDropProject}
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -598,9 +790,13 @@ const AreaDetails: React.FC = () => {
                         <div className="text-sm text-gray-400 dark:text-gray-500">
                             {t('loading.tasks', 'Loading tasks…')}
                         </div>
-                    ) : activeTasks.length === 0 && completedTasks.length === 0 ? (
+                    ) : activeTasks.length === 0 &&
+                      completedTasks.length === 0 ? (
                         <p className="text-sm text-gray-400 dark:text-gray-500">
-                            {t('areas.noTasks', 'No tasks directly in this area')}
+                            {t(
+                                'areas.noTasks',
+                                'No tasks directly in this area'
+                            )}
                         </p>
                     ) : (
                         <div className="space-y-6">
@@ -610,18 +806,21 @@ const AreaDetails: React.FC = () => {
                                     projects={projectsStore.projects}
                                     onTaskUpdate={handleTaskUpdate}
                                     onTaskDelete={handleTaskDelete}
+                                    onTaskDuplicated={handleTaskDuplicated}
                                 />
                             )}
                             {completedTasks.length > 0 && (
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                                        {t('tasks.completed', 'Completed')} ({completedTasks.length})
+                                        {t('tasks.completed', 'Completed')} (
+                                        {completedTasks.length})
                                     </h3>
                                     <TaskList
                                         tasks={completedTasks}
                                         projects={projectsStore.projects}
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         showCompletedTasks={true}
                                     />
                                 </div>
@@ -656,7 +855,13 @@ interface GoalBucketProps {
 }
 
 const GoalBucket: React.FC<GoalBucketProps> = ({
-    goal, projects, areaColor, getProjectLink, onEdit, onDelete, dimmed,
+    goal,
+    projects,
+    areaColor,
+    getProjectLink,
+    onEdit,
+    onDelete,
+    dimmed,
 }) => {
     const { t } = useTranslation();
     const dotColor = areaColor || '#6b7280';
@@ -664,26 +869,40 @@ const GoalBucket: React.FC<GoalBucketProps> = ({
         <div className={dimmed ? 'opacity-60' : ''}>
             <div className="flex items-start justify-between gap-2 mb-1.5">
                 <div className="flex items-center gap-2 min-w-0">
-                    <FlagIcon className="h-4 w-4 flex-shrink-0" style={{ color: dotColor }} />
+                    <FlagIcon
+                        className="h-4 w-4 flex-shrink-0"
+                        style={{ color: dotColor }}
+                    />
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                         {goal.title}
                     </span>
                     <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
                         {HORIZON_LABELS[goal.horizon]}
-                        {goal.status !== 'active' && ` · ${STATUS_LABELS[goal.status]}`}
+                        {goal.status !== 'active' &&
+                            ` · ${STATUS_LABELS[goal.status]}`}
                     </span>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={onEdit} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title={t('areas.editGoal')}>
+                    <button
+                        onClick={onEdit}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        title={t('areas.editGoal')}
+                    >
                         <PencilSquareIcon className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-500" title={t('areas.deleteGoal')}>
+                    <button
+                        onClick={onDelete}
+                        className="p-1 text-gray-400 hover:text-red-500"
+                        title={t('areas.deleteGoal')}
+                    >
                         <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </div>
             {goal.why && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 ml-6 mb-1.5 italic">{goal.why}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 ml-6 mb-1.5 italic">
+                    {goal.why}
+                </p>
             )}
             {projects.length > 0 ? (
                 <div className="ml-6">
@@ -692,12 +911,18 @@ const GoalBucket: React.FC<GoalBucketProps> = ({
                     </p>
                     <div className="space-y-2">
                         {projects.map((p) => (
-                            <ProjectChip key={p.uid || p.id} project={p} getLink={getProjectLink} />
+                            <ProjectChip
+                                key={p.uid || p.id}
+                                project={p}
+                                getLink={getProjectLink}
+                            />
                         ))}
                     </div>
                 </div>
             ) : (
-                <p className="text-xs text-gray-300 dark:text-gray-600 ml-6 italic">No projects linked</p>
+                <p className="text-xs text-gray-300 dark:text-gray-600 ml-6 italic">
+                    No projects linked
+                </p>
             )}
         </div>
     );
@@ -709,7 +934,11 @@ interface MaintenanceProjectRowProps {
     onUnmark: (p: Project) => void;
 }
 
-const MaintenanceProjectRow: React.FC<MaintenanceProjectRowProps> = ({ project, getLink, onUnmark }) => {
+const MaintenanceProjectRow: React.FC<MaintenanceProjectRowProps> = ({
+    project,
+    getLink,
+    onUnmark,
+}) => {
     const { t } = useTranslation();
     const cardColor = (project as any).color || '#6b7280';
     return (
@@ -764,7 +993,12 @@ interface UnlinkedProjectRowProps {
 }
 
 const UnlinkedProjectRow: React.FC<UnlinkedProjectRowProps> = ({
-    project, goals, getLink, onLinkToGoal, onMarkMaintenance, onDrop,
+    project,
+    goals,
+    getLink,
+    onLinkToGoal,
+    onMarkMaintenance,
+    onDrop,
 }) => {
     const [open, setOpen] = useState(false);
 
@@ -804,7 +1038,8 @@ const UnlinkedProjectRow: React.FC<UnlinkedProjectRowProps> = ({
                         </div>
                     ) : (
                         <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-                            No active goals yet. Add one above to link this project.
+                            No active goals yet. Add one above to link this
+                            project.
                         </p>
                     )}
                     <div className="flex flex-wrap gap-1.5">

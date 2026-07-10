@@ -195,7 +195,11 @@ const Areas: React.FC = () => {
                                         ? 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                                         : ''
                                 } ${dropdownOpen === area.uid ? 'z-50' : ''}`}
-                                style={area.color ? { backgroundColor: area.color } : {}}
+                                style={
+                                    area.color
+                                        ? { backgroundColor: area.color }
+                                        : {}
+                                }
                             >
                                 {/* Three Dots Dropdown - Top Right */}
                                 <div
@@ -220,7 +224,9 @@ const Areas: React.FC = () => {
                                                 ? 'text-white/60 hover:text-white hover:bg-white/20'
                                                 : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                         }`}
-                                        aria-label={t('areas.toggleDropdownMenu')}
+                                        aria-label={t(
+                                            'areas.toggleDropdownMenu'
+                                        )}
                                         data-testid={`area-dropdown-${area.uid}`}
                                     >
                                         <EllipsisVerticalIcon className="h-4 w-4" />
@@ -292,19 +298,34 @@ const Areas: React.FC = () => {
                                 >
                                     {[
                                         {
-                                            icon: <FolderIcon className="h-3.5 w-3.5" />,
+                                            icon: (
+                                                <FolderIcon className="h-3.5 w-3.5" />
+                                            ),
                                             count: area.projects_count ?? 0,
-                                            label: t('areas.stats.projects', 'projects'),
+                                            label: t(
+                                                'areas.stats.projects',
+                                                'projects'
+                                            ),
                                         },
                                         {
-                                            icon: <FlagIcon className="h-3.5 w-3.5" />,
+                                            icon: (
+                                                <FlagIcon className="h-3.5 w-3.5" />
+                                            ),
                                             count: area.goals_count ?? 0,
-                                            label: t('areas.stats.goals', 'goals'),
+                                            label: t(
+                                                'areas.stats.goals',
+                                                'goals'
+                                            ),
                                         },
                                         {
-                                            icon: <CheckCircleIcon className="h-3.5 w-3.5" />,
+                                            icon: (
+                                                <CheckCircleIcon className="h-3.5 w-3.5" />
+                                            ),
                                             count: area.tasks_count ?? 0,
-                                            label: t('areas.stats.tasks', 'tasks'),
+                                            label: t(
+                                                'areas.stats.tasks',
+                                                'tasks'
+                                            ),
                                         },
                                     ].map(({ icon, count, label }) => (
                                         <div

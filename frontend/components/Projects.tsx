@@ -429,7 +429,14 @@ const Projects: React.FC = () => {
         });
 
         return filteredProjects;
-    }, [projects, statusFilter, actualAreaFilter, somedayFilter, searchQuery, orderBy]);
+    }, [
+        projects,
+        statusFilter,
+        actualAreaFilter,
+        somedayFilter,
+        searchQuery,
+        orderBy,
+    ]);
 
     if (isLoading) {
         return (
@@ -510,10 +517,16 @@ const Projects: React.FC = () => {
                                 content={
                                     <div className="w-44">
                                         <p className="font-bold mb-1">
-                                            {t('projects.filters.someday', 'Someday')}
+                                            {t(
+                                                'projects.filters.someday',
+                                                'Someday'
+                                            )}
                                         </p>
                                         <p className="font-normal opacity-80">
-                                            {t('projects.filters.somedayTooltip', 'Projects tagged "someday" are hidden by default. Click to reveal them.')}
+                                            {t(
+                                                'projects.filters.somedayTooltip',
+                                                'Projects tagged "someday" are hidden by default. Click to reveal them.'
+                                            )}
                                         </p>
                                     </div>
                                 }
@@ -521,7 +534,10 @@ const Projects: React.FC = () => {
                             >
                                 <button
                                     onClick={handleSomedayToggle}
-                                    aria-label={t('projects.filters.someday', 'Someday')}
+                                    aria-label={t(
+                                        'projects.filters.someday',
+                                        'Someday'
+                                    )}
                                     className={`p-2 rounded-md focus:outline-none transition-colors ${
                                         somedayFilter
                                             ? 'bg-blue-500 text-white'

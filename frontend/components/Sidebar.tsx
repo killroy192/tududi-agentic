@@ -52,7 +52,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const habitsEnabled = useStore((state) => state.userSettingsStore.habitsEnabled);
+    const habitsEnabled = useStore(
+        (state) => state.userSettingsStore.habitsEnabled
+    );
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 

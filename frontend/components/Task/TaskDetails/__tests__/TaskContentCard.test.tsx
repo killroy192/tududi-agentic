@@ -51,7 +51,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('passes onContentChange to MarkdownRenderer in view mode', () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />);
+        render(
+            <TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />
+        );
 
         expect(capturedMarkdownProps).not.toBeNull();
         expect(capturedMarkdownProps.onContentChange).toBeDefined();
@@ -59,7 +61,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('checkboxes are enabled in view mode', () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />);
+        render(
+            <TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />
+        );
 
         const checkbox = screen.getByRole('checkbox');
         expect(checkbox).not.toBeDisabled();
@@ -67,7 +71,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('clicking a checkbox calls onUpdate with toggled content', async () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />);
+        render(
+            <TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />
+        );
 
         const checkbox = screen.getByRole('checkbox');
         fireEvent.click(checkbox);
@@ -78,7 +84,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('clicking a checked checkbox calls onUpdate to uncheck it', async () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [x] Do something" onUpdate={onUpdate} />);
+        render(
+            <TaskContentCard content="- [x] Do something" onUpdate={onUpdate} />
+        );
 
         const checkbox = screen.getByRole('checkbox');
         fireEvent.click(checkbox);

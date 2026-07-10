@@ -138,8 +138,13 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
         onSubtasksChange(updatedSubtasks);
     };
 
-    const handleToggleSubtaskCompletion = async (subtask: Task, index: number) => {
-        const isPersisted = subtask.id && subtask.uid &&
+    const handleToggleSubtaskCompletion = async (
+        subtask: Task,
+        index: number
+    ) => {
+        const isPersisted =
+            subtask.id &&
+            subtask.uid &&
             !((subtask as any)._isNew || (subtask as any).isNew);
 
         if (isPersisted) {
@@ -182,7 +187,12 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                             status={
                                                 subtask.status || 'not_started'
                                             }
-                                            onToggleCompletion={() => handleToggleSubtaskCompletion(subtask, index)}
+                                            onToggleCompletion={() =>
+                                                handleToggleSubtaskCompletion(
+                                                    subtask,
+                                                    index
+                                                )
+                                            }
                                         />
                                     </div>
                                     <input
@@ -224,7 +234,12 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                                     subtask.status ||
                                                     'not_started'
                                                 }
-                                                onToggleCompletion={() => handleToggleSubtaskCompletion(subtask, index)}
+                                                onToggleCompletion={() =>
+                                                    handleToggleSubtaskCompletion(
+                                                        subtask,
+                                                        index
+                                                    )
+                                                }
                                             />
                                         </div>
                                         <span

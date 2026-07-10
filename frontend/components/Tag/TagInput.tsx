@@ -213,7 +213,10 @@ const TagInput: React.FC<TagInputProps> = ({
                             title={
                                 tag.pinned
                                     ? t('tags.pinnedTag', 'Pinned tag')
-                                    : t('tags.frequentlyUsed', 'Frequently used')
+                                    : t(
+                                          'tags.frequentlyUsed',
+                                          'Frequently used'
+                                      )
                             }
                         >
                             {tag.color && (
@@ -232,24 +235,24 @@ const TagInput: React.FC<TagInputProps> = ({
                 ref={containerRef}
                 className="flex flex-wrap items-center gap-2 border border-gray-300 dark:border-gray-900 bg-white dark:bg-gray-900 rounded-md px-2 min-h-[40px] py-2"
             >
-                {tags.length > 0 ? (
-                    tags.map((tag, index) => (
-                        <span
-                            key={index}
-                            className="flex items-center bg-gray-200 text-gray-700 text-xs font-medium px-2.5 py-0.5 rounded"
-                        >
-                            {tag}
-                            <button
-                                type="button"
-                                onClick={() => removeTag(index)}
-                                className="ml-1 text-gray-600 hover:text-gray-800 focus:outline-none"
-                                aria-label={`Remove tag ${tag}`}
-                            >
-                                &times;
-                            </button>
-                        </span>
-                    ))
-                ) : null}
+                {tags.length > 0
+                    ? tags.map((tag, index) => (
+                          <span
+                              key={index}
+                              className="flex items-center bg-gray-200 text-gray-700 text-xs font-medium px-2.5 py-0.5 rounded"
+                          >
+                              {tag}
+                              <button
+                                  type="button"
+                                  onClick={() => removeTag(index)}
+                                  className="ml-1 text-gray-600 hover:text-gray-800 focus:outline-none"
+                                  aria-label={`Remove tag ${tag}`}
+                              >
+                                  &times;
+                              </button>
+                          </span>
+                      ))
+                    : null}
 
                 <input
                     type="text"

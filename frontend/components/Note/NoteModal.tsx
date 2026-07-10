@@ -587,7 +587,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
                                                                 handleChange
                                                             }
                                                             className="block w-full h-full min-h-0 sm:border sm:border-gray-300 sm:dark:border-gray-600 sm:rounded-md shadow-sm py-2 sm:py-3 px-3 sm:px-3 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 sm:focus:ring-2 sm:focus:ring-blue-500 transition duration-150 ease-in-out resize-none"
-                                                            placeholder={t('notes.contentPlaceholderMarkdown')}
+                                                            placeholder={t(
+                                                                'notes.contentPlaceholderMarkdown'
+                                                            )}
                                                             autoComplete="off"
                                                             data-testid="note-content-textarea"
                                                         />

@@ -11,7 +11,11 @@ import {
     ExclamationTriangleIcon,
     SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
+import {
+    getTodayDateString,
+    getTomorrowDateString,
+    getYesterdayDateString,
+} from '../../utils/dateUtils';
 
 interface TaskTimelineProps {
     taskUid: string | undefined;

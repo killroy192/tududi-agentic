@@ -72,6 +72,7 @@ const {
 const { getTaskMetrics } = require('./queries/metrics-computation');
 
 const { getSubtasks } = require('./operations/subtasks');
+const { duplicateTask } = require('./operations/duplicate');
 
 const {
     requireTaskReadAccess,
@@ -1044,6 +1045,39 @@ router.get('/task/:uid/next-iterations', async (req, res) => {
     } catch (error) {
         logError('Error getting next iterations:', error);
         res.status(500).json({ error: 'Failed to get next iterations' });
+    }
+});
+
+router.post('/task/:uid/duplicate', requireTaskReadAccess, async (req, res) => {
+    try {
+        const task = await taskRepository.findByUid(req.params.uid, {
+            include: TASK_INCLUDES_WITH_SUBTASKS,
+        });
+
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found.' });
+        }
+
+        if (task.habit_mode === true) {
+            return res
+                .status(400)
+                .json({ error: 'Habit tasks cannot be duplicated.' });
+        }
+
+        const newTask = await duplicateTask(task, req.currentUser.id);
+
+        const serializedTask = await serializeTask(
+            newTask,
+            req.currentUser.timezone,
+            { skipDisplayNameTransform: true }
+        );
+
+        res.status(201).json(serializedTask);
+    } catch (error) {
+        logError('Error duplicating task:', error);
+        res.status(500).json({
+            error: 'There was a problem duplicating the task.',
+        });
     }
 });
 

@@ -8,7 +8,12 @@ import {
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import PersonModal from './PersonModal';
 import { Person } from '../../entities/Person';
-import { fetchPeople, createPerson, updatePerson, deletePerson } from '../../utils/peopleService';
+import {
+    fetchPeople,
+    createPerson,
+    updatePerson,
+    deletePerson,
+} from '../../utils/peopleService';
 import { useToast } from '../Shared/ToastContext';
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
@@ -53,7 +58,10 @@ const PeopleList: React.FC = () => {
                 return;
             }
             const clickedElement = event.target as Node;
-            if (dropdownRef.current && !dropdownRef.current.contains(clickedElement)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(clickedElement)
+            ) {
                 setDropdownOpen(null);
             }
         };
@@ -75,22 +83,38 @@ const PeopleList: React.FC = () => {
     const handleSave = async (data: Partial<Person>) => {
         if (editingPerson?.uid) {
             const result = await updatePerson(editingPerson.uid, data);
-            setPeople((prev) => prev.map((p) => (p.uid === editingPerson.uid ? result.person : p)));
+            setPeople((prev) =>
+                prev.map((p) =>
+                    p.uid === editingPerson.uid ? result.person : p
+                )
+            );
             showSuccessToast('Person updated');
         } else {
             const result = await createPerson(data as any);
-            setPeople((prev) => [...prev, result.person].sort((a, b) => a.name.localeCompare(b.name)));
+            setPeople((prev) =>
+                [...prev, result.person].sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                )
+            );
             showSuccessToast('Person created');
         }
     };
 
     const handleArchive = async (person: Person) => {
         try {
-            const result = await updatePerson(person.uid!, { archived: !person.archived });
-            setPeople((prev) => prev.map((p) => (p.uid === person.uid ? result.person : p)));
-            showSuccessToast(person.archived ? 'Person unarchived' : 'Person archived');
+            const result = await updatePerson(person.uid!, {
+                archived: !person.archived,
+            });
+            setPeople((prev) =>
+                prev.map((p) => (p.uid === person.uid ? result.person : p))
+            );
+            showSuccessToast(
+                person.archived ? 'Person unarchived' : 'Person archived'
+            );
         } catch (err: unknown) {
-            showErrorToast(err instanceof Error ? err.message : 'Failed to archive person');
+            showErrorToast(
+                err instanceof Error ? err.message : 'Failed to archive person'
+            );
         }
     };
 
@@ -98,10 +122,14 @@ const PeopleList: React.FC = () => {
         if (!personToDelete) return;
         try {
             await deletePerson(personToDelete.uid!);
-            setPeople((prev) => prev.filter((p) => p.uid !== personToDelete.uid));
+            setPeople((prev) =>
+                prev.filter((p) => p.uid !== personToDelete.uid)
+            );
             showSuccessToast('Person deleted');
         } catch (err: unknown) {
-            showErrorToast(err instanceof Error ? err.message : 'Failed to delete person');
+            showErrorToast(
+                err instanceof Error ? err.message : 'Failed to delete person'
+            );
         } finally {
             setIsConfirmDialogOpen(false);
             setPersonToDelete(null);
@@ -137,7 +165,9 @@ const PeopleList: React.FC = () => {
 
     const sortedGroupKeys = Object.keys(groupedPeople).sort();
     sortedGroupKeys.forEach((letter) => {
-        groupedPeople[letter].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+        groupedPeople[letter].sort((a, b) =>
+            a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        );
     });
 
     return (
@@ -156,7 +186,9 @@ const PeopleList: React.FC = () => {
                 </div>
 
                 {isLoading ? (
-                    <div className="text-center py-12 text-gray-400 dark:text-gray-500">Loading...</div>
+                    <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+                        Loading...
+                    </div>
                 ) : displayPeople.length === 0 ? (
                     <div className="text-center py-16">
                         <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -186,16 +218,31 @@ const PeopleList: React.FC = () => {
                                                     ? 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                                                     : ''
                                             } ${dropdownOpen === person.uid ? 'z-50' : ''}`}
-                                            style={person.color ? { backgroundColor: person.color } : {}}
+                                            style={
+                                                person.color
+                                                    ? {
+                                                          backgroundColor:
+                                                              person.color,
+                                                      }
+                                                    : {}
+                                            }
                                         >
                                             {/* Three-dot dropdown */}
-                                            <div className="absolute top-2 right-2 z-10" ref={dropdownRef}>
+                                            <div
+                                                className="absolute top-2 right-2 z-10"
+                                                ref={dropdownRef}
+                                            >
                                                 <button
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        const next = dropdownOpen === person.uid ? null : person.uid!;
-                                                        if (next !== null) justOpenedRef.current = true;
+                                                        const next =
+                                                            dropdownOpen ===
+                                                            person.uid
+                                                                ? null
+                                                                : person.uid!;
+                                                        if (next !== null)
+                                                            justOpenedRef.current = true;
                                                         setDropdownOpen(next);
                                                     }}
                                                     className={`flex items-center justify-center w-6 h-6 rounded focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
@@ -206,14 +253,19 @@ const PeopleList: React.FC = () => {
                                                 >
                                                     <EllipsisVerticalIcon className="h-4 w-4" />
                                                 </button>
-                                                {dropdownOpen === person.uid && (
+                                                {dropdownOpen ===
+                                                    person.uid && (
                                                     <div className="absolute right-0 top-full mt-1 w-32 bg-white dark:bg-gray-700 shadow-lg rounded-md z-[60]">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
-                                                                openEdit(person);
-                                                                setDropdownOpen(null);
+                                                                openEdit(
+                                                                    person
+                                                                );
+                                                                setDropdownOpen(
+                                                                    null
+                                                                );
                                                             }}
                                                             className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 w-full text-left rounded-t-md"
                                                         >
@@ -223,19 +275,29 @@ const PeopleList: React.FC = () => {
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
-                                                                handleArchive(person);
-                                                                setDropdownOpen(null);
+                                                                handleArchive(
+                                                                    person
+                                                                );
+                                                                setDropdownOpen(
+                                                                    null
+                                                                );
                                                             }}
                                                             className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 w-full text-left"
                                                         >
-                                                            {person.archived ? 'Unarchive' : 'Archive'}
+                                                            {person.archived
+                                                                ? 'Unarchive'
+                                                                : 'Archive'}
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
-                                                                openDeleteConfirm(person);
-                                                                setDropdownOpen(null);
+                                                                openDeleteConfirm(
+                                                                    person
+                                                                );
+                                                                setDropdownOpen(
+                                                                    null
+                                                                );
                                                             }}
                                                             className="block px-4 py-2 text-sm text-red-500 dark:text-red-300 hover:bg-gray-100 dark:hover:bg-gray-600 w-full text-left rounded-b-md"
                                                         >
@@ -248,15 +310,23 @@ const PeopleList: React.FC = () => {
                                             {/* Name */}
                                             <div className="px-5 pt-6 pb-4 flex-1 flex items-center justify-center text-center">
                                                 <div>
-                                                    <h4 className={`text-sm font-semibold tracking-widest uppercase line-clamp-2 ${
-                                                        person.color ? 'text-white' : 'text-gray-800 dark:text-gray-100'
-                                                    }`}>
+                                                    <h4
+                                                        className={`text-sm font-semibold tracking-widest uppercase line-clamp-2 ${
+                                                            person.color
+                                                                ? 'text-white'
+                                                                : 'text-gray-800 dark:text-gray-100'
+                                                        }`}
+                                                    >
                                                         {person.name}
                                                     </h4>
                                                     {person.archived && (
-                                                        <span className={`mt-1 inline-block text-[10px] uppercase tracking-wide ${
-                                                            person.color ? 'text-white/60' : 'text-gray-400 dark:text-gray-500'
-                                                        }`}>
+                                                        <span
+                                                            className={`mt-1 inline-block text-[10px] uppercase tracking-wide ${
+                                                                person.color
+                                                                    ? 'text-white/60'
+                                                                    : 'text-gray-400 dark:text-gray-500'
+                                                            }`}
+                                                        >
                                                             archived
                                                         </span>
                                                     )}
@@ -264,25 +334,46 @@ const PeopleList: React.FC = () => {
                                             </div>
 
                                             {/* Footer */}
-                                            <div className={`rounded-b-xl flex items-stretch divide-x ${
-                                                person.color
-                                                    ? 'bg-black/20 divide-white/10'
-                                                    : 'bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 divide-gray-200 dark:divide-gray-600'
-                                            }`}>
+                                            <div
+                                                className={`rounded-b-xl flex items-stretch divide-x ${
+                                                    person.color
+                                                        ? 'bg-black/20 divide-white/10'
+                                                        : 'bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 divide-gray-200 dark:divide-gray-600'
+                                                }`}
+                                            >
                                                 <div className="flex-1 flex flex-col items-center py-2 gap-0.5">
-                                                    <span className={`text-[10px] leading-none uppercase tracking-wide ${
-                                                        person.color ? 'text-white/55' : 'text-gray-400 dark:text-gray-500'
-                                                    }`}>
-                                                        {RELATIONSHIP_LABELS[person.relationship_type ?? 'other']}
+                                                    <span
+                                                        className={`text-[10px] leading-none uppercase tracking-wide ${
+                                                            person.color
+                                                                ? 'text-white/55'
+                                                                : 'text-gray-400 dark:text-gray-500'
+                                                        }`}
+                                                    >
+                                                        {
+                                                            RELATIONSHIP_LABELS[
+                                                                person.relationship_type ??
+                                                                    'other'
+                                                            ]
+                                                        }
                                                     </span>
                                                 </div>
                                                 {person.email && (
                                                     <div className="flex-1 flex flex-col items-center py-2 gap-0.5 overflow-hidden">
-                                                        <span className={`flex items-center gap-1 text-[10px] leading-none truncate max-w-full px-2 ${
-                                                            person.color ? 'text-white/55' : 'text-gray-400 dark:text-gray-500'
-                                                        }`}>
+                                                        <span
+                                                            className={`flex items-center gap-1 text-[10px] leading-none truncate max-w-full px-2 ${
+                                                                person.color
+                                                                    ? 'text-white/55'
+                                                                    : 'text-gray-400 dark:text-gray-500'
+                                                            }`}
+                                                        >
                                                             <EnvelopeIcon className="h-3 w-3 flex-shrink-0" />
-                                                            <span className="truncate">{person.email.split('@')[0]}</span>
+                                                            <span className="truncate">
+                                                                {
+                                                                    person.email.split(
+                                                                        '@'
+                                                                    )[0]
+                                                                }
+                                                            </span>
                                                         </span>
                                                     </div>
                                                 )}

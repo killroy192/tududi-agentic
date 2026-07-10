@@ -76,7 +76,10 @@ const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
 
     const getWeekDays = () => {
         const allDays = getAllWeekDays();
-        return [...allDays.slice(firstDayOfWeek), ...allDays.slice(0, firstDayOfWeek)];
+        return [
+            ...allDays.slice(firstDayOfWeek),
+            ...allDays.slice(0, firstDayOfWeek),
+        ];
     };
 
     const handleDragStart = (event: CalendarEvent, e: React.DragEvent) => {
@@ -120,7 +123,8 @@ const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                 {days.map((day) => {
                     const dayEvents = events.filter(
                         (event) =>
-                            format(event.start, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
+                            format(event.start, 'yyyy-MM-dd') ===
+                            format(day, 'yyyy-MM-dd')
                     );
                     const isCurrentMonth = isSameMonth(day, currentDate);
                     const isTodayDate = isToday(day);
@@ -162,16 +166,23 @@ const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                     <div
                                         key={event.id}
                                         draggable={event.type === 'task'}
-                                        onDragStart={(e) => handleDragStart(event, e)}
+                                        onDragStart={(e) =>
+                                            handleDragStart(event, e)
+                                        }
                                         onDragEnd={handleDragEnd}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onEventClick?.(event);
                                         }}
                                         className={`text-xs px-1.5 py-1 rounded text-white truncate font-medium cursor-pointer hover:opacity-90 transition-opacity ${
-                                            draggedEventId === event.id ? 'opacity-40' : ''
+                                            draggedEventId === event.id
+                                                ? 'opacity-40'
+                                                : ''
                                         }`}
-                                        style={{ backgroundColor: event.color || '#3b82f6' }}
+                                        style={{
+                                            backgroundColor:
+                                                event.color || '#3b82f6',
+                                        }}
                                         title={event.title}
                                     >
                                         {event.title}

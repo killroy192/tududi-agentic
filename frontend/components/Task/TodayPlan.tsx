@@ -12,7 +12,8 @@ interface TodayPlanProps {
     onTaskUpdate: (task: Task) => Promise<void>;
     onTaskDelete: (taskUid: string) => Promise<void>;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
-    onTaskCompletionToggle?: (task: Task) => void; // New prop
+    onTaskCompletionToggle?: (task: Task) => void;
+    onTaskDuplicated?: (task: Task) => void;
 }
 
 const TodayPlan: React.FC<TodayPlanProps> = ({
@@ -21,7 +22,8 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
     onTaskUpdate,
     onTaskDelete,
     onToggleToday,
-    onTaskCompletionToggle, // Destructure new prop
+    onTaskCompletionToggle,
+    onTaskDuplicated,
 }) => {
     const { t } = useTranslation();
 
@@ -79,6 +81,7 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
                 tasks={sortedTasks}
                 onTaskUpdate={onTaskUpdate}
                 onTaskDelete={onTaskDelete}
+                onTaskDuplicated={onTaskDuplicated}
                 projects={projects}
                 onToggleToday={onToggleToday}
                 onTaskCompletionToggle={onTaskCompletionToggle}

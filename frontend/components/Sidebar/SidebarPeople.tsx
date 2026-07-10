@@ -7,9 +7,13 @@ interface SidebarPeopleProps {
     location: Location;
 }
 
-const SidebarPeople: React.FC<SidebarPeopleProps> = ({ handleNavClick, location }) => {
+const SidebarPeople: React.FC<SidebarPeopleProps> = ({
+    handleNavClick,
+    location,
+}) => {
     const isActive = () =>
-        location.pathname.startsWith('/people') || location.pathname.startsWith('/person/')
+        location.pathname.startsWith('/people') ||
+        location.pathname.startsWith('/person/')
             ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
             : 'text-gray-700 dark:text-gray-300';
 

@@ -9,6 +9,7 @@ interface TaskListProps {
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskCreate?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
+    onTaskDuplicated?: (task: Task) => void;
     projects: Project[];
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
@@ -23,6 +24,7 @@ const TaskList: React.FC<TaskListProps> = ({
     onTaskUpdate,
     onTaskCompletionToggle,
     onTaskDelete,
+    onTaskDuplicated,
     projects,
     hideProjectName = false,
     onToggleToday,
@@ -59,6 +61,7 @@ const TaskList: React.FC<TaskListProps> = ({
                             onTaskUpdate={onTaskUpdate}
                             onTaskCompletionToggle={onTaskCompletionToggle}
                             onTaskDelete={onTaskDelete}
+                            onTaskDuplicated={onTaskDuplicated}
                             projects={projects}
                             hideProjectName={hideProjectName}
                             onToggleToday={onToggleToday}

@@ -38,10 +38,7 @@ const CalDAVTab: React.FC<CalDAVTabProps> = ({ isActive }) => {
             setCalendars(data);
         } catch {
             showErrorToast(
-                t(
-                    'profile.caldav.loadError',
-                    'Failed to load CalDAV calendars'
-                )
+                t('profile.caldav.loadError', 'Failed to load CalDAV calendars')
             );
         } finally {
             setIsLoading(false);
@@ -64,10 +61,7 @@ const CalDAVTab: React.FC<CalDAVTabProps> = ({ isActive }) => {
             await loadCalendars();
         } catch {
             showErrorToast(
-                t(
-                    'profile.caldav.syncError',
-                    'Failed to sync calendar'
-                )
+                t('profile.caldav.syncError', 'Failed to sync calendar')
             );
         } finally {
             setSyncingId(null);
@@ -90,10 +84,7 @@ const CalDAVTab: React.FC<CalDAVTabProps> = ({ isActive }) => {
             setCalendarToDelete(null);
         } catch {
             showErrorToast(
-                t(
-                    'profile.caldav.deleteError',
-                    'Failed to delete calendar'
-                )
+                t('profile.caldav.deleteError', 'Failed to delete calendar')
             );
         } finally {
             setDeletingId(null);
@@ -165,7 +156,10 @@ const CalDAVTab: React.FC<CalDAVTabProps> = ({ isActive }) => {
                         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                             <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-                                {t('profile.caldav.noCalendars', 'No calendars')}
+                                {t(
+                                    'profile.caldav.noCalendars',
+                                    'No calendars'
+                                )}
                             </h3>
                             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 {t(
@@ -180,7 +174,10 @@ const CalDAVTab: React.FC<CalDAVTabProps> = ({ isActive }) => {
                                     className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md"
                                 >
                                     <PlusIcon className="w-5 h-5 mr-2" />
-                                    {t('profile.caldav.addCalendar', 'Add Calendar')}
+                                    {t(
+                                        'profile.caldav.addCalendar',
+                                        'Add Calendar'
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -191,7 +188,9 @@ const CalDAVTab: React.FC<CalDAVTabProps> = ({ isActive }) => {
                                     key={calendar.id}
                                     calendar={calendar}
                                     onSync={handleSyncCalendar}
-                                    onDelete={() => setCalendarToDelete(calendar)}
+                                    onDelete={() =>
+                                        setCalendarToDelete(calendar)
+                                    }
                                     onViewConflicts={handleViewConflicts}
                                     onUpdated={loadCalendars}
                                     isSyncing={syncingId === calendar.id}

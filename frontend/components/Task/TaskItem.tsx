@@ -149,7 +149,12 @@ const SubtasksDisplay: React.FC<SubtasksDisplayProps> = ({
         </div>
     );
 };
-import { toggleTaskCompletion, updateTask, fetchSubtasks } from '../../utils/tasksService';
+import {
+    toggleTaskCompletion,
+    updateTask,
+    fetchSubtasks,
+    duplicateTask,
+} from '../../utils/tasksService';
 import { isTaskOverdueInTodayPlan } from '../../utils/dateUtils';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../Shared/ConfirmDialog';
@@ -160,6 +165,7 @@ interface TaskItemProps {
     onTaskUpdate: (task: Task) => Promise<void>;
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
+    onTaskDuplicated?: (task: Task) => void;
     projects: Project[];
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
@@ -176,6 +182,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     onTaskUpdate,
     onTaskCompletionToggle,
     onTaskDelete,
+    onTaskDuplicated,
     projects,
     hideProjectName = false,
     onToggleToday,
@@ -191,11 +198,14 @@ const TaskItem: React.FC<TaskItemProps> = ({
     const { t } = useTranslation();
     const [projectList, setProjectList] = useState<Project[]>(projects);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-    const { showErrorToast, showUndoToast } = useToast();
+    const { showErrorToast, showUndoToast, showSuccessToast } = useToast();
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
     // Status menu state
     const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+
+    // Duplicate in-flight guard
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     // Subtasks state
     const [subtasks, setSubtasks] = useState<Task[]>([]);
@@ -312,6 +322,26 @@ const TaskItem: React.FC<TaskItemProps> = ({
         }
     };
 
+    const handleDuplicate = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isDuplicating) return;
+        setIsDuplicating(true);
+        try {
+            const newTask = await duplicateTask(task.uid!);
+            showSuccessToast(
+                t('tasks.duplicated', 'Task duplicated successfully')
+            );
+            onTaskDuplicated?.(newTask);
+        } catch {
+            showErrorToast(
+                t('tasks.duplicateFailed', 'Failed to duplicate task')
+            );
+        } finally {
+            setIsDuplicating(false);
+        }
+    };
+
     const handleToggleCompletion = async () => {
         if (task.id) {
             try {
@@ -336,7 +366,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
                 // Show undo toast on completion
                 if (isCompletingTask) {
                     showUndoToast(
-                        <>Task <span className="font-semibold">&apos;{task.name}&apos;</span> completed.</>,
+                        <>
+                            Task{' '}
+                            <span className="font-semibold">
+                                &apos;{task.name}&apos;
+                            </span>{' '}
+                            completed.
+                        </>,
                         async () => {
                             try {
                                 const reverted = await updateTask(task.uid!, {
@@ -347,10 +383,15 @@ const TaskItem: React.FC<TaskItemProps> = ({
                                 if (onTaskCompletionToggle) {
                                     onTaskCompletionToggle(reverted);
                                 } else {
-                                    await onTaskUpdate({ ...task, ...reverted });
+                                    await onTaskUpdate({
+                                        ...task,
+                                        ...reverted,
+                                    });
                                 }
                             } catch {
-                                showErrorToast('Failed to undo task completion.');
+                                showErrorToast(
+                                    'Failed to undo task completion.'
+                                );
                             }
                         }
                     );
@@ -448,6 +489,10 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     }
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
+                    onDuplicate={
+                        !task.habit_mode ? handleDuplicate : undefined
+                    }
+                    isDuplicating={isDuplicating}
                     isUpcomingView={isUpcomingView}
                     onMenuOpenChange={setIsStatusMenuOpen}
                     hideStatusControl={hideStatusControl}
@@ -468,31 +513,47 @@ const TaskItem: React.FC<TaskItemProps> = ({
             </div>
 
             {/* Suggestion reason row - only in Suggested section */}
-            {showSuggestionChips && task._suggestionMeta && (() => {
-                const { reason, reasonLabel, reasonColor } = task._suggestionMeta;
-                const iconProps = { className: 'h-3.5 w-3.5 flex-shrink-0' };
-                const icon =
-                    reason === 'due'        ? <ExclamationTriangleIcon {...iconProps} /> :
-                    reason === 'goal'       ? <ArrowRightCircleIcon {...iconProps} /> :
-                    reason === 'high'       ? <BoltIcon {...iconProps} /> :
-                    reason === 'revive'     ? <ArrowPathIcon {...iconProps} /> :
-                    reason === 'aging_review' ? <ClockIcon {...iconProps} /> :
-                    reason === 'area_balance' ? <ScaleIcon {...iconProps} /> :
-                    reason === 'fits_now'   ? <SparklesIcon {...iconProps} /> :
-                                              <ArrowRightCircleIcon {...iconProps} />;
-                return (
-                    <div
-                        className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-b-lg text-[11px] select-none"
-                        style={{
-                            backgroundColor: `${reasonColor}12`,
-                            color: `${reasonColor}cc`,
-                        }}
-                    >
-                        {icon}
-                        <span className="font-light leading-tight">{reasonLabel}</span>
-                    </div>
-                );
-            })()}
+            {showSuggestionChips &&
+                task._suggestionMeta &&
+                (() => {
+                    const { reason, reasonLabel, reasonColor } =
+                        task._suggestionMeta;
+                    const iconProps = {
+                        className: 'h-3.5 w-3.5 flex-shrink-0',
+                    };
+                    const icon =
+                        reason === 'due' ? (
+                            <ExclamationTriangleIcon {...iconProps} />
+                        ) : reason === 'goal' ? (
+                            <ArrowRightCircleIcon {...iconProps} />
+                        ) : reason === 'high' ? (
+                            <BoltIcon {...iconProps} />
+                        ) : reason === 'revive' ? (
+                            <ArrowPathIcon {...iconProps} />
+                        ) : reason === 'aging_review' ? (
+                            <ClockIcon {...iconProps} />
+                        ) : reason === 'area_balance' ? (
+                            <ScaleIcon {...iconProps} />
+                        ) : reason === 'fits_now' ? (
+                            <SparklesIcon {...iconProps} />
+                        ) : (
+                            <ArrowRightCircleIcon {...iconProps} />
+                        );
+                    return (
+                        <div
+                            className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-b-lg text-[11px] select-none"
+                            style={{
+                                backgroundColor: `${reasonColor}12`,
+                                color: `${reasonColor}cc`,
+                            }}
+                        >
+                            {icon}
+                            <span className="font-light leading-tight">
+                                {reasonLabel}
+                            </span>
+                        </div>
+                    );
+                })()}
 
             {/* Hide subtasks display for archived tasks */}
             {showSubtasks &&

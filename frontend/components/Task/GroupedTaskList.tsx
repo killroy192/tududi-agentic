@@ -18,6 +18,7 @@ interface GroupedTaskListProps {
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskCreate?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
+    onTaskDuplicated?: (task: Task) => void;
     projects: Project[];
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
@@ -45,6 +46,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
     onTaskUpdate,
     onTaskCompletionToggle,
     onTaskDelete,
+    onTaskDuplicated,
     projects,
     hideProjectName = false,
     onToggleToday,
@@ -352,6 +354,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                             onTaskDelete={
                                                                 onTaskDelete
                                                             }
+                                                            onTaskDuplicated={
+                                                                onTaskDuplicated
+                                                            }
                                                             projects={projects}
                                                             hideProjectName={
                                                                 hideProjectName
@@ -448,6 +453,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                   onTaskCompletionToggle
                                               }
                                               onTaskDelete={onTaskDelete}
+                                              onTaskDuplicated={
+                                                  onTaskDuplicated
+                                              }
                                               projects={projects}
                                               hideProjectName={hideProjectName}
                                               onToggleToday={onToggleToday}
@@ -468,6 +476,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                               onTaskUpdate={onTaskUpdate}
                               onTaskCompletionToggle={onTaskCompletionToggle}
                               onTaskDelete={onTaskDelete}
+                              onTaskDuplicated={onTaskDuplicated}
                               projects={projects}
                               hideProjectName={hideProjectName}
                               onToggleToday={onToggleToday}
@@ -500,6 +509,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                 onTaskCompletionToggle
                                             }
                                             onTaskDelete={onTaskDelete}
+                                            onTaskDuplicated={onTaskDuplicated}
                                             projects={projects}
                                             hideProjectName={hideProjectName}
                                             onToggleToday={onToggleToday}
@@ -580,6 +590,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                     onTaskCompletionToggle
                                                 }
                                                 onTaskDelete={onTaskDelete}
+                                                onTaskDuplicated={
+                                                    onTaskDuplicated
+                                                }
                                                 projects={projects}
                                                 hideProjectName={
                                                     hideProjectName

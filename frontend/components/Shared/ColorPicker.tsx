@@ -29,7 +29,10 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange }) => {
                     key={color.name}
                     type="button"
                     onClick={() => onChange(color.value)}
-                    aria-label={t(`colors.${color.name.toLowerCase()}`, color.name)}
+                    aria-label={t(
+                        `colors.${color.name.toLowerCase()}`,
+                        color.name
+                    )}
                     className={`w-7 h-7 rounded-full border-2 transition-all focus:outline-none ${
                         (value || '') === color.value
                             ? 'border-blue-500 scale-110'

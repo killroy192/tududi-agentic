@@ -113,27 +113,43 @@ const Habits: React.FC = () => {
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {[
                                     {
-                                        label: t('habits.totalHabits', 'Total Habits'),
+                                        label: t(
+                                            'habits.totalHabits',
+                                            'Total Habits'
+                                        ),
                                         value: dashboardStats.totalHabits,
                                         icon: <FireIcon className="h-4 w-4" />,
                                         sub: null,
                                     },
                                     {
-                                        label: t('habits.activeStreaks', 'Active Streaks'),
+                                        label: t(
+                                            'habits.activeStreaks',
+                                            'Active Streaks'
+                                        ),
                                         value: dashboardStats.activeStreaks,
                                         icon: <FireIcon className="h-4 w-4" />,
                                         sub: `${dashboardStats.totalCurrentStreak} ${t('habits.days', 'days')} total`,
                                     },
                                     {
-                                        label: t('habits.bestStreak', 'Best Streak'),
+                                        label: t(
+                                            'habits.bestStreak',
+                                            'Best Streak'
+                                        ),
                                         value: dashboardStats.totalBestStreak,
-                                        icon: <ChartBarIcon className="h-4 w-4" />,
+                                        icon: (
+                                            <ChartBarIcon className="h-4 w-4" />
+                                        ),
                                         sub: t('habits.days', 'days'),
                                     },
                                     {
-                                        label: t('habits.totalCompletions', 'Total Completions'),
+                                        label: t(
+                                            'habits.totalCompletions',
+                                            'Total Completions'
+                                        ),
                                         value: dashboardStats.totalCompletions,
-                                        icon: <CheckCircleIcon className="h-4 w-4" />,
+                                        icon: (
+                                            <CheckCircleIcon className="h-4 w-4" />
+                                        ),
                                         sub: t('habits.allTime', 'all time'),
                                     },
                                 ].map(({ label, value, icon, sub }) => (

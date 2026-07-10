@@ -155,7 +155,9 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onComplete, onEdit }) => {
             <div className="px-5 pb-4">
                 <div
                     className="grid gap-[3px]"
-                    style={{ gridTemplateColumns: `repeat(${DAYS}, minmax(0, 1fr))` }}
+                    style={{
+                        gridTemplateColumns: `repeat(${DAYS}, minmax(0, 1fr))`,
+                    }}
                 >
                     {days.map(({ key, date }) => {
                         const done = completedDays.has(key);

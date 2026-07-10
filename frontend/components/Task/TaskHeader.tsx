@@ -7,6 +7,7 @@ import {
     ListBulletIcon,
     ChevronDownIcon,
     CheckIcon,
+    DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { TagIcon, FolderIcon, FireIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,12 @@ import { Task } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
-import { parseDateString, getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
+import {
+    parseDateString,
+    getTodayDateString,
+    getTomorrowDateString,
+    getYesterdayDateString,
+} from '../../utils/dateUtils';
 
 const tagColorStyle = (color?: string): React.CSSProperties | undefined => {
     if (!color) return undefined;
@@ -41,6 +47,8 @@ interface TaskHeaderProps {
     // Props for edit and delete functionality
     onEdit?: (e: React.MouseEvent) => void;
     onDelete?: (e: React.MouseEvent) => void;
+    onDuplicate?: (e: React.MouseEvent) => void;
+    isDuplicating?: boolean;
     isUpcomingView?: boolean;
     onMenuOpenChange?: (isOpen: boolean) => void;
     hideStatusControl?: boolean;
@@ -61,6 +69,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     // Props for edit and delete functionality
     onEdit: _onEdit,
     onDelete: _onDelete,
+    onDuplicate,
+    isDuplicating = false,
     isUpcomingView = false,
     onMenuOpenChange,
     hideStatusControl = false,
@@ -267,12 +277,32 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                                 key={tag.uid || tag.name}
                                                 to={
                                                     tag.uid
-                                                        ? `/tag/${tag.uid}-${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
-                                                        : `/tag/${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
+                                                        ? `/tag/${tag.uid}-${tag.name
+                                                              .toLowerCase()
+                                                              .replace(
+                                                                  /[^a-z0-9]+/g,
+                                                                  '-'
+                                                              )
+                                                              .replace(
+                                                                  /^-|-$/g,
+                                                                  ''
+                                                              )}`
+                                                        : `/tag/${tag.name
+                                                              .toLowerCase()
+                                                              .replace(
+                                                                  /[^a-z0-9]+/g,
+                                                                  '-'
+                                                              )
+                                                              .replace(
+                                                                  /^-|-$/g,
+                                                                  ''
+                                                              )}`
                                                 }
                                                 className="inline-flex items-center px-2 py-px rounded-full text-[10px] font-medium transition-opacity hover:opacity-80 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
                                                 style={tagColorStyle(tag.color)}
-                                                onClick={(e) => e.stopPropagation()}
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
                                             >
                                                 {tag.name}
                                             </Link>
@@ -298,7 +328,9 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         )}
                         {/* Project, tags, due date, and recurrence in same row, with spacing when they exist */}
                         {!isUpcomingView && (
-                            <div className={`flex text-xs text-gray-500 dark:text-gray-400 ${isKanbanView ? 'flex-col space-y-0.5 mt-1.5' : 'items-center gap-3 whitespace-nowrap overflow-x-auto'}`}>
+                            <div
+                                className={`flex text-xs text-gray-500 dark:text-gray-400 ${isKanbanView ? 'flex-col space-y-0.5 mt-1.5' : 'items-center gap-3 whitespace-nowrap overflow-x-auto'}`}
+                            >
                                 {project && !hideProjectName && (
                                     <div className="flex items-center">
                                         <FolderIcon className="h-3 w-3 mr-1" />
@@ -342,12 +374,32 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                                 key={tag.uid || tag.name}
                                                 to={
                                                     tag.uid
-                                                        ? `/tag/${tag.uid}-${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
-                                                        : `/tag/${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
+                                                        ? `/tag/${tag.uid}-${tag.name
+                                                              .toLowerCase()
+                                                              .replace(
+                                                                  /[^a-z0-9]+/g,
+                                                                  '-'
+                                                              )
+                                                              .replace(
+                                                                  /^-|-$/g,
+                                                                  ''
+                                                              )}`
+                                                        : `/tag/${tag.name
+                                                              .toLowerCase()
+                                                              .replace(
+                                                                  /[^a-z0-9]+/g,
+                                                                  '-'
+                                                              )
+                                                              .replace(
+                                                                  /^-|-$/g,
+                                                                  ''
+                                                              )}`
                                                 }
                                                 className="inline-flex items-center px-2 py-px rounded-full text-[10px] font-medium transition-opacity hover:opacity-80 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
                                                 style={tagColorStyle(tag.color)}
-                                                onClick={(e) => e.stopPropagation()}
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
                                             >
                                                 {tag.name}
                                             </Link>
@@ -414,16 +466,37 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         )}
                     </div>
                 </div>
-                {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
+                {!isUpcomingView && !task.habit_mode && (
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
-                        <TaskStatusControl
-                            task={task}
-                            onToggleCompletion={onToggleCompletion}
-                            onTaskUpdate={onTaskUpdate}
-                            showMobileVariant={false}
-                            className=""
-                            onMenuOpenChange={onMenuOpenChange}
-                        />
+                        {onDuplicate && (
+                            <button
+                                type="button"
+                                disabled={isDuplicating}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onDuplicate(e);
+                                }}
+                                className={`mr-1 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 ${
+                                    isDuplicating
+                                        ? 'opacity-100 cursor-not-allowed'
+                                        : ''
+                                }`}
+                                title={t('tasks.duplicate', 'Duplicate task')}
+                            >
+                                <DocumentDuplicateIcon className="h-4 w-4" />
+                            </button>
+                        )}
+                        {!hideStatusControl && onToggleCompletion && (
+                            <TaskStatusControl
+                                task={task}
+                                onToggleCompletion={onToggleCompletion}
+                                onTaskUpdate={onTaskUpdate}
+                                showMobileVariant={false}
+                                className=""
+                                onMenuOpenChange={onMenuOpenChange}
+                            />
+                        )}
                     </div>
                 )}
             </div>
@@ -503,8 +576,26 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                             key={tag.uid || tag.name}
                                             to={
                                                 tag.uid
-                                                    ? `/tag/${tag.uid}-${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
-                                                    : `/tag/${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
+                                                    ? `/tag/${tag.uid}-${tag.name
+                                                          .toLowerCase()
+                                                          .replace(
+                                                              /[^a-z0-9]+/g,
+                                                              '-'
+                                                          )
+                                                          .replace(
+                                                              /^-|-$/g,
+                                                              ''
+                                                          )}`
+                                                    : `/tag/${tag.name
+                                                          .toLowerCase()
+                                                          .replace(
+                                                              /[^a-z0-9]+/g,
+                                                              '-'
+                                                          )
+                                                          .replace(
+                                                              /^-|-$/g,
+                                                              ''
+                                                          )}`
                                             }
                                             className="inline-flex items-center px-2 py-px rounded-full text-[10px] font-medium transition-opacity hover:opacity-80 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
                                             style={tagColorStyle(tag.color)}
@@ -570,7 +661,29 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         </div>
 
                         {onToggleCompletion && (
-                            <div className="mt-2">
+                            <div className="mt-2 flex items-center gap-2">
+                                {onDuplicate && !task.habit_mode && (
+                                    <button
+                                        type="button"
+                                        disabled={isDuplicating}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onDuplicate(e);
+                                        }}
+                                        className={`p-1 rounded text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 ${
+                                            isDuplicating
+                                                ? 'opacity-50 cursor-not-allowed'
+                                                : ''
+                                        }`}
+                                        title={t(
+                                            'tasks.duplicate',
+                                            'Duplicate task'
+                                        )}
+                                    >
+                                        <DocumentDuplicateIcon className="h-4 w-4" />
+                                    </button>
+                                )}
                                 <TaskStatusControl
                                     task={task}
                                     onToggleCompletion={onToggleCompletion}

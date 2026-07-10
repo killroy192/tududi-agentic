@@ -285,9 +285,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
                         }
                         className="block"
                     >
-                        <div
-                            className="relative h-40 overflow-hidden rounded-t-lg bg-gray-200 dark:bg-gray-700"
-                        >
+                        <div className="relative h-40 overflow-hidden rounded-t-lg bg-gray-200 dark:bg-gray-700">
                             {project.image_url ? (
                                 <img
                                     src={project.image_url}

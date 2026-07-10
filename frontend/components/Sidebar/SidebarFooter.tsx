@@ -256,7 +256,9 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
                                                             fontSize: '10px',
                                                         }}
                                                     >
-                                                        {getShortcutDisplay(action)}
+                                                        {getShortcutDisplay(
+                                                            action
+                                                        )}
                                                     </span>
                                                 </button>
                                             )

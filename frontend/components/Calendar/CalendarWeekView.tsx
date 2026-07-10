@@ -63,8 +63,8 @@ const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     const getEventsForTimeSlot = (day: Date, hour: number) =>
         events.filter(
             (event) =>
-                format(event.start, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') &&
-                event.start.getHours() === hour
+                format(event.start, 'yyyy-MM-dd') ===
+                    format(day, 'yyyy-MM-dd') && event.start.getHours() === hour
         );
 
     const handleDragStart = (event: CalendarEvent, e: React.DragEvent) => {
@@ -130,37 +130,53 @@ const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                         className="grid grid-cols-8 border-b border-gray-100 dark:border-gray-600"
                     >
                         <div className="py-3 px-2 text-xs font-medium text-gray-400 dark:text-gray-500 text-center border-r border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
-                            {format(addHours(new Date().setHours(hour, 0, 0, 0), 0), 'HH:mm')}
+                            {format(
+                                addHours(new Date().setHours(hour, 0, 0, 0), 0),
+                                'HH:mm'
+                            )}
                         </div>
                         {weekDays.map((day) => {
-                            const timeSlotEvents = getEventsForTimeSlot(day, hour);
+                            const timeSlotEvents = getEventsForTimeSlot(
+                                day,
+                                hour
+                            );
                             const eventCount = timeSlotEvents.length;
 
                             return (
                                 <div
                                     key={`${day.toString()}-${hour}`}
                                     onClick={() => onTimeSlotClick?.(day, hour)}
-                                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.dataTransfer.dropEffect = 'move';
+                                    }}
                                     onDrop={(e) => handleDrop(day, hour, e)}
                                     className={`min-h-[72px] p-1.5 border-l border-gray-100 dark:border-gray-600 cursor-pointer transition-colors hover:bg-blue-50/30 dark:hover:bg-blue-900/10 relative ${
-                                        isToday(day) ? 'bg-blue-50/10 dark:bg-blue-900/5' : ''
+                                        isToday(day)
+                                            ? 'bg-blue-50/10 dark:bg-blue-900/5'
+                                            : ''
                                     }`}
                                 >
                                     {timeSlotEvents.map((event, index) => (
                                         <div
                                             key={event.id}
                                             draggable={event.type === 'task'}
-                                            onDragStart={(e) => handleDragStart(event, e)}
+                                            onDragStart={(e) =>
+                                                handleDragStart(event, e)
+                                            }
                                             onDragEnd={handleDragEnd}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onEventClick?.(event);
                                             }}
                                             className={`text-xs px-2 py-1.5 rounded-lg text-white absolute font-medium overflow-hidden cursor-pointer hover:opacity-90 transition-opacity ${
-                                                event.type === 'task' ? 'cursor-move' : ''
+                                                event.type === 'task'
+                                                    ? 'cursor-move'
+                                                    : ''
                                             } ${draggedEventId === event.id ? 'opacity-40' : ''}`}
                                             style={{
-                                                backgroundColor: event.color || '#3b82f6',
+                                                backgroundColor:
+                                                    event.color || '#3b82f6',
                                                 left: `${(100 / eventCount) * index}%`,
                                                 width: `${eventCount > 1 ? 100 / eventCount - 1 : 100}%`,
                                                 top: '0.25rem',

@@ -67,21 +67,31 @@ const App: React.FC = () => {
             if (data.user) {
                 setCurrentUser(data.user);
                 setUserInStorage(data.user);
-                useStore.getState().userSettingsStore.setEisenhowerEnabled(
-                    data.user.features?.eisenhower_enabled === true
-                );
-                useStore.getState().userSettingsStore.setKanbanEnabled(
-                    data.user.features?.kanban_enabled === true
-                );
-                useStore.getState().userSettingsStore.setHabitsEnabled(
-                    data.user.features?.habits_enabled !== false
-                );
-                useStore.getState().userSettingsStore.setCalendarEnabled(
-                    data.user.features?.calendar_enabled === true
-                );
-                useStore.getState().userSettingsStore.setAiAssistantEnabled(
-                    data.user.features?.ai_assistant_enabled === true
-                );
+                useStore
+                    .getState()
+                    .userSettingsStore.setEisenhowerEnabled(
+                        data.user.features?.eisenhower_enabled === true
+                    );
+                useStore
+                    .getState()
+                    .userSettingsStore.setKanbanEnabled(
+                        data.user.features?.kanban_enabled === true
+                    );
+                useStore
+                    .getState()
+                    .userSettingsStore.setHabitsEnabled(
+                        data.user.features?.habits_enabled !== false
+                    );
+                useStore
+                    .getState()
+                    .userSettingsStore.setCalendarEnabled(
+                        data.user.features?.calendar_enabled === true
+                    );
+                useStore
+                    .getState()
+                    .userSettingsStore.setAiAssistantEnabled(
+                        data.user.features?.ai_assistant_enabled === true
+                    );
             } else {
                 setCurrentUser(null);
                 setUserInStorage(null);
@@ -245,7 +255,10 @@ const App: React.FC = () => {
                                     </Suspense>
                                 }
                             />
-                            <Route path="/eisenhower" element={<EisenhowerMatrix />} />
+                            <Route
+                                path="/eisenhower"
+                                element={<EisenhowerMatrix />}
+                            />
                             <Route path="/kanban" element={<KanbanBoard />} />
                             <Route path="/inbox" element={<InboxItems />} />
                             <Route path="/habits" element={<Habits />} />
@@ -259,7 +272,10 @@ const App: React.FC = () => {
                                 element={<ProjectDetails />}
                             />
                             <Route path="/areas" element={<Areas />} />
-                            <Route path="/area/:uidSlug" element={<AreaDetails />} />
+                            <Route
+                                path="/area/:uidSlug"
+                                element={<AreaDetails />}
+                            />
                             <Route path="/tags" element={<Tags />} />
                             <Route
                                 path="/tag/:uidSlug"
@@ -293,7 +309,10 @@ const App: React.FC = () => {
                             />
                             <Route path="/backup" element={<BackupRestore />} />
                             <Route path="/people" element={<PeopleList />} />
-                            <Route path="/person/:uid" element={<PersonDetails />} />
+                            <Route
+                                path="/person/:uid"
+                                element={<PersonDetails />}
+                            />
                             <Route
                                 path="/admin/users"
                                 element={

@@ -135,7 +135,9 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
                             'profile.taskIntelligenceDescription',
                             'Show popup alerts while typing task names that suggest improvements like "Make it more descriptive!", "Be more specific!", or "Add an action verb!". Disable this if you prefer typing in your own shorthand without suggestions.'
                         )}
-                        value={Boolean(formData.features?.task_intelligence_enabled)}
+                        value={Boolean(
+                            formData.features?.task_intelligence_enabled
+                        )}
                         onToggle={() => onToggleAi('task_intelligence_enabled')}
                     />
                     <ToggleRow
@@ -147,7 +149,9 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
                             'profile.autoSuggestNextActionsDescription',
                             'When creating a project, automatically prompt for the very next physical action to take.'
                         )}
-                        value={Boolean(formData.features?.auto_suggest_next_actions_enabled)}
+                        value={Boolean(
+                            formData.features?.auto_suggest_next_actions_enabled
+                        )}
                         onToggle={() =>
                             onToggleAi('auto_suggest_next_actions_enabled')
                         }
@@ -161,7 +165,9 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
                             'profile.productivityAssistantDescription',
                             'Show productivity insights that help identify stalled projects, vague tasks, and workflow improvements on your Today page.'
                         )}
-                        value={Boolean(formData.features?.productivity_assistant_enabled)}
+                        value={Boolean(
+                            formData.features?.productivity_assistant_enabled
+                        )}
                         onToggle={() =>
                             onToggleAi('productivity_assistant_enabled')
                         }
@@ -175,7 +181,9 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
                             'profile.nextTaskSuggestionDescription',
                             'Automatically suggest the next best task to work on when you have nothing in progress, prioritizing due today tasks, then suggested tasks, then next actions.'
                         )}
-                        value={Boolean(formData.features?.next_task_suggestion_enabled)}
+                        value={Boolean(
+                            formData.features?.next_task_suggestion_enabled
+                        )}
                         onToggle={() =>
                             onToggleAi('next_task_suggestion_enabled')
                         }

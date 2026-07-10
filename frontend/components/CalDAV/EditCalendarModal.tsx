@@ -3,10 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useToast } from '../Shared/ToastContext';
-import {
-    updateCalendar,
-    type CalDAVCalendar,
-} from '../../utils/caldavService';
+import { updateCalendar, type CalDAVCalendar } from '../../utils/caldavService';
 
 interface EditCalendarModalProps {
     isOpen: boolean;
@@ -112,7 +109,10 @@ const EditCalendarModal: React.FC<EditCalendarModalProps> = ({
         } catch (err: any) {
             const errorMessage =
                 err.message ||
-                t('profile.editCalendar.updateError', 'Failed to update calendar');
+                t(
+                    'profile.editCalendar.updateError',
+                    'Failed to update calendar'
+                );
             setError(errorMessage);
             showErrorToast(errorMessage);
         } finally {
@@ -139,17 +139,26 @@ const EditCalendarModal: React.FC<EditCalendarModalProps> = ({
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex-1 overflow-y-auto p-6 space-y-4"
+                >
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('profile.caldavWizard.calendarName', 'Calendar name')}{' '}
+                            {t(
+                                'profile.caldavWizard.calendarName',
+                                'Calendar name'
+                            )}{' '}
                             <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={formData.name}
                             onChange={(e) =>
-                                setFormData({ ...formData, name: e.target.value })
+                                setFormData({
+                                    ...formData,
+                                    name: e.target.value,
+                                })
                             }
                             disabled={isSubmitting}
                             className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -158,12 +167,18 @@ const EditCalendarModal: React.FC<EditCalendarModalProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('profile.caldavWizard.description', 'Description')}
+                            {t(
+                                'profile.caldavWizard.description',
+                                'Description'
+                            )}
                         </label>
                         <textarea
                             value={formData.description}
                             onChange={(e) =>
-                                setFormData({ ...formData, description: e.target.value })
+                                setFormData({
+                                    ...formData,
+                                    description: e.target.value,
+                                })
                             }
                             disabled={isSubmitting}
                             rows={3}
@@ -210,14 +225,20 @@ const EditCalendarModal: React.FC<EditCalendarModalProps> = ({
                                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                             />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {t('profile.editCalendar.enableSync', 'Enable synchronization')}
+                                {t(
+                                    'profile.editCalendar.enableSync',
+                                    'Enable synchronization'
+                                )}
                             </span>
                         </label>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('profile.caldavWizard.syncDirection', 'Sync direction')}
+                            {t(
+                                'profile.caldavWizard.syncDirection',
+                                'Sync direction'
+                            )}
                         </label>
                         <select
                             value={formData.sync_direction}
@@ -269,7 +290,9 @@ const EditCalendarModal: React.FC<EditCalendarModalProps> = ({
                             onChange={(e) =>
                                 setFormData({
                                     ...formData,
-                                    sync_interval_minutes: parseInt(e.target.value),
+                                    sync_interval_minutes: parseInt(
+                                        e.target.value
+                                    ),
                                 })
                             }
                             disabled={isSubmitting}

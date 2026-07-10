@@ -1,7 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowRightIcon, RectangleStackIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+    ArrowRightIcon,
+    RectangleStackIcon,
+    XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { Area } from '../../../entities/Area';
 import { Task } from '../../../entities/Task';
 
@@ -71,7 +75,14 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                     <div className="flex items-center gap-2 min-w-0">
                         <span
                             className="inline-block w-3 h-3 rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                            style={effectiveArea.color ? { backgroundColor: effectiveArea.color, borderColor: effectiveArea.color } : {}}
+                            style={
+                                effectiveArea.color
+                                    ? {
+                                          backgroundColor: effectiveArea.color,
+                                          borderColor: effectiveArea.color,
+                                      }
+                                    : {}
+                            }
                         />
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
                             {effectiveArea.name}
@@ -130,7 +141,16 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                                     >
                                         <span
                                             className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                                            style={area.color ? { backgroundColor: area.color, borderColor: area.color } : {}}
+                                            style={
+                                                area.color
+                                                    ? {
+                                                          backgroundColor:
+                                                              area.color,
+                                                          borderColor:
+                                                              area.color,
+                                                      }
+                                                    : {}
+                                            }
                                         />
                                         {area.name}
                                     </button>
@@ -144,11 +164,21 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                     <div className="flex items-center justify-between gap-2">
                         <div
                             className="flex items-center gap-2 min-w-0 cursor-pointer flex-1"
-                            onClick={() => !isInherited && setDropdownOpen(true)}
+                            onClick={() =>
+                                !isInherited && setDropdownOpen(true)
+                            }
                         >
                             <span
                                 className="inline-block w-3 h-3 rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                                style={effectiveArea.color ? { backgroundColor: effectiveArea.color, borderColor: effectiveArea.color } : {}}
+                                style={
+                                    effectiveArea.color
+                                        ? {
+                                              backgroundColor:
+                                                  effectiveArea.color,
+                                              borderColor: effectiveArea.color,
+                                          }
+                                        : {}
+                                }
                             />
                             <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                 {effectiveArea.name}

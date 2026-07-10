@@ -282,7 +282,9 @@ const ProductivityAssistant: React.FC<ProductivityAssistantProps> = ({
         if (!isProject) {
             // Handle task click - navigate to task details page
             if (item.uid) {
-                navigate(`/task/${item.uid}`, { state: { from: location.pathname + location.search } });
+                navigate(`/task/${item.uid}`, {
+                    state: { from: location.pathname + location.search },
+                });
             }
         } else {
             // Handle project click - navigate to project page

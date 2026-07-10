@@ -149,9 +149,12 @@ function DeadlineDanger({ projects }: { projects: Project[] }) {
                 const daysLeft = floorDays(due.getTime() - NOW.getTime());
                 const pct = p.completion_percentage ?? 0;
                 const needed =
-                    daysLeft > 0 ? (100 - pct) / daysLeft : daysLeft < 0 ? 999 : 999;
-                const area =
-                    (p as any).Area ?? p.area;
+                    daysLeft > 0
+                        ? (100 - pct) / daysLeft
+                        : daysLeft < 0
+                          ? 999
+                          : 999;
+                const area = (p as any).Area ?? p.area;
                 return {
                     p,
                     daysLeft,
@@ -175,43 +178,45 @@ function DeadlineDanger({ projects }: { projects: Project[] }) {
                 </p>
             ) : (
                 <div className="space-y-1.5">
-                    {rows.slice(0, 5).map(({ p, daysLeft, pct, risk, areaName }) => (
-                        <div
-                            key={p.id}
-                            className="flex items-center gap-2 cursor-pointer group"
-                            onClick={() => navigate(`/project/${p.uid}`)}
-                        >
-                            <span
-                                className={`text-xs w-3 flex-shrink-0 ${RISK_STYLES[risk]}`}
-                                title={risk}
+                    {rows
+                        .slice(0, 5)
+                        .map(({ p, daysLeft, pct, risk, areaName }) => (
+                            <div
+                                key={p.id}
+                                className="flex items-center gap-2 cursor-pointer group"
+                                onClick={() => navigate(`/project/${p.uid}`)}
                             >
-                                {RISK_DOT[risk]}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-baseline gap-1.5">
-                                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate group-hover:text-blue-500 transition-colors">
-                                        {p.name}
-                                    </span>
-                                    {areaName && (
-                                        <span className="text-[10px] text-gray-400 dark:text-gray-600 flex-shrink-0">
-                                            {areaName}
+                                <span
+                                    className={`text-xs w-3 flex-shrink-0 ${RISK_STYLES[risk]}`}
+                                    title={risk}
+                                >
+                                    {RISK_DOT[risk]}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-xs text-gray-700 dark:text-gray-300 truncate group-hover:text-blue-500 transition-colors">
+                                            {p.name}
                                         </span>
-                                    )}
+                                        {areaName && (
+                                            <span className="text-[10px] text-gray-400 dark:text-gray-600 flex-shrink-0">
+                                                {areaName}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="w-full h-0.5 bg-gray-100 dark:bg-gray-800 rounded-full mt-0.5">
+                                        <div
+                                            className="h-0.5 bg-blue-500 rounded-full"
+                                            style={{ width: `${pct}%` }}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="w-full h-0.5 bg-gray-100 dark:bg-gray-800 rounded-full mt-0.5">
-                                    <div
-                                        className="h-0.5 bg-blue-500 rounded-full"
-                                        style={{ width: `${pct}%` }}
-                                    />
-                                </div>
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 w-7 text-right">
+                                    {daysLeft < 0
+                                        ? `${Math.abs(daysLeft)}d ago`
+                                        : `${daysLeft}d`}
+                                </span>
                             </div>
-                            <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 w-7 text-right">
-                                {daysLeft < 0
-                                    ? `${Math.abs(daysLeft)}d ago`
-                                    : `${daysLeft}d`}
-                            </span>
-                        </div>
-                    ))}
+                        ))}
                     {rows.length > 5 && (
                         <p className="text-[10px] text-gray-400 dark:text-gray-600">
                             +{rows.length - 5} more
@@ -251,7 +256,10 @@ function WaitingForAge({
             .map((t) => ({
                 t,
                 ageDays: t.created_at
-                    ? floorDays(NOW.getTime() - startOfDay(new Date(t.created_at)).getTime())
+                    ? floorDays(
+                          NOW.getTime() -
+                              startOfDay(new Date(t.created_at)).getTime()
+                      )
                     : 0,
                 projectName: t.project_id
                     ? (projectMap.get(t.project_id)?.name ?? '')

@@ -59,10 +59,7 @@ function isSomedayTask(task: Task): boolean {
 }
 
 export function computeAreaStats(projects: Project[]): AreaStats[] {
-    const map = new Map<
-        string,
-        { color: string; total: number }
-    >();
+    const map = new Map<string, { color: string; total: number }>();
 
     projects.forEach((p) => {
         const areaObj = (p as any).Area ?? p.area;
@@ -99,7 +96,11 @@ function isEligibleForSuggestion(task: Task): boolean {
 
     if (task.due_date) {
         const due = new Date(task.due_date).getTime();
-        if (!Number.isNaN(due) && due > now + DUE_DATE_HORIZON_DAYS * 86_400_000) return false;
+        if (
+            !Number.isNaN(due) &&
+            due > now + DUE_DATE_HORIZON_DAYS * 86_400_000
+        )
+            return false;
     }
 
     return true;
@@ -108,12 +109,12 @@ function isEligibleForSuggestion(task: Task): boolean {
 // Build one-per-project candidate pool: one next action per active project + all orphan tasks.
 // Uses the task's own embedded Project.status (from getTaskIncludeConfigLight) so we don't
 // depend on ID-matching against localProjects, which can silently fail.
-export function buildCandidatePool(
-    tasks: Task[],
-    projects: Project[]
-): Task[] {
+export function buildCandidatePool(tasks: Task[], projects: Project[]): Task[] {
     const pendingTasks = tasks.filter(
-        (t) => isPendingStatus(t.status) && !isSomedayTask(t) && isEligibleForSuggestion(t)
+        (t) =>
+            isPendingStatus(t.status) &&
+            !isSomedayTask(t) &&
+            isEligibleForSuggestion(t)
     );
 
     // Group pending tasks by project_id, reading status from the embedded Project object
@@ -196,7 +197,9 @@ export function scoreCandidate(
 
     // Goal nudge: task belongs to a project serving an active goal
     if (reason === 'next_step') {
-        const goalObj = project ? ((project as any).Goal ?? (project as any).goal) : null;
+        const goalObj = project
+            ? ((project as any).Goal ?? (project as any).goal)
+            : null;
         if (goalObj && goalObj.status === 'active') {
             score += 12;
             reason = 'goal';
@@ -207,8 +210,7 @@ export function scoreCandidate(
     if (opts.contextFilter && reason === 'next_step') {
         const hasContextTag = (task.tags ?? []).some(
             (tag) =>
-                tag.name?.toLowerCase() ===
-                opts.contextFilter?.toLowerCase()
+                tag.name?.toLowerCase() === opts.contextFilter?.toLowerCase()
         );
         if (hasContextTag) {
             score += 10;
@@ -253,7 +255,12 @@ export function scoreCandidate(
             (Date.now() - new Date(refDate).getTime()) / 86_400_000
         );
     }
-    if (reason === 'next_step' && agingDays >= 60 && !task.project_id && !hasPriority(task)) {
+    if (
+        reason === 'next_step' &&
+        agingDays >= 60 &&
+        !task.project_id &&
+        !hasPriority(task)
+    ) {
         reason = 'aging_review';
     }
 
@@ -275,8 +282,12 @@ export function scoreCandidate(
             break;
         }
         case 'goal': {
-            const goalObj = project ? ((project as any).Goal ?? (project as any).goal) : null;
-            reasonLabel = goalObj ? `Advances: ${goalObj.title}` : 'Advances an active goal';
+            const goalObj = project
+                ? ((project as any).Goal ?? (project as any).goal)
+                : null;
+            reasonLabel = goalObj
+                ? `Advances: ${goalObj.title}`
+                : 'Advances an active goal';
             reasonColor = areaColor;
             break;
         }
@@ -317,15 +328,22 @@ export function scoreCandidate(
 
 function hasPriority(task: Task): boolean {
     const p = task.priority;
-    return p === 'high' || p === 2 || p === 'medium' || p === 1 || p === 'low' || p === 0;
+    return (
+        p === 'high' ||
+        p === 2 ||
+        p === 'medium' ||
+        p === 1 ||
+        p === 'low' ||
+        p === 0
+    );
 }
 
 // Returns 0=high, 1=medium, 2=low, 3=none — used as the primary sort key.
 function priorityTier(task: Task): number {
     const p = task.priority;
-    if (p === 'high'   || p === 2) return 0;
+    if (p === 'high' || p === 2) return 0;
     if (p === 'medium' || p === 1) return 1;
-    if (p === 'low'    || p === 0) return 2;
+    if (p === 'low' || p === 0) return 2;
     return 3;
 }
 
@@ -354,8 +372,12 @@ export function scoreAndSortSuggestedTasks(
     });
 
     // Stale tasks are informational nudges — cap at 1 and push to the end.
-    const nonStale = deduped.filter((t) => t._suggestionMeta.reason !== 'aging_review');
-    const stale    = deduped.filter((t) => t._suggestionMeta.reason === 'aging_review');
+    const nonStale = deduped.filter(
+        (t) => t._suggestionMeta.reason !== 'aging_review'
+    );
+    const stale = deduped.filter(
+        (t) => t._suggestionMeta.reason === 'aging_review'
+    );
 
     // Final ordering by composite bucket key: (priorityTier * 2) + isOrphan
     // Bucket 0: project + high    Bucket 1: orphan + high

@@ -239,7 +239,10 @@ const Tasks: React.FC = () => {
                         });
                     }
                     if (tasksData.projects) {
-                        setUpcomingProjects((prev) => [...prev, ...(tasksData.projects || [])]);
+                        setUpcomingProjects((prev) => [
+                            ...prev,
+                            ...(tasksData.projects || []),
+                        ]);
                     }
                     if (!options?.disablePagination) {
                         const limitToUse = options?.limitOverride ?? limit;
@@ -442,6 +445,11 @@ const Tasks: React.FC = () => {
         }
     };
 
+    const handleTaskDuplicated = (newTask: Task) => {
+        setTasks((prevTasks) => [newTask, ...prevTasks]);
+        setTotalCount((prevCount) => prevCount + 1);
+    };
+
     const handleTaskDelete = async (taskUid: string) => {
         try {
             const response = await fetch(
@@ -610,34 +618,40 @@ const Tasks: React.FC = () => {
                                                 {t('tasks.groupBy', 'Group by')}
                                             </div>
                                             <div className="py-1">
-                                                {(['none', 'project'] as const).map(
-                                                    (val) => (
-                                                        <button
-                                                            key={val}
-                                                            onClick={() => {
-                                                                setGroupBy(val);
-                                                                localStorage.setItem(
-                                                                    'tasks_group_by',
-                                                                    val
-                                                                );
-                                                            }}
-                                                            className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
-                                                                groupBy === val
-                                                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                            }`}
-                                                        >
-                                                            <span>
-                                                                {val === 'project'
-                                                                    ? t('tasks.groupByProject', 'Project')
-                                                                    : t('tasks.grouping.none', 'None')}
-                                                            </span>
-                                                            {groupBy === val && (
-                                                                <CheckIcon className="h-4 w-4" />
-                                                            )}
-                                                        </button>
-                                                    )
-                                                )}
+                                                {(
+                                                    ['none', 'project'] as const
+                                                ).map((val) => (
+                                                    <button
+                                                        key={val}
+                                                        onClick={() => {
+                                                            setGroupBy(val);
+                                                            localStorage.setItem(
+                                                                'tasks_group_by',
+                                                                val
+                                                            );
+                                                        }}
+                                                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                                                            groupBy === val
+                                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                        }`}
+                                                    >
+                                                        <span>
+                                                            {val === 'project'
+                                                                ? t(
+                                                                      'tasks.groupByProject',
+                                                                      'Project'
+                                                                  )
+                                                                : t(
+                                                                      'tasks.grouping.none',
+                                                                      'None'
+                                                                  )}
+                                                        </span>
+                                                        {groupBy === val && (
+                                                            <CheckIcon className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
@@ -904,6 +918,9 @@ const Tasks: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                            onTaskDuplicated={
+                                                handleTaskDuplicated
+                                            }
                                             projects={projects}
                                             hideProjectName={false}
                                             onToggleToday={undefined}
@@ -913,30 +930,57 @@ const Tasks: React.FC = () => {
                                         {upcomingProjects.length > 0 && (
                                             <div className="mt-8">
                                                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                                                    {t('projects.upcomingProjects', 'Upcoming Projects')}
+                                                    {t(
+                                                        'projects.upcomingProjects',
+                                                        'Upcoming Projects'
+                                                    )}
                                                 </h3>
                                                 <div className="space-y-2">
-                                                    {upcomingProjects.map((project) => (
-                                                        <div
-                                                            key={project.uid}
-                                                            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
-                                                        >
-                                                            <div className="flex items-center justify-between">
-                                                                <a
-                                                                    href={`/project/${project.uid}-${project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`}
-                                                                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                                                                >
-                                                                    {project.name}
-                                                                </a>
-                                                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                                                    <span>{t('common.due', 'Due')}: </span>
-                                                                    <span className="font-medium">
-                                                                        {new Date(project.due_date_at).toLocaleDateString()}
-                                                                    </span>
+                                                    {upcomingProjects.map(
+                                                        (project) => (
+                                                            <div
+                                                                key={
+                                                                    project.uid
+                                                                }
+                                                                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <a
+                                                                        href={`/project/${project.uid}-${project.name
+                                                                            .toLowerCase()
+                                                                            .replace(
+                                                                                /[^a-z0-9]+/g,
+                                                                                '-'
+                                                                            )
+                                                                            .replace(
+                                                                                /^-|-$/g,
+                                                                                ''
+                                                                            )}`}
+                                                                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                                                    >
+                                                                        {
+                                                                            project.name
+                                                                        }
+                                                                    </a>
+                                                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                                                        <span>
+                                                                            {t(
+                                                                                'common.due',
+                                                                                'Due'
+                                                                            )}
+
+                                                                            :{' '}
+                                                                        </span>
+                                                                        <span className="font-medium">
+                                                                            {new Date(
+                                                                                project.due_date_at
+                                                                            ).toLocaleDateString()}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        )
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -952,6 +996,7 @@ const Tasks: React.FC = () => {
                                             handleTaskCompletionToggle
                                         }
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         hideProjectName={false}
                                         onToggleToday={undefined}
@@ -967,6 +1012,7 @@ const Tasks: React.FC = () => {
                                             handleTaskCompletionToggle
                                         }
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         onToggleToday={undefined}
                                         showCompletedTasks={showCompleted}

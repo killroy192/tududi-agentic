@@ -52,7 +52,15 @@ export interface Task {
     // Transient UI field set by suggestion scoring - never persisted or sent to server
     _suggestionMeta?: {
         score: number;
-        reason: 'area_balance' | 'due' | 'goal' | 'fits_now' | 'revive' | 'high' | 'aging_review' | 'next_step';
+        reason:
+            | 'area_balance'
+            | 'due'
+            | 'goal'
+            | 'fits_now'
+            | 'revive'
+            | 'high'
+            | 'aging_review'
+            | 'next_step';
         reasonLabel: string;
         reasonColor: string;
     };

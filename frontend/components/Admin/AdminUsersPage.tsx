@@ -467,14 +467,17 @@ const AdminUsersPage: React.FC = () => {
     // Toggle registration
     const toggleRegistration = async () => {
         try {
-            const res = await fetchWithCsrf(getApiPath('admin/toggle-registration'), {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ enabled: !registrationEnabled }),
-            });
+            const res = await fetchWithCsrf(
+                getApiPath('admin/toggle-registration'),
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ enabled: !registrationEnabled }),
+                }
+            );
             if (res.ok) {
                 const data = await res.json();
                 setRegistrationEnabled(data.enabled);

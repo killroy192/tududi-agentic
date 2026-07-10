@@ -34,9 +34,13 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
     onChange,
 }) => {
     const { t } = useTranslation();
-    const [editingAction, setEditingAction] = useState<ShortcutAction | null>(null);
+    const [editingAction, setEditingAction] = useState<ShortcutAction | null>(
+        null
+    );
     const [isRecording, setIsRecording] = useState(false);
-    const [tempShortcut, setTempShortcut] = useState<KeyboardShortcut | null>(null);
+    const [tempShortcut, setTempShortcut] = useState<KeyboardShortcut | null>(
+        null
+    );
 
     // Ensure we always have a valid config
     const activeConfig = config || getDefaultConfig();
@@ -46,7 +50,7 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
     const validation = validateShortcuts(shortcuts);
 
     const handleEditClick = (action: ShortcutAction) => {
-        const current = shortcuts.find(s => s.action === action);
+        const current = shortcuts.find((s) => s.action === action);
         setEditingAction(action);
         setTempShortcut(current || null);
         setIsRecording(false);
@@ -61,7 +65,7 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
     const handleSaveEdit = () => {
         if (!editingAction || !tempShortcut) return;
 
-        const newShortcuts = shortcuts.map(s =>
+        const newShortcuts = shortcuts.map((s) =>
             s.action === editingAction ? tempShortcut : s
         );
 
@@ -94,7 +98,12 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
             }
 
             // Require at least one modifier
-            if (!event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
+            if (
+                !event.ctrlKey &&
+                !event.altKey &&
+                !event.shiftKey &&
+                !event.metaKey
+            ) {
                 return;
             }
 
@@ -130,15 +139,22 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
         });
     };
 
-    const getShortcutForAction = (action: ShortcutAction): KeyboardShortcut | undefined => {
-        return shortcuts.find(s => s.action === action);
+    const getShortcutForAction = (
+        action: ShortcutAction
+    ): KeyboardShortcut | undefined => {
+        return shortcuts.find((s) => s.action === action);
     };
 
     // Check if a shortcut would create a duplicate
-    const wouldCreateDuplicate = (newShortcut: KeyboardShortcut): string | null => {
+    const wouldCreateDuplicate = (
+        newShortcut: KeyboardShortcut
+    ): string | null => {
         const newKey = shortcutToString(newShortcut);
         for (const existing of shortcuts) {
-            if (existing.action !== newShortcut.action && shortcutToString(existing) === newKey) {
+            if (
+                existing.action !== newShortcut.action &&
+                shortcutToString(existing) === newKey
+            ) {
                 return existing.action;
             }
         }
@@ -158,7 +174,10 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
             <div className="flex items-center justify-between py-4 border-b border-gray-200 dark:border-gray-700 mb-6">
                 <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t('profile.shortcuts.enableShortcuts', 'Enable Keyboard Shortcuts')}
+                        {t(
+                            'profile.shortcuts.enableShortcuts',
+                            'Enable Keyboard Shortcuts'
+                        )}
                     </label>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {t(
@@ -177,7 +196,9 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
                 >
                     <span
                         className={`absolute left-0 top-0 bottom-0 m-1 w-4 h-4 transition-transform duration-200 ease-in-out transform bg-white rounded-full ${
-                            activeConfig.enabled ? 'translate-x-6' : 'translate-x-0'
+                            activeConfig.enabled
+                                ? 'translate-x-6'
+                                : 'translate-x-0'
                         }`}
                     ></span>
                 </div>
@@ -187,7 +208,10 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
             {!validation.valid && (
                 <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                        {t('profile.shortcuts.duplicateWarning', 'Duplicate shortcuts detected:')}
+                        {t(
+                            'profile.shortcuts.duplicateWarning',
+                            'Duplicate shortcuts detected:'
+                        )}
                     </p>
                     <ul className="mt-2 text-xs text-yellow-700 dark:text-yellow-300 list-disc list-inside">
                         {validation.duplicates.map((dup, idx) => (
@@ -219,18 +243,31 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
                                 <div className="flex items-center space-x-2">
                                     {isRecording ? (
                                         <div className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-400 dark:border-blue-600 rounded text-blue-700 dark:text-blue-300 text-sm font-mono animate-pulse">
-                                            {t('profile.shortcuts.pressKeys', 'Press keys...')}
+                                            {t(
+                                                'profile.shortcuts.pressKeys',
+                                                'Press keys...'
+                                            )}
                                         </div>
                                     ) : tempShortcut ? (
                                         <div className="flex items-center space-x-2">
                                             <kbd className="px-3 py-1.5 text-sm font-mono bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm text-gray-700 dark:text-gray-300">
-                                                {formatShortcutDisplay(tempShortcut)}
+                                                {formatShortcutDisplay(
+                                                    tempShortcut
+                                                )}
                                             </kbd>
-                                            {wouldCreateDuplicate(tempShortcut) && (
+                                            {wouldCreateDuplicate(
+                                                tempShortcut
+                                            ) && (
                                                 <span className="text-xs text-yellow-600 dark:text-yellow-400">
-                                                    {t('profile.shortcuts.duplicateWith', 'Conflicts with {{action}}', {
-                                                        action: wouldCreateDuplicate(tempShortcut),
-                                                    })}
+                                                    {t(
+                                                        'profile.shortcuts.duplicateWith',
+                                                        'Conflicts with {{action}}',
+                                                        {
+                                                            action: wouldCreateDuplicate(
+                                                                tempShortcut
+                                                            ),
+                                                        }
+                                                    )}
                                                 </span>
                                             )}
                                         </div>
@@ -240,7 +277,10 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
                                         onClick={handleStartRecording}
                                         className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                                     >
-                                        {t('profile.shortcuts.record', 'Record')}
+                                        {t(
+                                            'profile.shortcuts.record',
+                                            'Record'
+                                        )}
                                     </button>
                                     <button
                                         type="button"
@@ -287,7 +327,10 @@ const KeyboardShortcutsTab: React.FC<KeyboardShortcutsTabProps> = ({
                     className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                     <ArrowPathIcon className="w-4 h-4 mr-2" />
-                    {t('profile.shortcuts.resetToDefaults', 'Reset to Defaults')}
+                    {t(
+                        'profile.shortcuts.resetToDefaults',
+                        'Reset to Defaults'
+                    )}
                 </button>
             </div>
 

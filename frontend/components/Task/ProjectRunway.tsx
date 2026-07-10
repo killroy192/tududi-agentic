@@ -126,9 +126,7 @@ const ProjectRunway: React.FC<Props> = ({ projects }) => {
                                 className={`flex-shrink-0 text-right text-[10px] font-semibold tabular-nums ${badgeClass(row.daysLeft)}`}
                                 style={{ width: 32 }}
                             >
-                                {row.daysLeft <= 0
-                                    ? 'OVR'
-                                    : `${row.daysLeft}d`}
+                                {row.daysLeft <= 0 ? 'OVR' : `${row.daysLeft}d`}
                             </div>
                         </div>
                     );

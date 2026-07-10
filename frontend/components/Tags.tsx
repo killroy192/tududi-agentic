@@ -180,7 +180,10 @@ const Tags: React.FC = () => {
                         aria-expanded={isSearchExpanded}
                         aria-label={
                             isSearchExpanded
-                                ? t('common.hideSearch', 'Collapse search panel')
+                                ? t(
+                                      'common.hideSearch',
+                                      'Collapse search panel'
+                                  )
                                 : t('common.showSearch', 'Show search input')
                         }
                     >
@@ -226,13 +229,23 @@ const Tags: React.FC = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                     {groupedTags[letter].map((tag) => {
-                                        const isSystem = tag.tag_type === 'system';
+                                        const isSystem =
+                                            tag.tag_type === 'system';
                                         return (
                                             <Link
                                                 key={tag.uid || tag.id}
                                                 to={
                                                     tag.uid
-                                                        ? `/tag/${tag.uid}-${tag.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
+                                                        ? `/tag/${tag.uid}-${tag.name
+                                                              .toLowerCase()
+                                                              .replace(
+                                                                  /[^a-z0-9]+/g,
+                                                                  '-'
+                                                              )
+                                                              .replace(
+                                                                  /^-|-$/g,
+                                                                  ''
+                                                              )}`
                                                         : `/tag/${encodeURIComponent(tag.name)}`
                                                 }
                                                 className={`rounded-xl shadow-sm relative flex flex-col group hover:shadow-md transition-shadow cursor-pointer ${
@@ -245,8 +258,16 @@ const Tags: React.FC = () => {
                                                 style={
                                                     tag.color
                                                         ? {
-                                                            backgroundColor: tag.color,
-                                                            ...(isSystem ? { outline: '2px dashed rgba(255,255,255,0.45)', outlineOffset: '-3px' } : {}),
+                                                              backgroundColor:
+                                                                  tag.color,
+                                                              ...(isSystem
+                                                                  ? {
+                                                                        outline:
+                                                                            '2px dashed rgba(255,255,255,0.45)',
+                                                                        outlineOffset:
+                                                                            '-3px',
+                                                                    }
+                                                                  : {}),
                                                           }
                                                         : {}
                                                 }
@@ -256,7 +277,10 @@ const Tags: React.FC = () => {
                                                     <span className="absolute top-2 left-2 z-10 flex items-center justify-center pointer-events-none">
                                                         <LockClosedIcon
                                                             className={`h-3.5 w-3.5 ${tag.color ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'}`}
-                                                            title={t('tags.systemTag', 'System tag')}
+                                                            title={t(
+                                                                'tags.systemTag',
+                                                                'System tag'
+                                                            )}
                                                         />
                                                     </span>
                                                 )}
@@ -270,51 +294,85 @@ const Tags: React.FC = () => {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            const next = dropdownOpen === tag.uid ? null : tag.uid!;
-                                                            if (next !== null) justOpenedRef.current = true;
-                                                            setDropdownOpen(next);
+                                                            const next =
+                                                                dropdownOpen ===
+                                                                tag.uid
+                                                                    ? null
+                                                                    : tag.uid!;
+                                                            if (next !== null)
+                                                                justOpenedRef.current = true;
+                                                            setDropdownOpen(
+                                                                next
+                                                            );
                                                         }}
                                                         className={`flex items-center justify-center w-6 h-6 rounded focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
                                                             tag.color
                                                                 ? 'text-white/60 hover:text-white hover:bg-white/20'
                                                                 : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                                                         }`}
-                                                        aria-label={t('tags.toggleDropdownMenu', 'Toggle dropdown menu')}
+                                                        aria-label={t(
+                                                            'tags.toggleDropdownMenu',
+                                                            'Toggle dropdown menu'
+                                                        )}
                                                         data-testid={`tag-dropdown-${tag.uid || tag.id}`}
                                                     >
                                                         <EllipsisVerticalIcon className="h-4 w-4" />
                                                     </button>
 
-                                                    {dropdownOpen === tag.uid && (
+                                                    {dropdownOpen ===
+                                                        tag.uid && (
                                                         <div className="absolute right-0 top-full mt-1 w-28 bg-white dark:bg-gray-700 shadow-lg rounded-md z-[60]">
                                                             <button
-                                                                onClick={(e) => {
+                                                                onClick={(
+                                                                    e
+                                                                ) => {
                                                                     e.preventDefault();
                                                                     e.stopPropagation();
-                                                                    handleEditTag(tag);
-                                                                    setDropdownOpen(null);
+                                                                    handleEditTag(
+                                                                        tag
+                                                                    );
+                                                                    setDropdownOpen(
+                                                                        null
+                                                                    );
                                                                 }}
                                                                 className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 w-full text-left ${
-                                                                    isSystem ? 'rounded-md' : 'rounded-t-md'
+                                                                    isSystem
+                                                                        ? 'rounded-md'
+                                                                        : 'rounded-t-md'
                                                                 }`}
                                                                 data-testid={`tag-edit-${tag.uid || tag.id}`}
                                                             >
                                                                 {isSystem
-                                                                    ? t('tags.customize', 'Customize')
-                                                                    : t('tags.edit', 'Edit')}
+                                                                    ? t(
+                                                                          'tags.customize',
+                                                                          'Customize'
+                                                                      )
+                                                                    : t(
+                                                                          'tags.edit',
+                                                                          'Edit'
+                                                                      )}
                                                             </button>
                                                             {!isSystem && (
                                                                 <button
-                                                                    onClick={(e) => {
+                                                                    onClick={(
+                                                                        e
+                                                                    ) => {
                                                                         e.preventDefault();
                                                                         e.stopPropagation();
-                                                                        openConfirmDialog(tag);
-                                                                        setDropdownOpen(null);
+                                                                        openConfirmDialog(
+                                                                            tag
+                                                                        );
+                                                                        setDropdownOpen(
+                                                                            null
+                                                                        );
                                                                     }}
                                                                     className="block px-4 py-2 text-sm text-red-500 dark:text-red-300 hover:bg-gray-100 dark:hover:bg-gray-600 w-full text-left rounded-b-md"
                                                                     data-testid={`tag-delete-${tag.uid || tag.id}`}
                                                                 >
-                                                                    {t('tags.delete', 'Delete')}
+                                                                    {t(
+                                                                        'tags.delete',
+                                                                        'Delete'
+                                                                    )}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -324,41 +382,95 @@ const Tags: React.FC = () => {
                                                 {/* Tag name */}
                                                 <div className="px-4 pt-3 pb-2 flex-1 flex items-center justify-center text-center">
                                                     <div>
-                                                        {tag.pinned && !isSystem && (
-                                                            <div className="flex items-center justify-center mb-0.5">
-                                                                <MapPinIcon
-                                                                    className={`h-3 w-3 flex-shrink-0 ${tag.color ? 'text-white/60' : 'text-blue-400 dark:text-blue-500'}`}
-                                                                    title={t('tags.pinned', 'Pinned')}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                        <h4 className={`text-sm font-semibold tracking-widest line-clamp-2 ${tag.color ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}>
+                                                        {tag.pinned &&
+                                                            !isSystem && (
+                                                                <div className="flex items-center justify-center mb-0.5">
+                                                                    <MapPinIcon
+                                                                        className={`h-3 w-3 flex-shrink-0 ${tag.color ? 'text-white/60' : 'text-blue-400 dark:text-blue-500'}`}
+                                                                        title={t(
+                                                                            'tags.pinned',
+                                                                            'Pinned'
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        <h4
+                                                            className={`text-sm font-semibold tracking-widest line-clamp-2 ${tag.color ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}
+                                                        >
                                                             {tag.name}
                                                         </h4>
                                                     </div>
                                                 </div>
 
                                                 {/* Stats footer */}
-                                                <div className={`rounded-b-xl flex items-stretch divide-x ${
-                                                    tag.color
-                                                        ? 'bg-black/20 divide-white/10'
-                                                        : 'bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 divide-gray-200 dark:divide-gray-600'
-                                                }`}>
+                                                <div
+                                                    className={`rounded-b-xl flex items-stretch divide-x ${
+                                                        tag.color
+                                                            ? 'bg-black/20 divide-white/10'
+                                                            : 'bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 divide-gray-200 dark:divide-gray-600'
+                                                    }`}
+                                                >
                                                     {[
-                                                        { icon: <CheckCircleIcon className="h-3.5 w-3.5" />, count: tag.tasks_count ?? 0, label: t('tags.stats.tasks', 'tasks') },
-                                                        { icon: <DocumentTextIcon className="h-3.5 w-3.5" />, count: tag.notes_count ?? 0, label: t('tags.stats.notes', 'notes') },
-                                                        { icon: <FolderIcon className="h-3.5 w-3.5" />, count: tag.projects_count ?? 0, label: t('tags.stats.projects', 'projects') },
-                                                    ].map(({ icon, count, label }) => (
-                                                        <div key={label} className="flex-1 flex flex-col items-center py-2 gap-0.5">
-                                                            <span className={`text-sm font-semibold leading-none ${tag.color ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                                                                {count}
-                                                            </span>
-                                                            <span className={`flex items-center gap-1 text-[10px] leading-none ${tag.color ? 'text-white/55' : 'text-gray-400 dark:text-gray-500'}`}>
-                                                                {icon}
-                                                                {label}
-                                                            </span>
-                                                        </div>
-                                                    ))}
+                                                        {
+                                                            icon: (
+                                                                <CheckCircleIcon className="h-3.5 w-3.5" />
+                                                            ),
+                                                            count:
+                                                                tag.tasks_count ??
+                                                                0,
+                                                            label: t(
+                                                                'tags.stats.tasks',
+                                                                'tasks'
+                                                            ),
+                                                        },
+                                                        {
+                                                            icon: (
+                                                                <DocumentTextIcon className="h-3.5 w-3.5" />
+                                                            ),
+                                                            count:
+                                                                tag.notes_count ??
+                                                                0,
+                                                            label: t(
+                                                                'tags.stats.notes',
+                                                                'notes'
+                                                            ),
+                                                        },
+                                                        {
+                                                            icon: (
+                                                                <FolderIcon className="h-3.5 w-3.5" />
+                                                            ),
+                                                            count:
+                                                                tag.projects_count ??
+                                                                0,
+                                                            label: t(
+                                                                'tags.stats.projects',
+                                                                'projects'
+                                                            ),
+                                                        },
+                                                    ].map(
+                                                        ({
+                                                            icon,
+                                                            count,
+                                                            label,
+                                                        }) => (
+                                                            <div
+                                                                key={label}
+                                                                className="flex-1 flex flex-col items-center py-2 gap-0.5"
+                                                            >
+                                                                <span
+                                                                    className={`text-sm font-semibold leading-none ${tag.color ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}
+                                                                >
+                                                                    {count}
+                                                                </span>
+                                                                <span
+                                                                    className={`flex items-center gap-1 text-[10px] leading-none ${tag.color ? 'text-white/55' : 'text-gray-400 dark:text-gray-500'}`}
+                                                                >
+                                                                    {icon}
+                                                                    {label}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    )}
                                                 </div>
                                             </Link>
                                         );

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CpuChipIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
+import {
+    CpuChipIcon,
+    DocumentDuplicateIcon,
+} from '@heroicons/react/24/outline';
 import { useToast } from '../../Shared/ToastContext';
 import { getApiPath } from '../../../config/paths';
 
@@ -158,7 +161,10 @@ const McpTab: React.FC<McpTabProps> = ({ isActive }) => {
 
                     <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                         <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-2">
-                            {t('profile.mcp.step2.locationTitle', 'Claude Desktop config file location:')}
+                            {t(
+                                'profile.mcp.step2.locationTitle',
+                                'Claude Desktop config file location:'
+                            )}
                         </p>
                         <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-1 font-mono">
                             <li>
@@ -171,7 +177,8 @@ const McpTab: React.FC<McpTabProps> = ({ isActive }) => {
                             </li>
                         </ul>
                         <p className="text-xs text-blue-700 dark:text-blue-400 mt-2 italic">
-                            Other MCP clients may use different configuration methods - check your client&apos;s documentation.
+                            Other MCP clients may use different configuration
+                            methods - check your client&apos;s documentation.
                         </p>
                     </div>
 
@@ -180,8 +187,11 @@ const McpTab: React.FC<McpTabProps> = ({ isActive }) => {
                             ✓ Remote Access Enabled
                         </p>
                         <p className="text-xs text-green-700 dark:text-green-400">
-                            This configuration uses <code className="px-1 py-0.5 bg-green-100 dark:bg-green-900 rounded">mcp-remote</code> to connect via HTTP.
-                            This means you can:
+                            This configuration uses{' '}
+                            <code className="px-1 py-0.5 bg-green-100 dark:bg-green-900 rounded">
+                                mcp-remote
+                            </code>{' '}
+                            to connect via HTTP. This means you can:
                         </p>
                         <ul className="text-xs text-green-700 dark:text-green-400 mt-2 ml-4 space-y-1">
                             <li>• Access local tududi (localhost)</li>
@@ -244,23 +254,29 @@ const McpTab: React.FC<McpTabProps> = ({ isActive }) => {
                     </p>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {t('profile.mcp.step4.examplesTitle', 'Example prompts:')}
+                            {t(
+                                'profile.mcp.step4.examplesTitle',
+                                'Example prompts:'
+                            )}
                         </p>
                         <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
                             <li className="italic">
                                 &quot;Show me my tasks for today&quot;
                             </li>
                             <li className="italic">
-                                &quot;Create a task to review the MCP integration&quot;
+                                &quot;Create a task to review the MCP
+                                integration&quot;
                             </li>
                             <li className="italic">
                                 &quot;What projects do I have in progress?&quot;
                             </li>
                             <li className="italic">
-                                &quot;Add a reminder to my inbox to check emails&quot;
+                                &quot;Add a reminder to my inbox to check
+                                emails&quot;
                             </li>
                             <li className="italic">
-                                &quot;Search for tasks related to documentation&quot;
+                                &quot;Search for tasks related to
+                                documentation&quot;
                             </li>
                         </ul>
                     </div>
@@ -274,9 +290,17 @@ const McpTab: React.FC<McpTabProps> = ({ isActive }) => {
                         </p>
                         <ul className="text-xs text-yellow-700 dark:text-yellow-400 mt-2 ml-4 space-y-1">
                             <li>• Your API token is valid and not expired</li>
-                            <li>• The tududi server is running and accessible</li>
-                            <li>• You&apos;ve restarted your MCP client completely</li>
-                            <li>• For remote servers, check your firewall settings</li>
+                            <li>
+                                • The tududi server is running and accessible
+                            </li>
+                            <li>
+                                • You&apos;ve restarted your MCP client
+                                completely
+                            </li>
+                            <li>
+                                • For remote servers, check your firewall
+                                settings
+                            </li>
                         </ul>
                     </div>
                 </section>
