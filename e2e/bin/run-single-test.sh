@@ -130,6 +130,7 @@ cd "$E2E_DIR"
 
 yellow "Running Playwright tests matching: ${TEST_PATTERN} on ${BROWSER}..."
 APP_URL="$FRONTEND_URL" \
+API_URL="$BACKEND_URL" \
 E2E_EMAIL="${E2E_EMAIL:-test@tududi.com}" \
 E2E_PASSWORD="${E2E_PASSWORD:-password123}" \
 npx playwright test --grep "$TEST_PATTERN" --project="$BROWSER"

@@ -24,11 +24,9 @@ ROOT_DIR="$(cd "$E2E_DIR/.." && pwd)"
 
 cd "$ROOT_DIR"
 
-# Check if Playwright is installed
-if ! npx playwright --version >/dev/null 2>&1; then
-  yellow "Installing Playwright browsers..."
-  npx playwright install --with-deps
-fi
+# Ensure browsers match the installed Playwright version (CLI can exist without browsers)
+yellow "Ensuring Playwright browsers are installed..."
+npx playwright install chromium
 
 # Start backend and frontend
 cd "$ROOT_DIR"
@@ -114,6 +112,7 @@ cd "$ROOT_DIR"
 
 yellow "Running Playwright tests..."
 APP_URL="$FRONTEND_URL" \
+API_URL="$BACKEND_URL" \
 E2E_EMAIL="${E2E_EMAIL:-test@tududi.com}" \
 E2E_PASSWORD="${E2E_PASSWORD:-password123}" \
 bash -c '

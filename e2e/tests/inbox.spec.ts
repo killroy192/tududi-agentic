@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 test.describe('Inbox', () => {
-    async function loginViaUI(page, baseURL) {
+    async function loginViaUI(page: Page, baseURL?: string) {
         const appUrl =
             baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
         await page.goto(`${appUrl}/login`);
@@ -41,7 +41,9 @@ test.describe('Inbox', () => {
                     (t) => t.name.toLowerCase() === tagName.toLowerCase()
                 );
                 if (tag) {
-                    await context.request.delete(`${appUrl}/api/tags/${tag.id}`);
+                    await context.request.delete(
+                        `${appUrl}/api/tags/${tag.id}`
+                    );
                 }
             }
         }
@@ -120,9 +122,10 @@ test.describe('Inbox', () => {
             const appUrl =
                 baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
             const timestamp = Date.now();
-            const longText = `This is a very long inbox entry ${timestamp} that exceeds typical lengths. `.repeat(
-                10
-            );
+            const longText =
+                `This is a very long inbox entry ${timestamp} that exceeds typical lengths. `.repeat(
+                    10
+                );
 
             await page.goto(`${appUrl}/inbox`);
 
@@ -193,7 +196,6 @@ test.describe('Inbox', () => {
             await cleanupInboxItems(context, appUrl, String(timestamp));
             await cleanupTags(context, appUrl, [newTagName]);
         });
-
     });
 
     test.describe('Projects', () => {
@@ -348,9 +350,9 @@ test.describe('Inbox', () => {
             await expect(
                 page.getByTestId(`selected-tag-${customTag}`)
             ).toBeVisible({ timeout: 5000 });
-            await expect(
-                page.getByTestId('selected-tag-bookmark')
-            ).toBeVisible({ timeout: 10000 });
+            await expect(page.getByTestId('selected-tag-bookmark')).toBeVisible(
+                { timeout: 10000 }
+            );
         });
 
         test('URL bookmark saves successfully', async ({
@@ -372,9 +374,9 @@ test.describe('Inbox', () => {
 
             await quickCaptureInput.fill(testUrl);
 
-            await expect(
-                page.getByTestId('selected-tag-bookmark')
-            ).toBeVisible({ timeout: 10000 });
+            await expect(page.getByTestId('selected-tag-bookmark')).toBeVisible(
+                { timeout: 10000 }
+            );
 
             await quickCaptureInput.press('Enter');
             await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });

@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 test.describe('Today', () => {
     // Helper function to login via UI
-    async function loginViaUI(page, baseURL) {
+    async function loginViaUI(page: Page, baseURL?: string) {
         const appUrl =
             baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
         await page.goto(`${appUrl}/login`);
