@@ -180,8 +180,6 @@ docker run \
 - Admin role assignment based on email domains
 - Hybrid authentication (email/password + SSO)
 
-**Documentation:** See [docs/10-oidc-sso.md](docs/10-oidc-sso.md) for detailed setup guides and provider-specific configuration.
-
 ### CalDAV Synchronization
 
 Tududi supports the industry-standard CalDAV protocol, enabling seamless task synchronization with popular CalDAV clients and servers.
@@ -212,8 +210,6 @@ Connect Tududi to external CalDAV servers like Nextcloud, Baikal, or other CalDA
 - Background automatic synchronization
 - HTTP Basic Authentication
 - Encrypted password storage (AES-256-GCM)
-
-**Documentation:** See [docs/11-caldav-sync.md](docs/11-caldav-sync.md) for client setup guides, server configuration, and troubleshooting.
 
 ### 📚 Documentation
 
