@@ -1,4 +1,4 @@
-const sharedConfig = {
+const sharedProjectConfig = {
     testEnvironment: 'node',
     setupFilesAfterEnv: ['<rootDir>/tests/helpers/setup.js'],
     collectCoverageFrom: [
@@ -13,11 +13,9 @@ const sharedConfig = {
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html'],
     verbose: false,
-    forceExit: true,
     clearMocks: true,
     resetMocks: true,
     restoreMocks: true,
-    testTimeout: 30000,
     moduleNameMapper: {
         '^jose$': '<rootDir>/tests/mocks/jose.js',
         '^nanoid$': '<rootDir>/tests/mocks/nanoid.js',
@@ -25,9 +23,12 @@ const sharedConfig = {
 };
 
 module.exports = {
+    // These must be root-level in a multi-project config (ignored inside projects)
+    testTimeout: 30000,
+    forceExit: true,
     projects: [
         {
-            ...sharedConfig,
+            ...sharedProjectConfig,
             displayName: 'unit',
             testMatch: [
                 '<rootDir>/tests/unit/**/*.test.js',
@@ -36,14 +37,13 @@ module.exports = {
             maxWorkers: '100%',
         },
         {
-            ...sharedConfig,
+            ...sharedProjectConfig,
             displayName: 'integration',
             testMatch: [
                 '<rootDir>/tests/integration/**/*.test.js',
                 '<rootDir>/tests/integration/**/*.spec.js',
             ],
             maxWorkers: 1,
-            retryTimes: 2,
         },
     ],
 };

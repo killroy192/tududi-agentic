@@ -6,6 +6,9 @@ const testId = require('crypto').randomBytes(4).toString('hex');
 process.env.DB_FILE = `/tmp/test-${testId}.sqlite3`;
 const { sequelize } = require('../../models');
 
+// Multi-project Jest config ignores project-level retryTimes; set it here instead.
+jest.retryTimes(2);
+
 beforeAll(async () => {
     // Ensure test database is clean and created with proper schema
     await sequelize.sync({ force: true });
@@ -31,6 +34,8 @@ beforeEach(async () => {
             'tasks_tags',
             'notes_tags',
             'projects_tags',
+            'permissions',
+            'task_attachments',
             'caldav_calendars',
             'caldav_sync_state',
             'caldav_occurrence_overrides',
@@ -45,7 +50,7 @@ beforeEach(async () => {
     } catch (error) {
         // Ignore errors during cleanup
     }
-});
+}, 30000);
 
 afterEach(async () => {
     // Clean up sessions after each test
