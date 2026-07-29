@@ -363,6 +363,7 @@ const ProjectDetails: React.FC = () => {
                 )
             );
         }
+        useStore.getState().tasksStore.updateTaskInStore(savedTask);
     };
 
     const handleTaskDelete = async (taskUid: string | undefined) => {

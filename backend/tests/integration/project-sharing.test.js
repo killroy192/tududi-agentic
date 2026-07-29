@@ -616,4 +616,67 @@ describe('Project Sharing Integration Tests', () => {
             expect(deleteResponse.status).toBe(403);
         });
     });
+
+    describe('Task Size Permission Tests (AC-7)', () => {
+        test('rw collaborator can PATCH size on a shared project task', async () => {
+            const taskResp = await ownerAgent.post('/api/task').send({
+                name: 'Shared Size Task',
+                project_id: project.id,
+            });
+            const taskUid = taskResp.body.uid;
+
+            const response = await sharedUserAgent
+                .patch(`/api/task/${taskUid}`)
+                .send({ size: 'M' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe('M');
+        });
+
+        test('ro collaborator gets 403 when PATCHing size', async () => {
+            const taskResp = await ownerAgent.post('/api/task').send({
+                name: 'RO Size Task',
+                project_id: project.id,
+            });
+            const taskUid = taskResp.body.uid;
+
+            await Permission.update(
+                { access_level: 'ro' },
+                {
+                    where: {
+                        resource_uid: project.uid,
+                        user_id: sharedUser.id,
+                    },
+                }
+            );
+
+            const response = await sharedUserAgent
+                .patch(`/api/task/${taskUid}`)
+                .send({ size: 'L' });
+
+            expect(response.status).toBe(403);
+        });
+
+        test('unauthenticated request gets 401 when PATCHing size', async () => {
+            const taskResp = await ownerAgent.post('/api/task').send({
+                name: 'Unauth Size Task',
+                project_id: project.id,
+            });
+            const taskUid = taskResp.body.uid;
+
+            const response = await request(app)
+                .patch(`/api/task/${taskUid}`)
+                .send({ size: 'S' });
+
+            expect(response.status).toBe(401);
+        });
+
+        test('PATCH size on nonexistent task gets 403', async () => {
+            const response = await sharedUserAgent
+                .patch('/api/task/nonexistent-uid-99999')
+                .send({ size: 'XL' });
+
+            expect(response.status).toBe(403);
+        });
+    });
 });

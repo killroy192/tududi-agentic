@@ -201,6 +201,14 @@ module.exports = (sequelize) => {
                 type: DataTypes.DATE,
                 allowNull: true,
             },
+            size: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                defaultValue: null,
+                validate: {
+                    isIn: [['S', 'M', 'L', 'XL']],
+                },
+            },
             ai_insights: {
                 type: DataTypes.JSON,
                 allowNull: true,
@@ -324,6 +332,15 @@ module.exports = (sequelize) => {
         CANCELLED: 5,
         PLANNED: 6,
     };
+
+    Task.SIZE = {
+        S: 'S',
+        M: 'M',
+        L: 'L',
+        XL: 'XL',
+    };
+
+    Task.ALLOWED_SIZES = ['S', 'M', 'L', 'XL'];
 
     Task.RECURRENCE_TYPE = {
         NONE: 'none',

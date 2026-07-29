@@ -407,6 +407,7 @@ const Tasks: React.FC = () => {
                             : task
                     )
                 );
+                useStore.getState().tasksStore.updateTaskInStore(updatedTaskFromServer);
             } else {
                 const errorData = await response.json();
                 console.error('Failed to update task:', errorData.error);

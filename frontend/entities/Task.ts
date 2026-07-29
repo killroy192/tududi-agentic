@@ -47,6 +47,7 @@ export interface Task {
     habit_best_streak?: number;
     habit_total_completions?: number;
     habit_last_completion_at?: string;
+    size?: SizeType;
     assigned_to?: string | null;
     involves?: string[];
     // Transient UI field set by suggestion scoring - never persisted or sent to server
@@ -67,6 +68,7 @@ export type StatusType =
     | 'cancelled'
     | 'planned';
 export type PriorityType = 'low' | 'medium' | 'high' | null | undefined;
+export type SizeType = 'S' | 'M' | 'L' | 'XL' | null;
 export type RecurrenceType =
     | 'none'
     | 'daily'

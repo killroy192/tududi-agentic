@@ -511,11 +511,13 @@ const ViewDetail: React.FC = () => {
             );
 
             if (response.ok) {
+                const saved = await response.json();
                 setTasks((prevTasks) =>
                     prevTasks.map((task) =>
-                        task.id === updatedTask.id ? updatedTask : task
+                        task.id === updatedTask.id ? { ...task, ...saved } : task
                     )
                 );
+                useStore.getState().tasksStore.updateTaskInStore(saved);
             }
         } catch (error) {
             console.error('Error updating task:', error);

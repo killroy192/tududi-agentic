@@ -16,6 +16,7 @@ import { Task } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
+import SizeDropdown from '../Shared/SizeDropdown';
 import { parseDateString, getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
 
 const tagColorStyle = (color?: string): React.CSSProperties | undefined => {
@@ -164,14 +165,16 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         ? formatDeferUntil(task.defer_until)
         : null;
 
-    // Check if task has metadata (project, tags, due_date, completed_at, recurrence_type, recurring_parent_id, or defer_until)
+    const isRecurring =
+        (task.recurrence_type && task.recurrence_type !== 'none') ||
+        !!task.recurring_parent_id;
+
     const hasMetadata =
         (project && !hideProjectName) ||
         (task.tags && task.tags.length > 0) ||
         task.due_date ||
         (isTaskCompleted(task.status) && task.completed_at) ||
-        (task.recurrence_type && task.recurrence_type !== 'none') ||
-        task.recurring_parent_id ||
+        isRecurring ||
         !!formattedDeferUntil;
 
     return (
@@ -415,7 +418,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                     </div>
                 </div>
                 {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 z-[1]">
                         <TaskStatusControl
                             task={task}
                             onToggleCompletion={onToggleCompletion}
@@ -424,6 +427,23 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                             className=""
                             onMenuOpenChange={onMenuOpenChange}
                         />
+                        {!isRecurring && onTaskUpdate && (
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                            >
+                                <SizeDropdown
+                                    value={task.size ?? null}
+                                    onChange={(newSize) => {
+                                        onTaskUpdate({
+                                            ...task,
+                                            size: newSize,
+                                        });
+                                    }}
+                                    testIdSuffix={`${task.id}-desktop`}
+                                />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -570,7 +590,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         </div>
 
                         {onToggleCompletion && (
-                            <div className="mt-2">
+                            <div className="mt-2 flex items-center gap-2">
                                 <TaskStatusControl
                                     task={task}
                                     onToggleCompletion={onToggleCompletion}
@@ -579,6 +599,23 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                     showMobileVariant={false}
                                     onMenuOpenChange={onMenuOpenChange}
                                 />
+                                {!isRecurring && onTaskUpdate && (
+                                    <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                        <SizeDropdown
+                                            value={task.size ?? null}
+                                            onChange={(newSize) => {
+                                                onTaskUpdate({
+                                                    ...task,
+                                                    size: newSize,
+                                                });
+                                            }}
+                                            testIdSuffix={`${task.id}-mobile`}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

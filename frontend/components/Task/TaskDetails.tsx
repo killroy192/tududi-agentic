@@ -1208,6 +1208,27 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleSizeUpdate = async (size: any) => {
+        if (!task?.uid) return;
+
+        try {
+            taskModifiedRef.current = true;
+            await updateTask(task.uid, { size });
+            const updatedTask = await fetchTaskByUid(uid!);
+            tasksStore.updateTaskInStore(updatedTask);
+            setTimelineRefreshKey((prev) => prev + 1);
+            showSuccessToast(
+                t('task.sizeUpdated', 'Size updated successfully')
+            );
+        } catch (error) {
+            console.error('Error updating size:', error);
+            showErrorToast(
+                t('task.sizeUpdateError', 'Failed to update size')
+            );
+            throw error;
+        }
+    };
+
     if (loading) {
         return <LoadingScreen />;
     }
@@ -1247,6 +1268,7 @@ const TaskDetails: React.FC = () => {
                     onTitleUpdate={handleTitleUpdate}
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
+                    onSizeUpdate={handleSizeUpdate}
                     onDelete={handleDeleteClick}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}

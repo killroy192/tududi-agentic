@@ -1,5 +1,5 @@
 const { Task } = require('../../../models');
-const { parsePriority, parseStatus } = require('./parsers');
+const { parsePriority, parseStatus, parseSize } = require('./parsers');
 const {
     processDueDateForStorage,
     processDeferUntilForStorage,
@@ -164,6 +164,7 @@ function buildTaskAttributes(body, userId, timezone, isUpdate = false) {
                 ? body.recurrence_week_of_month
                 : null,
         completion_based: body.completion_based || false,
+        size: parseSize(body.size) !== undefined ? parseSize(body.size) : null,
     };
 
     if (!isUpdate) {
@@ -231,6 +232,7 @@ function buildUpdateAttributes(body, task, timezone) {
             body.completion_based !== undefined
                 ? body.completion_based
                 : task.completion_based,
+        size: body.size !== undefined ? parseSize(body.size) : task.size,
     };
 
     if (body.due_date !== undefined) {

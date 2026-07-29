@@ -101,6 +101,7 @@ const EisenhowerMatrix: React.FC = () => {
                 setTasks((prev) =>
                     prev.map((t) => (t.id === updatedTask.id ? { ...t, ...saved } : t))
                 );
+                useStore.getState().tasksStore.updateTaskInStore(saved);
             }
         } catch (e) {
             console.error('Error updating task:', e);

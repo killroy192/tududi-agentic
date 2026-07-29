@@ -159,9 +159,44 @@ async function validateAreaAccess(areaIdOrUid, userId) {
     return area.id;
 }
 
+function validateSize(body) {
+    if (body.size === undefined || body.size === null) return;
+    if (
+        typeof body.size !== 'string' ||
+        !Task.ALLOWED_SIZES.includes(body.size)
+    ) {
+        throw new Error(
+            `Invalid size value. Allowed values are: ${Task.ALLOWED_SIZES.join(', ')}.`
+        );
+    }
+}
+
+function validateSizeNotOnRecurringTask(body, task) {
+    if (body.size === undefined) return;
+
+    const effectiveRecurrenceType =
+        body.recurrence_type !== undefined
+            ? body.recurrence_type
+            : task?.recurrence_type;
+    const effectiveRecurringParentId =
+        body.recurring_parent_id !== undefined
+            ? body.recurring_parent_id
+            : task?.recurring_parent_id;
+
+    const isRecurring =
+        (effectiveRecurrenceType && effectiveRecurrenceType !== 'none') ||
+        !!effectiveRecurringParentId;
+
+    if (isRecurring) {
+        throw new Error('Size cannot be set on recurring tasks.');
+    }
+}
+
 module.exports = {
     validateProjectAccess,
     validateParentTaskAccess,
     validateDeferUntilAndDueDate,
     validateAreaAccess,
+    validateSize,
+    validateSizeNotOnRecurringTask,
 };

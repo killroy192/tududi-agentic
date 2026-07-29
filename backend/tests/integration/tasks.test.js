@@ -513,4 +513,294 @@ describe('Tasks Routes', () => {
             expect(taskIds).not.toContain(recurringTemplate.id);
         });
     });
+
+    describe('Task Size (AC-2, AC-3, AC-4, AC-14, AC-15)', () => {
+        it('POST /api/task should persist and echo a supplied size', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Sized Task',
+                size: 'M',
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.body.size).toBe('M');
+        });
+
+        it('POST /api/task without size should yield size: null', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'No Size Task',
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.body.size).toBeNull();
+        });
+
+        it('PATCH should set each of S/M/L/XL', async () => {
+            const task = await Task.create({
+                name: 'Size Test',
+                user_id: user.id,
+                status: 0,
+            });
+
+            for (const sizeVal of ['S', 'M', 'L', 'XL']) {
+                const response = await agent
+                    .patch(`/api/task/${task.uid}`)
+                    .send({ size: sizeVal });
+
+                expect(response.status).toBe(200);
+                expect(response.body.size).toBe(sizeVal);
+            }
+        });
+
+        it('PATCH with size: null should clear size', async () => {
+            const task = await Task.create({
+                name: 'Clear Size',
+                user_id: user.id,
+                status: 0,
+                size: 'L',
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ size: null });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBeNull();
+        });
+
+        it('PATCH with no size key should leave existing size untouched', async () => {
+            const task = await Task.create({
+                name: 'Keep Size',
+                user_id: user.id,
+                status: 0,
+                size: 'XL',
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ name: 'Renamed' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe('XL');
+            expect(response.body.name).toBe('Renamed');
+        });
+
+        it('GET /api/task/:uid should include size', async () => {
+            const task = await Task.create({
+                name: 'Get Size',
+                user_id: user.id,
+                status: 0,
+                size: 'S',
+            });
+
+            const response = await agent.get(`/api/task/${task.uid}`);
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe('S');
+        });
+
+        it('GET /api/tasks should include size field', async () => {
+            await Task.create({
+                name: 'Listed Size',
+                user_id: user.id,
+                status: 0,
+                size: 'M',
+            });
+
+            const response = await agent.get('/api/tasks');
+
+            expect(response.status).toBe(200);
+            const found = response.body.tasks.find(
+                (t) => t.name === 'Listed Size'
+            );
+            expect(found).toBeDefined();
+            expect(found.size).toBe('M');
+        });
+
+        it('changing size should leave priority untouched (AC-14)', async () => {
+            const task = await Task.create({
+                name: 'Independence Test',
+                user_id: user.id,
+                status: 0,
+                priority: 2,
+                size: 'S',
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ size: 'XL' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe('XL');
+            expect(response.body.priority).toBe(2);
+        });
+
+        it('changing priority should leave size untouched (AC-14)', async () => {
+            const task = await Task.create({
+                name: 'Independence Test 2',
+                user_id: user.id,
+                status: 0,
+                priority: 0,
+                size: 'L',
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ priority: 2 });
+
+            expect(response.status).toBe(200);
+            expect(response.body.priority).toBe(2);
+            expect(response.body.size).toBe('L');
+        });
+
+        it('subtask should default to size: null regardless of parent size (AC-15)', async () => {
+            const parent = await Task.create({
+                name: 'Parent',
+                user_id: user.id,
+                status: 0,
+                size: 'XL',
+            });
+
+            const response = await agent.post('/api/task').send({
+                name: 'Child',
+                parent_task_id: parent.id,
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.body.size).toBeNull();
+        });
+    });
+
+    describe('Task Size Validation (AC-1, AC-5, AC-6)', () => {
+        it('should reject invalid size "XXL" with 400', async () => {
+            const task = await Task.create({
+                name: 'Validation Test',
+                user_id: user.id,
+                status: 0,
+                size: 'M',
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ size: 'XXL' });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+
+            const reread = await agent.get(`/api/task/${task.uid}`);
+            expect(reread.body.size).toBe('M');
+        });
+
+        it('should reject lowercase "s" with 400', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Lowercase Test',
+                size: 's',
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should reject empty string with 400', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Empty String Test',
+                size: '',
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should reject numeric size with 400', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Numeric Test',
+                size: 3,
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should reject non-string size (array) with 400', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Array Test',
+                size: ['S'],
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should reject size on a recurring parent with 400 (AC-6)', async () => {
+            const task = await Task.create({
+                name: 'Recurring Parent',
+                user_id: user.id,
+                status: 0,
+                recurrence_type: 'daily',
+                recurrence_interval: 1,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ size: 'S' });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should reject size on a recurring instance with 400 (AC-6)', async () => {
+            const parent = await Task.create({
+                name: 'Parent',
+                user_id: user.id,
+                status: 0,
+                recurrence_type: 'daily',
+                recurrence_interval: 1,
+            });
+
+            const instance = await Task.create({
+                name: 'Instance',
+                user_id: user.id,
+                status: 0,
+                recurring_parent_id: parent.id,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${instance.uid}`)
+                .send({ size: 'L' });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should reject size when adding recurrence in the same request (AC-6)', async () => {
+            const task = await Task.create({
+                name: 'Becomes Recurring',
+                user_id: user.id,
+                status: 0,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ size: 'M', recurrence_type: 'daily' });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toBeDefined();
+        });
+
+        it('should allow PATCH without size on recurring tasks (positive control, AC-17)', async () => {
+            const task = await Task.create({
+                name: 'Recurring No Size',
+                user_id: user.id,
+                status: 0,
+                recurrence_type: 'daily',
+                recurrence_interval: 1,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${task.uid}`)
+                .send({ name: 'Renamed Recurring' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.name).toBe('Renamed Recurring');
+        });
+    });
 });

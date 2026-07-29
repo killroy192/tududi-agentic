@@ -43,6 +43,8 @@ const {
     validateParentTaskAccess,
     validateDeferUntilAndDueDate,
     validateAreaAccess,
+    validateSize,
+    validateSizeNotOnRecurringTask,
 } = require('./utils/validation');
 const {
     buildTaskAttributes,
@@ -422,6 +424,13 @@ router.post('/task', async (req, res) => {
             return res.status(400).json({ error: 'Task name is required.' });
         }
 
+        try {
+            validateSize(req.body);
+            validateSizeNotOnRecurringTask(req.body, null);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
         const timezone = getSafeTimezone(req.currentUser.timezone);
         const taskAttributes = buildTaskAttributes(
             req.body,
@@ -634,6 +643,13 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
                             : parentTask.completion_based,
                 });
             }
+        }
+
+        try {
+            validateSize(req.body);
+            validateSizeNotOnRecurringTask(req.body, task);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
         }
 
         const timezone = getSafeTimezone(req.currentUser.timezone);

@@ -13,8 +13,9 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
-import { Task, PriorityType } from '../../../entities/Task';
+import { Task, PriorityType, SizeType } from '../../../entities/Task';
 import BackButton from '../../Shared/BackButton';
+import SizeDropdown from '../../Shared/SizeDropdown';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
 import { getStatusValue } from '../../../constants/taskStatus';
@@ -24,6 +25,7 @@ interface TaskDetailsHeaderProps {
     onTitleUpdate: (newTitle: string) => Promise<void>;
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
+    onSizeUpdate?: (newSize: SizeType) => Promise<void>;
     onDelete: () => void;
     getProjectLink?: (project: any) => string;
     getTagLink?: (tag: any) => string;
@@ -46,6 +48,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onTitleUpdate,
     onStatusUpdate,
     onPriorityUpdate,
+    onSizeUpdate,
     onDelete,
     getProjectLink,
     getTagLink,
@@ -485,6 +488,22 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* Size Dropdown - Hidden for recurring tasks */}
+                                        {onSizeUpdate &&
+                                            !(
+                                                (task.recurrence_type &&
+                                                    task.recurrence_type !==
+                                                        'none') ||
+                                                task.recurring_parent_id
+                                            ) && (
+                                                <SizeDropdown
+                                                    value={
+                                                        task.size ?? null
+                                                    }
+                                                    onChange={onSizeUpdate}
+                                                />
+                                            )}
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

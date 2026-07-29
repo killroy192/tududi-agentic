@@ -734,6 +734,14 @@
     "medium": "Medium",
     "high": "High"
   },
+  "size": {
+    "label": "Size",
+    "none": "—",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Not Started",
     "inProgress": "In Progress",
@@ -984,6 +992,8 @@
     "projectClearError": "Failed to clear project",
     "priorityUpdated": "Priority updated successfully",
     "priorityUpdateError": "Failed to update priority",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size",
     "overview": "Overview",
     "schedule": "Schedule",
     "attachments": "Attachments",

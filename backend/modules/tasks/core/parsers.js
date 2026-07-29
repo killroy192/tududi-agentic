@@ -12,7 +12,13 @@ function parseStatus(status, defaultStatus = Task.STATUS.NOT_STARTED) {
     return typeof status === 'string' ? Task.getStatusValue(status) : status;
 }
 
+function parseSize(size) {
+    if (size === undefined) return undefined;
+    return size;
+}
+
 module.exports = {
     parsePriority,
     parseStatus,
+    parseSize,
 };
