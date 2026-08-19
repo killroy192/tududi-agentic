@@ -1,0 +1,32 @@
+---
+description: Guidelines for mocking API responses in Playwright E2E tests to ensure deterministic, backend-independent UI testing.
+globs: e2e/*.ts,e2e/**/*.ts
+alwaysApply: false
+---
+
+# Mock APIs for Deterministic Tests
+
+Isolate your UI tests from backend flakiness by intercepting and mocking API responses.
+
+❌ BAD: Relying on a live, potentially unstable backend
+```typescript
+test('display products', async ({ page }) => {
+  await page.goto('/products'); // Fetches from real API
+  await expect(page.getByText('Product A')).toBeVisible();
+});
+```
+
+✅ GOOD: Mocking API responses
+```typescript
+test('display mocked products', async ({ page }) => {
+  await page.route('**/api/products', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: 1, name: 'Mock Product' }]),
+    });
+  });
+  await page.goto('/products');
+  await expect(page.getByText('Mock Product')).toBeVisible();
+});
+```
