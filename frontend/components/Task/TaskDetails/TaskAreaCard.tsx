@@ -4,23 +4,29 @@ import { Link } from 'react-router-dom';
 import { ArrowRightIcon, RectangleStackIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Area } from '../../../entities/Area';
 import { Task } from '../../../entities/Task';
+import { updateTask, fetchTaskByUid } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { StoreState } from '../../../store/useStore';
+import { getAreaLink } from './taskDetailsLinks';
 
 interface TaskAreaCardProps {
     task: Task;
-    areas: Area[];
-    onAreaSelect: (area: Area) => Promise<void>;
-    onAreaClear: () => Promise<void>;
-    getAreaLink: (area: Area) => string;
+    areasStore: StoreState['areasStore'];
+    tasksStore: StoreState['tasksStore'];
+    onTaskModified: () => void;
+    onTimelineRefresh: () => void;
 }
 
 const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
     task,
-    areas,
-    onAreaSelect,
-    onAreaClear,
-    getAreaLink,
+    areasStore,
+    tasksStore,
+    onTaskModified,
+    onTimelineRefresh,
 }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const areas = areasStore.areas;
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -52,13 +58,49 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
     );
 
     const handleSelect = async (area: Area) => {
-        await onAreaSelect(area);
+        if (task.uid) {
+            try {
+                onTaskModified();
+                await updateTask(task.uid, { area_id: area.id });
+
+                const updatedTask = await fetchTaskByUid(task.uid);
+                tasksStore.updateTaskInStore(updatedTask);
+
+                showSuccessToast(
+                    t('task.areaUpdated', 'Area updated successfully')
+                );
+                onTimelineRefresh();
+            } catch (error) {
+                console.error('Error updating area:', error);
+                showErrorToast(
+                    t('task.areaUpdateError', 'Failed to update area')
+                );
+            }
+        }
         setDropdownOpen(false);
         setSearchQuery('');
     };
 
     const handleClear = async () => {
-        await onAreaClear();
+        if (task.uid) {
+            try {
+                onTaskModified();
+                await updateTask(task.uid, { area_id: null });
+
+                const updatedTask = await fetchTaskByUid(task.uid);
+                tasksStore.updateTaskInStore(updatedTask);
+
+                showSuccessToast(
+                    t('task.areaCleared', 'Area cleared successfully')
+                );
+                onTimelineRefresh();
+            } catch (error) {
+                console.error('Error clearing area:', error);
+                showErrorToast(
+                    t('task.areaClearError', 'Failed to clear area')
+                );
+            }
+        }
         setDropdownOpen(false);
         setSearchQuery('');
     };

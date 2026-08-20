@@ -5,25 +5,31 @@ import { ArrowRightIcon, FolderIcon } from '@heroicons/react/24/outline';
 import ProjectDropdown from '../../Shared/ProjectDropdown';
 import { Project } from '../../../entities/Project';
 import { Task } from '../../../entities/Task';
+import { updateTask, fetchTaskByUid } from '../../../utils/tasksService';
+import { createProject } from '../../../utils/projectsService';
+import { useToast } from '../../Shared/ToastContext';
+import { StoreState } from '../../../store/useStore';
+import { replaceTaskInStore } from './taskDetailsMutations';
+import { getProjectLink } from './taskDetailsLinks';
 
 interface TaskProjectCardProps {
     task: Task;
-    projects: Project[];
-    onProjectSelect: (project: Project) => Promise<void>;
-    onProjectClear: () => Promise<void>;
-    onProjectCreate: (name: string) => Promise<void>;
-    getProjectLink: (project: Project) => string;
+    tasksStore: StoreState['tasksStore'];
+    projectsStore: StoreState['projectsStore'];
+    onTaskModified: () => void;
+    onTimelineRefresh: () => void;
 }
 
 const TaskProjectCard: React.FC<TaskProjectCardProps> = ({
     task,
-    projects,
-    onProjectSelect,
-    onProjectClear,
-    onProjectCreate,
-    getProjectLink,
+    tasksStore,
+    projectsStore,
+    onTaskModified,
+    onTimelineRefresh,
 }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const projects = projectsStore.projects;
     const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
     const [projectName, setProjectName] = useState('');
     const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -58,23 +64,82 @@ const TaskProjectCard: React.FC<TaskProjectCardProps> = ({
     };
 
     const handleProjectSelection = async (project: Project) => {
-        await onProjectSelect(project);
-        setProjectDropdownOpen(false);
-        setProjectName('');
+        if (!task.uid) return;
+
+        try {
+            onTaskModified();
+            await updateTask(task.uid, { project_id: project.id });
+
+            const updatedTask = await fetchTaskByUid(task.uid);
+            replaceTaskInStore(tasksStore, task.uid, updatedTask);
+
+            showSuccessToast(
+                t('task.projectUpdated', 'Project updated successfully')
+            );
+            onTimelineRefresh();
+        } catch (error) {
+            console.error('Error updating project:', error);
+            showErrorToast(
+                t('task.projectUpdateError', 'Failed to update project')
+            );
+        } finally {
+            setProjectDropdownOpen(false);
+            setProjectName('');
+        }
     };
 
     const handleClearProject = async () => {
-        await onProjectClear();
-        setProjectDropdownOpen(false);
-        setProjectName('');
+        if (!task.uid) return;
+
+        try {
+            onTaskModified();
+            await updateTask(task.uid, { project_id: null });
+
+            const updatedTask = await fetchTaskByUid(task.uid);
+            replaceTaskInStore(tasksStore, task.uid, updatedTask);
+
+            showSuccessToast(
+                t('task.projectCleared', 'Project cleared successfully')
+            );
+            onTimelineRefresh();
+        } catch (error) {
+            console.error('Error clearing project:', error);
+            showErrorToast(
+                t('task.projectClearError', 'Failed to clear project')
+            );
+        } finally {
+            setProjectDropdownOpen(false);
+            setProjectName('');
+        }
     };
 
     const handleCreateProjectInline = async (name: string) => {
+        if (!task.uid || !name.trim()) return;
+
         setIsCreatingProject(true);
         try {
-            await onProjectCreate(name);
+            onTaskModified();
+            const newProject = await createProject({ name });
+
+            projectsStore.setProjects([...projectsStore.projects, newProject]);
+
+            await updateTask(task.uid, { project_id: newProject.id });
+
+            const updatedTask = await fetchTaskByUid(task.uid);
+            replaceTaskInStore(tasksStore, task.uid, updatedTask);
+
+            showSuccessToast(
+                t('project.createdAndAssigned', 'Project created and assigned')
+            );
+            onTimelineRefresh();
+
             setProjectDropdownOpen(false);
             setProjectName('');
+        } catch (error) {
+            console.error('Error creating project:', error);
+            showErrorToast(
+                t('project.createError', 'Failed to create project')
+            );
         } finally {
             setIsCreatingProject(false);
         }

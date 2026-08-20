@@ -127,7 +127,7 @@ interface HabitsStore {
     removeTodayCompletion: (habitUid: string) => Promise<void>;
 }
 
-interface StoreState {
+export interface StoreState {
     notesStore: NotesStore;
     areasStore: AreasStore;
     projectsStore: ProjectsStore;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import TaskDeferUntilSection from '../TaskForm/TaskDeferUntilSection';
@@ -9,27 +9,104 @@ import {
     getUserTimezone,
 } from '../../../utils/dateUtils';
 import { getCountryFromTimezone } from '../../../utils/localeUtils';
+import { updateTask, fetchTaskByUid } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { StoreState } from '../../../store/useStore';
+import { replaceTaskInStore } from './taskDetailsMutations';
 
 interface TaskDeferUntilCardProps {
     task: Task;
-    isEditing: boolean;
-    editedDeferUntil: string;
-    onChangeDateTime: (value: string) => void;
-    onStartEdit: () => void;
-    onSave: () => void;
-    onCancel: () => void;
+    tasksStore: StoreState['tasksStore'];
+    onTaskModified: () => void;
+    onTimelineRefresh: () => void;
 }
 
 const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
     task,
-    isEditing,
-    editedDeferUntil,
-    onChangeDateTime,
-    onStartEdit,
-    onSave,
-    onCancel,
+    tasksStore,
+    onTaskModified,
+    onTimelineRefresh,
 }) => {
     const { t } = useTranslation();
+    const { showErrorToast, showSuccessToast } = useToast();
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedDeferUntil, setEditedDeferUntil] = useState<string>(
+        task.defer_until || ''
+    );
+
+    const handleStartEdit = () => {
+        setEditedDeferUntil(task.defer_until || '');
+        setIsEditing(true);
+    };
+
+    const handleSave = async () => {
+        if (!task.uid) {
+            setIsEditing(false);
+            setEditedDeferUntil(task.defer_until || '');
+            return;
+        }
+
+        if ((editedDeferUntil || '') === (task.defer_until || '')) {
+            setIsEditing(false);
+            return;
+        }
+
+        if (editedDeferUntil && task.due_date) {
+            const deferDate = new Date(editedDeferUntil);
+            const dueDate = new Date(task.due_date);
+
+            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
+                // For recurring instances, skip strict frontend validation
+                // Backend will validate against parent's recurrence_end_date
+                if (!task.recurring_parent_id) {
+                    // Due dates are date-only; allow any time on the same calendar day
+                    const dueDateEndOfDay = new Date(dueDate);
+                    dueDateEndOfDay.setUTCHours(23, 59, 59, 999);
+                    if (deferDate > dueDateEndOfDay) {
+                        showErrorToast(
+                            t(
+                                'task.deferAfterDueError',
+                                'Defer until date cannot be after the due date'
+                            )
+                        );
+                        return;
+                    }
+                }
+            }
+        }
+
+        try {
+            onTaskModified();
+            await updateTask(task.uid, {
+                defer_until: editedDeferUntil || null,
+            });
+
+            const updatedTask = await fetchTaskByUid(task.uid);
+            replaceTaskInStore(tasksStore, task.uid, updatedTask);
+
+            showSuccessToast(
+                t('task.deferUntilUpdated', 'Defer until successfully updated')
+            );
+            setIsEditing(false);
+            onTimelineRefresh();
+        } catch (error) {
+            console.error('Error updating defer until:', error);
+            showErrorToast(
+                (error as { message?: string })?.message ||
+                    t(
+                        'task.deferUntilUpdateError',
+                        'Failed to update defer until'
+                    )
+            );
+            setEditedDeferUntil(task.defer_until || '');
+            setIsEditing(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditedDeferUntil(task.defer_until || '');
+    };
 
     const getDeferUntilDisplay = (deferUntil: string) => {
         const date = new Date(deferUntil);
@@ -130,7 +207,7 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
                     <div className="space-y-3">
                         <TaskDeferUntilSection
                             value={editedDeferUntil}
-                            onChange={onChangeDateTime}
+                            onChange={setEditedDeferUntil}
                             placeholder={t(
                                 'forms.task.deferUntilPlaceholder',
                                 'Select defer until date and time'
@@ -138,13 +215,13 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
                         />
                         <div className="flex justify-end space-x-2">
                             <button
-                                onClick={onSave}
+                                onClick={handleSave}
                                 className="px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
                             >
                                 {t('common.save', 'Save')}
                             </button>
                             <button
-                                onClick={onCancel}
+                                onClick={handleCancel}
                                 className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                                 {t('common.cancel', 'Cancel')}
@@ -154,7 +231,7 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
                 ) : (
                     <button
                         type="button"
-                        onClick={onStartEdit}
+                        onClick={handleStartEdit}
                         className="flex w-full items-center justify-between text-left"
                     >
                         {task.defer_until ? (

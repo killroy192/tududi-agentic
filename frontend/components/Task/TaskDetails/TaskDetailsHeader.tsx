@@ -14,8 +14,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { Task, PriorityType } from '../../../entities/Task';
+import { Project } from '../../../entities/Project';
+import { Tag } from '../../../entities/Tag';
 import BackButton from '../../Shared/BackButton';
-import { formatDateTime } from '../../../utils/dateUtils';
+import {
+    formatDateTime,
+    isTaskOverdueInTodayPlan,
+    isTaskPastDue,
+} from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
 import { getStatusValue } from '../../../constants/taskStatus';
 
@@ -25,15 +31,10 @@ interface TaskDetailsHeaderProps {
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
     onDelete: () => void;
-    getProjectLink?: (project: any) => string;
-    getTagLink?: (tag: any) => string;
+    getProjectLink?: (project: Project) => string;
+    getTagLink?: (tag: Tag) => string;
     activePill: string;
     onPillChange: (pill: string) => void;
-    showOverdueIcon?: boolean;
-    showPastDueBadge?: boolean;
-    onOverdueIconClick?: () => void;
-    isOverdueAlertVisible?: boolean;
-    onDismissOverdueAlert?: () => void;
     onQuickStatusToggle?: () => void;
     onAiInsightsClick?: () => void;
     aiInsightsActive?: boolean;
@@ -51,11 +52,6 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     getTagLink,
     activePill,
     onPillChange,
-    showOverdueIcon = false,
-    showPastDueBadge = false,
-    onOverdueIconClick,
-    isOverdueAlertVisible = false,
-    onDismissOverdueAlert,
     onQuickStatusToggle,
     onAiInsightsClick,
     aiInsightsActive = false,
@@ -70,14 +66,26 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
         useState<React.CSSProperties>({});
     const [actionsMenuReady, setActionsMenuReady] = useState(false);
     const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
+    const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] =
+        useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const actionsMenuRef = useRef<HTMLDivElement>(null);
     const actionsMenuDropdownRef = useRef<HTMLDivElement>(null);
     const priorityDropdownRef = useRef<HTMLDivElement>(null);
 
+    const isOverdue = isTaskOverdueInTodayPlan(task);
+    const isPastDue = isTaskPastDue(task);
+    const isOverdueAlertVisible = isOverdue && isOverdueBubbleVisible;
+
     useEffect(() => {
         setEditedTitle(task.name);
     }, [task.name]);
+
+    useEffect(() => {
+        if (!isOverdue) {
+            setIsOverdueBubbleVisible(false);
+        }
+    }, [isOverdue]);
 
     useEffect(() => {
         if (isEditingTitle && titleInputRef.current) {
@@ -136,28 +144,58 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+
             if (
                 actionsMenuOpen &&
                 actionsMenuRef.current &&
-                !actionsMenuRef.current.contains(e.target as Node)
+                !actionsMenuRef.current.contains(target)
             ) {
                 setActionsMenuOpen(false);
             }
             if (
                 priorityDropdownOpen &&
                 priorityDropdownRef.current &&
-                !priorityDropdownRef.current.contains(e.target as Node)
+                !priorityDropdownRef.current.contains(target)
             ) {
                 setPriorityDropdownOpen(false);
             }
+            if (isOverdueBubbleVisible) {
+                const clickedOverdueToggle =
+                    typeof e.composedPath === 'function'
+                        ? e
+                              .composedPath()
+                              .some(
+                                  (node) =>
+                                      node instanceof HTMLElement &&
+                                      node.hasAttribute('data-overdue-toggle')
+                              )
+                        : target instanceof HTMLElement &&
+                          !!target.closest('[data-overdue-toggle]');
+
+                if (!clickedOverdueToggle) {
+                    setIsOverdueBubbleVisible(false);
+                }
+            }
         };
 
-        if (actionsMenuOpen || priorityDropdownOpen) {
+        if (actionsMenuOpen || priorityDropdownOpen || isOverdueBubbleVisible) {
             document.addEventListener('mousedown', handleClickOutside);
             return () =>
                 document.removeEventListener('mousedown', handleClickOutside);
         }
-    }, [actionsMenuOpen, priorityDropdownOpen]);
+    }, [actionsMenuOpen, priorityDropdownOpen, isOverdueBubbleVisible]);
+
+    const handleOverdueIconClick = () => {
+        if (!isOverdue) {
+            return;
+        }
+        setIsOverdueBubbleVisible((prev) => !prev);
+    };
+
+    const handleDismissOverdueAlert = () => {
+        setIsOverdueBubbleVisible(false);
+    };
 
     const handleStartTitleEdit = () => {
         setIsEditingTitle(true);
@@ -487,7 +525,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         </div>
 
                                         {/* Past Due Badge - Right of priority button */}
-                                        {showPastDueBadge && (
+                                        {isPastDue && (
                                             <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex-shrink-0">
                                                 <ExclamationTriangleIcon className="h-3 w-3 text-red-600 dark:text-red-400" />
                                                 <span className="text-xs font-medium text-red-700 dark:text-red-300 hidden sm:inline">
@@ -541,7 +579,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 <span>
                                                     {task.tags.map(
                                                         (
-                                                            tag: any,
+                                                            tag: Tag,
                                                             index: number
                                                         ) => (
                                                             <React.Fragment
@@ -649,9 +687,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                 />
                             </button>
                         )}
-                        {(showOverdueIcon || onQuickStatusToggle) && (
+                        {(isOverdue || onQuickStatusToggle) && (
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            {showOverdueIcon && (
+                            {isOverdue && (
                                 <div
                                     className="relative flex items-center z-20"
                                     data-overdue-toggle
@@ -661,7 +699,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            onOverdueIconClick?.();
+                                            handleOverdueIconClick();
                                         }}
                                         className={`flex items-center justify-center w-8 h-8 rounded-full border text-xs transition-colors ${
                                             isOverdueAlertVisible
@@ -689,7 +727,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        onDismissOverdueAlert?.();
+                                                        handleDismissOverdueAlert();
                                                     }}
                                                     className="absolute top-2 right-2 text-amber-600 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-100 transition-colors"
                                                     aria-label={t(

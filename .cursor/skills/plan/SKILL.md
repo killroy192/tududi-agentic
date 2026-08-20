@@ -1,12 +1,12 @@
 ---
 name: generate-plan
-description: Turns spec into a structured implementation plan. Use to cover request to create a plan or when plan mode is enabled.
+description: Turns a feature spec into a structured feature implementation plan. Use when asked to create a plan for a new feature or when Plan Mode is enabled for feature work — not for refactors (use refactoring-plan).
 disable-model-invocation: true
 ---
 
-# Generate Plan
+# Generate Feature Implementation Plan
 
-Use Plan Mode to produce **.md file only** — a structured implementation plan. Another agent uses plan and spec (already created) to create a context map and verification plan.
+Use Plan Mode to produce **.md file only** — a structured feature implementation plan from an existing spec. Another agent uses this plan and the spec to create a context map and verification plan. For behavior-preserving refactors, use the refactoring-plan skill instead.
 
 ## Hard rules
 

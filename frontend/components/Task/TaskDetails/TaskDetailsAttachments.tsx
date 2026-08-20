@@ -15,12 +15,12 @@ import ConfirmDialog from '../../Shared/ConfirmDialog';
 import AttachmentCard from '../../Shared/AttachmentCard';
 import AttachmentPreview from '../../Shared/AttachmentPreview';
 
-interface TaskAttachmentsCardProps {
+interface TaskDetailsAttachmentsProps {
     taskUid: string;
     onAttachmentsCountChange?: (count: number) => void;
 }
 
-const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
+const TaskDetailsAttachments: React.FC<TaskDetailsAttachmentsProps> = ({
     taskUid,
     onAttachmentsCountChange,
 }) => {
@@ -109,9 +109,9 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
                     'File uploaded successfully'
                 )
             );
-        } catch (error: any) {
+        } catch (error) {
             showErrorToast(
-                error.message ||
+                (error as Error).message ||
                     t('task.attachments.uploadError', 'Failed to upload file')
             );
         } finally {
@@ -146,9 +146,9 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
             if (previewAttachment?.uid === attachmentToDelete.uid) {
                 setPreviewAttachment(null);
             }
-        } catch (error: any) {
+        } catch (error) {
             showErrorToast(
-                error.message ||
+                (error as Error).message ||
                     t(
                         'task.attachments.deleteError',
                         'Failed to delete attachment'
@@ -320,4 +320,4 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
     );
 };
 
-export default TaskAttachmentsCard;
+export default TaskDetailsAttachments;
