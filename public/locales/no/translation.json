@@ -1019,7 +1019,11 @@
     "statusUpdated": "Status oppdatert med suksess",
     "statusUpdateError": "Feil ved oppdatering av status",
     "updatedAt": "Oppdatert kl",
-    "upcoming": "kommende"
+    "upcoming": "kommende",
+    "duplicate": "Dupliser",
+    "duplicated": "Oppgave",
+    "duplicatedSuccessfully": "duplisert!",
+    "duplicateError": "Kunne ikke duplisere oppgaven"
   },
   "projects": {
     "loading": "Laster prosjekter...",

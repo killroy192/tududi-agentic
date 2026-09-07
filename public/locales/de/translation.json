@@ -950,7 +950,11 @@
     "statusUpdated": "Status erfolgreich aktualisiert",
     "statusUpdateError": "Fehler beim Aktualisieren des Status",
     "updatedAt": "Aktualisiert am",
-    "upcoming": "bevorstehend"
+    "upcoming": "bevorstehend",
+    "duplicate": "Duplizieren",
+    "duplicated": "Aufgabe",
+    "duplicatedSuccessfully": "erfolgreich dupliziert!",
+    "duplicateError": "Aufgabe konnte nicht dupliziert werden"
   },
   "calendar": {
     "month": "Monat",

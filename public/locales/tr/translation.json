@@ -1018,7 +1018,11 @@
     "statusUpdated": "Durum başarıyla güncellendi",
     "statusUpdateError": "Durum güncellenemedi",
     "updatedAt": "Güncellenme zamanı",
-    "upcoming": "yaklaşan"
+    "upcoming": "yaklaşan",
+    "duplicate": "Çoğalt",
+    "duplicated": "Görev",
+    "duplicatedSuccessfully": "başarıyla çoğaltıldı!",
+    "duplicateError": "Görev çoğaltılamadı"
   },
   "projects": {
     "loading": "Projeler yükleniyor...",

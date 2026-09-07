@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status atualizado com sucesso",
     "statusUpdateError": "Falha ao atualizar o status",
     "updatedAt": "Atualizado em",
-    "upcoming": "próximo"
+    "upcoming": "próximo",
+    "duplicate": "Duplicar",
+    "duplicated": "Tarefa",
+    "duplicatedSuccessfully": "duplicada com sucesso!",
+    "duplicateError": "Falha ao duplicar a tarefa"
   },
   "projects": {
     "loading": "Carregando projetos...",

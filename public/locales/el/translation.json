@@ -1013,7 +1013,11 @@
     "statusUpdated": "Η κατάσταση ενημερώθηκε με επιτυχία",
     "statusUpdateError": "Αποτυχία ενημέρωσης κατάστασης",
     "updatedAt": "Ενημερώθηκε στις",
-    "upcoming": "επερχόμενο"
+    "upcoming": "επερχόμενο",
+    "duplicate": "Αντιγραφή",
+    "duplicated": "Εργασία",
+    "duplicatedSuccessfully": "αντιγράφηκε με επιτυχία!",
+    "duplicateError": "Αποτυχία αντιγραφής εργασίας"
   },
   "dateFormats": {
     "long": "EEEE, d MMMM yyyy",

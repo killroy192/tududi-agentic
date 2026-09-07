@@ -1001,7 +1001,11 @@
     "statusUpdated": "Estado actualizado con éxito",
     "statusUpdateError": "Error al actualizar el estado",
     "updatedAt": "Actualizado en",
-    "upcoming": "próximo"
+    "upcoming": "próximo",
+    "duplicate": "Duplicar",
+    "duplicated": "Tarea",
+    "duplicatedSuccessfully": "¡duplicada correctamente!",
+    "duplicateError": "Error al duplicar la tarea"
   },
   "dateIndicators": {
     "today": "HOY",

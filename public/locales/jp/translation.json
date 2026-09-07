@@ -1144,7 +1144,11 @@
     "statusUpdated": "ステータスが正常に更新されました",
     "statusUpdateError": "ステータスの更新に失敗しました",
     "updatedAt": "更新日時",
-    "upcoming": "今後"
+    "upcoming": "今後",
+    "duplicate": "複製",
+    "duplicated": "タスク",
+    "duplicatedSuccessfully": "を複製しました！",
+    "duplicateError": "タスクの複製に失敗しました"
   },
   "calendar": {
     "month": "月",

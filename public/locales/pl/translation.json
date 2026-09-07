@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status zaktualizowany pomyślnie",
     "statusUpdateError": "Nie udało się zaktualizować statusu",
     "updatedAt": "Zaktualizowano o",
-    "upcoming": "nadchodzący"
+    "upcoming": "nadchodzący",
+    "duplicate": "Duplikuj",
+    "duplicated": "Zadanie",
+    "duplicatedSuccessfully": "pomyślnie zduplikowane!",
+    "duplicateError": "Nie udało się zduplikować zadania"
   },
   "projects": {
     "loading": "Ładowanie projektów...",

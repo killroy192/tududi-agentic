@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status uppdaterad framgångsrikt",
     "statusUpdateError": "Misslyckades med att uppdatera status",
     "updatedAt": "Uppdaterad den",
-    "upcoming": "kommande"
+    "upcoming": "kommande",
+    "duplicate": "Duplicera",
+    "duplicated": "Uppgift",
+    "duplicatedSuccessfully": "duplicerades!",
+    "duplicateError": "Kunde inte duplicera uppgiften"
   },
   "projects": {
     "loading": "Laddar projekt...",

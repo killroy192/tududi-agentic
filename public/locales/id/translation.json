@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status berhasil diperbarui",
     "statusUpdateError": "Gagal memperbarui status",
     "updatedAt": "Diperbarui pada",
-    "upcoming": "mendatang"
+    "upcoming": "mendatang",
+    "duplicate": "Duplikat",
+    "duplicated": "Tugas",
+    "duplicatedSuccessfully": "berhasil diduplikasi!",
+    "duplicateError": "Gagal menduplikasi tugas"
   },
   "projects": {
     "loading": "Memuat proyek...",

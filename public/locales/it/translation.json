@@ -1018,7 +1018,11 @@
     "statusUpdated": "Stato aggiornato con successo",
     "statusUpdateError": "Aggiornamento dello stato non riuscito",
     "updatedAt": "Aggiornato il",
-    "upcoming": "imminente"
+    "upcoming": "imminente",
+    "duplicate": "Duplica",
+    "duplicated": "Attività",
+    "duplicatedSuccessfully": "duplicata con successo!",
+    "duplicateError": "Impossibile duplicare l'attività"
   },
   "projects": {
     "loading": "Caricamento progetti...",

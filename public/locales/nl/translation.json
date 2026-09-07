@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status succesvol bijgewerkt",
     "statusUpdateError": "Status bijwerken mislukt",
     "updatedAt": "Bijgewerkt op",
-    "upcoming": "komend"
+    "upcoming": "komend",
+    "duplicate": "Dupliceren",
+    "duplicated": "Taak",
+    "duplicatedSuccessfully": "succesvol gedupliceerd!",
+    "duplicateError": "Taak dupliceren mislukt"
   },
   "projects": {
     "loading": "Projecten laden...",

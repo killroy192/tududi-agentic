@@ -1018,7 +1018,11 @@
     "statusUpdated": "Tila päivitetty onnistuneesti",
     "statusUpdateError": "Tilapäivitys epäonnistui",
     "updatedAt": "Päivitetty",
-    "upcoming": "tulossa"
+    "upcoming": "tulossa",
+    "duplicate": "Monista",
+    "duplicated": "Tehtävä",
+    "duplicatedSuccessfully": "monistettu!",
+    "duplicateError": "Tehtävän monistaminen epäonnistui"
   },
   "projects": {
     "loading": "Ladataan projekteja...",

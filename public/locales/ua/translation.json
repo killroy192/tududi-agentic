@@ -1032,7 +1032,11 @@
     "statusUpdated": "Статус успішно оновлено",
     "statusUpdateError": "Не вдалося оновити статус",
     "updatedAt": "Оновлено о",
-    "upcoming": "майбутні"
+    "upcoming": "майбутні",
+    "duplicate": "Дублікувати",
+    "duplicated": "Завдання",
+    "duplicatedSuccessfully": "успішно продубльовано!",
+    "duplicateError": "Не вдалося продублювати завдання"
   },
   "calendar": {
     "month": "Місяць",

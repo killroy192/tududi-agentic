@@ -1018,7 +1018,11 @@
     "statusUpdated": "Statut mis à jour avec succès",
     "statusUpdateError": "Échec de la mise à jour du statut",
     "updatedAt": "Mis à jour à",
-    "upcoming": "à venir"
+    "upcoming": "à venir",
+    "duplicate": "Dupliquer",
+    "duplicated": "Tâche",
+    "duplicatedSuccessfully": "dupliquée avec succès !",
+    "duplicateError": "Échec de la duplication de la tâche"
   },
   "projects": {
     "loading": "Chargement des projets...",

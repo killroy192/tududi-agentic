@@ -1018,7 +1018,11 @@
     "statusUpdated": "تم تحديث الحالة بنجاح",
     "statusUpdateError": "فشل في تحديث الحالة",
     "updatedAt": "تم التحديث في",
-    "upcoming": "قادم"
+    "upcoming": "قادم",
+    "duplicate": "تكرار",
+    "duplicated": "المهمة",
+    "duplicatedSuccessfully": "تم تكرارها بنجاح!",
+    "duplicateError": "فشل تكرار المهمة"
   },
   "projects": {
     "loading": "جارٍ تحميل المشاريع...",

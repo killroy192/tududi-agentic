@@ -1018,7 +1018,11 @@
     "statusUpdated": "Статус успешно обновлён",
     "statusUpdateError": "Не удалось обновить статус",
     "updatedAt": "Обновлено в",
-    "upcoming": "предстоящие"
+    "upcoming": "предстоящие",
+    "duplicate": "Дублировать",
+    "duplicated": "Задача",
+    "duplicatedSuccessfully": "успешно продублирована!",
+    "duplicateError": "Не удалось продублировать задачу"
   },
   "projects": {
     "loading": "Загрузка проектов...",

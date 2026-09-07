@@ -25,6 +25,7 @@ interface TaskDetailsHeaderProps {
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
     onDelete: () => void;
+    onDuplicate: () => void;
     getProjectLink?: (project: any) => string;
     getTagLink?: (tag: any) => string;
     activePill: string;
@@ -47,6 +48,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onStatusUpdate,
     onPriorityUpdate,
     onDelete,
+    onDuplicate,
     getProjectLink,
     getTagLink,
     activePill,
@@ -755,7 +757,18 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         className="z-30 w-40 rounded-lg shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
                                     >
                                         <button
-                                            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-t-lg"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setActionsMenuOpen(false);
+                                                onDuplicate();
+                                            }}
+                                        >
+                                            {t('task.duplicate', 'Duplicate')}
+                                        </button>
+                                        <button
+                                            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-b-lg"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();

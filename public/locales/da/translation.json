@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status opdateret med succes",
     "statusUpdateError": "Fejl ved opdatering af status",
     "updatedAt": "Opdateret den",
-    "upcoming": "kommende"
+    "upcoming": "kommende",
+    "duplicate": "Duplikér",
+    "duplicated": "Opgave",
+    "duplicatedSuccessfully": "duplikeret!",
+    "duplicateError": "Kunne ikke duplikere opgaven"
   },
   "projects": {
     "loading": "Indlæser projekter...",

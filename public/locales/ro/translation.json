@@ -1018,7 +1018,11 @@
     "statusUpdated": "Starea a fost actualizată cu succes",
     "statusUpdateError": "Actualizarea stării a eșuat",
     "updatedAt": "Actualizat la",
-    "upcoming": "viitor"
+    "upcoming": "viitor",
+    "duplicate": "Duplică",
+    "duplicated": "Sarcină",
+    "duplicatedSuccessfully": "duplicată cu succes!",
+    "duplicateError": "Nu s-a putut duplica sarcina"
   },
   "projects": {
     "loading": "Se încarcă proiectele...",

@@ -40,6 +40,7 @@ import {
     isTaskPastDue,
     getTodayDateString,
 } from '../../utils/dateUtils';
+import { buildDuplicateTaskPayload } from '../../utils/duplicateTask';
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -88,6 +89,7 @@ const TaskDetails: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
     const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] = useState(false);
     const [nextIterations, setNextIterations] = useState<TaskIteration[]>([]);
@@ -904,6 +906,64 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleDuplicate = async () => {
+        if (!task?.uid || isDuplicating) {
+            return;
+        }
+
+        setIsDuplicating(true);
+        try {
+            let subtasksForCopy = task.subtasks || [];
+            if (!hasLoadedSubtasks && subtasksForCopy.length === 0) {
+                subtasksForCopy = await fetchSubtasks(task.uid);
+                setHasLoadedSubtasks(true);
+                lastKnownSubtaskCount.current = subtasksForCopy.length;
+
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === task.uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = {
+                        ...task,
+                        subtasks: subtasksForCopy,
+                    };
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            const payload = buildDuplicateTaskPayload({
+                ...task,
+                subtasks: subtasksForCopy,
+            });
+            const createdTask = await tasksStore.createTask(payload);
+
+            const taskLink = (
+                <span>
+                    {t('task.duplicated', 'Task')}{' '}
+                    <a
+                        href={`/task/${createdTask.uid}`}
+                        className="text-green-200 underline hover:text-green-100"
+                    >
+                        {createdTask.name}
+                    </a>{' '}
+                    {t(
+                        'task.duplicatedSuccessfully',
+                        'duplicated successfully!'
+                    )}
+                </span>
+            );
+            showSuccessToast(taskLink);
+        } catch (error) {
+            console.error('Error duplicating task:', error);
+            showErrorToast(
+                t('task.duplicateError', 'Failed to duplicate task')
+            );
+        } finally {
+            setIsDuplicating(false);
+        }
+    };
+
     const handleDeleteConfirm = async () => {
         if (taskToDelete?.uid) {
             try {
@@ -1248,6 +1308,7 @@ const TaskDetails: React.FC = () => {
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
                     onDelete={handleDeleteClick}
+                    onDuplicate={handleDuplicate}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
                     activePill={activePill}

@@ -1018,7 +1018,11 @@
     "statusUpdated": "Status uspešno posodobljen",
     "statusUpdateError": "Posodobitev statusa ni uspela",
     "updatedAt": "Posodobljeno ob",
-    "upcoming": "prihajajoč"
+    "upcoming": "prihajajoč",
+    "duplicate": "Podvoji",
+    "duplicated": "Opravilo",
+    "duplicatedSuccessfully": "uspešno podvojeno!",
+    "duplicateError": "Podvajanje opravila ni uspelo"
   },
   "projects": {
     "loading": "Nalagam projekte...",

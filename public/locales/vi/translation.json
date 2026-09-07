@@ -1018,7 +1018,11 @@
     "statusUpdated": "Cập nhật trạng thái thành công",
     "statusUpdateError": "Cập nhật trạng thái thất bại",
     "updatedAt": "Cập nhật lúc",
-    "upcoming": "sắp tới"
+    "upcoming": "sắp tới",
+    "duplicate": "Nhân bản",
+    "duplicated": "Công việc",
+    "duplicatedSuccessfully": "đã nhân bản thành công!",
+    "duplicateError": "Không thể nhân bản công việc"
   },
   "projects": {
     "loading": "Đang tải dự án...",
