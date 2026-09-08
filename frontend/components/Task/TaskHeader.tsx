@@ -16,6 +16,7 @@ import { Task } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
+import SizeControl from './SizeControl';
 import { parseDateString, getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
 
 const tagColorStyle = (color?: string): React.CSSProperties | undefined => {
@@ -45,6 +46,8 @@ interface TaskHeaderProps {
     onMenuOpenChange?: (isOpen: boolean) => void;
     hideStatusControl?: boolean;
     isKanbanView?: boolean;
+    showSizeChip?: boolean;
+    onSizeChange?: (size: number | null) => void;
 }
 
 const TaskHeader: React.FC<TaskHeaderProps> = ({
@@ -65,6 +68,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     onMenuOpenChange,
     hideStatusControl = false,
     isKanbanView = false,
+    showSizeChip = false,
+    onSizeChange,
 }) => {
     const { t } = useTranslation();
     void _onToggleToday;
@@ -195,7 +200,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {/* Full view (md and larger) */}
             <div className="hidden md:flex flex-col md:flex-row md:items-center md:relative">
                 <div
-                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? 'pr-56' : ''}`}
+                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? (showSizeChip ? 'pe-72' : 'pe-56') : ''}`}
                 >
                     <div className="hidden">
                         <TaskPriorityIcon
@@ -415,7 +420,15 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                     </div>
                 </div>
                 {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
+                    <div className="absolute end-0 top-1/2 -translate-y-1/2 flex items-center gap-2 z-[1]">
+                        {showSizeChip && (
+                            <SizeControl
+                                taskUid={task.uid}
+                                size={task.size}
+                                variant="chip"
+                                onSizeChange={onSizeChange}
+                            />
+                        )}
                         <TaskStatusControl
                             task={task}
                             onToggleCompletion={onToggleCompletion}
@@ -570,7 +583,15 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         </div>
 
                         {onToggleCompletion && (
-                            <div className="mt-2">
+                            <div className="mt-2 flex items-center gap-2">
+                                {showSizeChip && (
+                                    <SizeControl
+                                        taskUid={task.uid}
+                                        size={task.size}
+                                        variant="chip"
+                                        onSizeChange={onSizeChange}
+                                    />
+                                )}
                                 <TaskStatusControl
                                     task={task}
                                     onToggleCompletion={onToggleCompletion}

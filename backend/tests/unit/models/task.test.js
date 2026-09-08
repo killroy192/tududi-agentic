@@ -53,6 +53,47 @@ describe('Task Model', () => {
             await expect(Task.create(taskData)).rejects.toThrow();
         });
 
+        it('should validate size range 1–4 and allow null', async () => {
+            const withNull = await Task.create({
+                name: 'Unset size',
+                user_id: user.id,
+                size: null,
+            });
+            expect(withNull.size).toBeNull();
+
+            const withValid = await Task.create({
+                name: 'Valid size',
+                user_id: user.id,
+                size: 4,
+            });
+            expect(withValid.size).toBe(4);
+
+            await expect(
+                Task.create({
+                    name: 'Invalid size',
+                    user_id: user.id,
+                    size: 0,
+                })
+            ).rejects.toThrow();
+
+            await expect(
+                Task.create({
+                    name: 'Invalid size high',
+                    user_id: user.id,
+                    size: 5,
+                })
+            ).rejects.toThrow();
+        });
+
+        it('should not coerce unknown size names to a default', () => {
+            expect(Task.getSizeValue('unknown')).toBe(Task.INVALID_SIZE);
+            expect(Task.getSizeValue(99)).toBe(Task.INVALID_SIZE);
+            expect(Task.getSizeValue('s')).toBe(1);
+            expect(Task.getSizeValue('XL')).toBe(4);
+            expect(Task.getSizeName(3)).toBe('l');
+            expect(Task.getSizeName(null)).toBeNull();
+        });
+
         it('should validate status range', async () => {
             const taskData = {
                 name: 'Test Task',
@@ -69,6 +110,13 @@ describe('Task Model', () => {
             expect(Task.PRIORITY.LOW).toBe(0);
             expect(Task.PRIORITY.MEDIUM).toBe(1);
             expect(Task.PRIORITY.HIGH).toBe(2);
+        });
+
+        it('should have correct size constants', () => {
+            expect(Task.SIZE.S).toBe(1);
+            expect(Task.SIZE.M).toBe(2);
+            expect(Task.SIZE.L).toBe(3);
+            expect(Task.SIZE.XL).toBe(4);
         });
 
         it('should have correct status constants', () => {
@@ -128,6 +176,7 @@ describe('Task Model', () => {
 
             expect(task.priority).toBe(0);
             expect(task.status).toBe(0);
+            expect(task.size == null).toBe(true);
             expect(task.recurrence_type).toBe('none');
         });
     });
@@ -139,6 +188,7 @@ describe('Task Model', () => {
                 user_id: user.id,
                 due_date: null,
                 note: null,
+                size: null,
                 recurrence_interval: null,
                 recurrence_end_date: null,
                 project_id: null,
@@ -146,6 +196,7 @@ describe('Task Model', () => {
 
             expect(task.due_date).toBeNull();
             expect(task.note).toBeNull();
+            expect(task.size == null).toBe(true);
             expect(task.recurrence_interval).toBeNull();
             expect(task.recurrence_end_date).toBeNull();
             expect(task.project_id).toBeNull();

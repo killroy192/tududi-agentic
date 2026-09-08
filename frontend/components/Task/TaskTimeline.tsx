@@ -100,6 +100,32 @@ const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskUid, refreshKey }) => {
                 }
                 return t('timeline.events.priorityChanged');
             }
+            case 'size_changed': {
+                const formatSize = (value: unknown) => {
+                    if (value === null || value === undefined) {
+                        return t('size.none', 'None');
+                    }
+                    const letters: Record<number, string> = {
+                        1: 'S',
+                        2: 'M',
+                        3: 'L',
+                        4: 'XL',
+                    };
+                    if (typeof value === 'number' && letters[value]) {
+                        return letters[value];
+                    }
+                    if (typeof value === 'string') {
+                        const lower = value.toLowerCase();
+                        if (['s', 'm', 'l', 'xl'].includes(lower)) {
+                            return lower.toUpperCase();
+                        }
+                    }
+                    return t('size.none', 'None');
+                };
+                const oldSize = old_value?.size;
+                const newSize = new_value?.size;
+                return `${t('timeline.events.size', 'Size')}: ${formatSize(oldSize)} → ${formatSize(newSize)}`;
+            }
             case 'due_date_changed': {
                 const oldDate = old_value?.due_date;
                 const newDate = new_value?.due_date;

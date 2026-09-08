@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Tipo de recorrência alterado",
       "recurrence_weekday_changed": "Dia da semana da recorrência alterado",
       "recurrence_month_day_changed": "Dia do mês da recorrência alterado",
-      "recurrence_week_of_month_changed": "Semana do mês da recorrência alterada"
+      "recurrence_week_of_month_changed": "Semana do mês da recorrência alterada",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Agora mesmo",
     "minutesAgo": "{{minutes}}m atrás",
@@ -741,6 +743,15 @@
     "high": "Alta",
     "none": "Nenhum"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Não Iniciado",
     "inProgress": "Em Progresso",
@@ -799,7 +810,8 @@
     "loginFailed": "Falha no login. Por favor, tente novamente.",
     "generalError": "Ocorreu um erro. Por favor, tente novamente.",
     "viewNameRequired": "O nome da visualização é obrigatório",
-    "viewSaveFailed": "Falha ao salvar a visualização. Por favor, tente novamente."
+    "viewSaveFailed": "Falha ao salvar a visualização. Por favor, tente novamente.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Caixa de Entrada",
@@ -1022,7 +1034,9 @@
     "duplicate": "Duplicar",
     "duplicated": "Tarefa",
     "duplicatedSuccessfully": "duplicada com sucesso!",
-    "duplicateError": "Falha ao duplicar a tarefa"
+    "duplicateError": "Falha ao duplicar a tarefa",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Carregando projetos...",

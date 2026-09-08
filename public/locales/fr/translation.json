@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Type de récurrence modifié",
       "recurrence_weekday_changed": "Le jour de la semaine de récurrence a changé",
       "recurrence_month_day_changed": "Le jour du mois de récurrence a changé",
-      "recurrence_week_of_month_changed": "La semaine du mois de récurrence a changé"
+      "recurrence_week_of_month_changed": "La semaine du mois de récurrence a changé",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "À l'instant",
     "minutesAgo": "{{minutes}}m auparavant",
@@ -741,6 +743,15 @@
     "high": "Élevée",
     "none": "Aucun"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Non commencé",
     "inProgress": "En cours",
@@ -799,7 +810,8 @@
     "loginFailed": "Échec de la connexion. Veuillez réessayer.",
     "generalError": "Une erreur est survenue. Veuillez réessayer.",
     "viewNameRequired": "Le nom de la vue est requis",
-    "viewSaveFailed": "Échec de l'enregistrement de la vue. Veuillez réessayer."
+    "viewSaveFailed": "Échec de l'enregistrement de la vue. Veuillez réessayer.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Boîte de réception",
@@ -1022,7 +1034,9 @@
     "duplicate": "Dupliquer",
     "duplicated": "Tâche",
     "duplicatedSuccessfully": "dupliquée avec succès !",
-    "duplicateError": "Échec de la duplication de la tâche"
+    "duplicateError": "Échec de la duplication de la tâche",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Chargement des projets...",

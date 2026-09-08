@@ -41,6 +41,15 @@ module.exports = (sequelize) => {
                     max: 2,
                 },
             },
+            size: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                // No defaultValue — existing and new tasks stay unset (NULL)
+                validate: {
+                    min: 1,
+                    max: 4,
+                },
+            },
             status: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
@@ -315,6 +324,16 @@ module.exports = (sequelize) => {
         HIGH: 2,
     };
 
+    Task.SIZE = {
+        S: 1,
+        M: 2,
+        L: 3,
+        XL: 4,
+    };
+
+    /** Sentinel returned by getSizeValue for unrecognised input — never coerce to a default. */
+    Task.INVALID_SIZE = Symbol('INVALID_SIZE');
+
     Task.STATUS = {
         NOT_STARTED: 0,
         IN_PROGRESS: 1,
@@ -388,10 +407,44 @@ module.exports = (sequelize) => {
         return statuses[statusName] !== undefined ? statuses[statusName] : 0;
     };
 
+    const getSizeName = (sizeValue) => {
+        const sizes = { 1: 's', 2: 'm', 3: 'l', 4: 'xl' };
+        return sizes[sizeValue] || null;
+    };
+
+    const getSizeValue = (sizeName) => {
+        if (sizeName === null || sizeName === undefined || sizeName === '') {
+            return null;
+        }
+        if (typeof sizeName === 'number') {
+            return [1, 2, 3, 4].includes(sizeName)
+                ? sizeName
+                : Task.INVALID_SIZE;
+        }
+        if (typeof sizeName === 'string') {
+            const sizes = { s: 1, m: 2, l: 3, xl: 4 };
+            const lower = sizeName.toLowerCase().trim();
+            if (sizes[lower] !== undefined) {
+                return sizes[lower];
+            }
+            const asNumber = Number(sizeName);
+            if (
+                Number.isInteger(asNumber) &&
+                [1, 2, 3, 4].includes(asNumber)
+            ) {
+                return asNumber;
+            }
+            return Task.INVALID_SIZE;
+        }
+        return Task.INVALID_SIZE;
+    };
+
     Task.getPriorityName = getPriorityName;
     Task.getStatusName = getStatusName;
     Task.getPriorityValue = getPriorityValue;
     Task.getStatusValue = getStatusValue;
+    Task.getSizeName = getSizeName;
+    Task.getSizeValue = getSizeValue;
 
     return Task;
 };

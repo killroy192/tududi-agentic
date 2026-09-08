@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Tekrar türü değiştirildi",
       "recurrence_weekday_changed": "Tekrar gün değişti",
       "recurrence_month_day_changed": "Tekrar ay günü değişti",
-      "recurrence_week_of_month_changed": "Tekrar ayın haftası değişti"
+      "recurrence_week_of_month_changed": "Tekrar ayın haftası değişti",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Şu anda",
     "minutesAgo": "{{minutes}}d önce",
@@ -741,6 +743,15 @@
     "high": "Yüksek",
     "none": "Yok"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Başlamadı",
     "inProgress": "Devam Ediyor",
@@ -799,7 +810,8 @@
     "loginFailed": "Giriş başarısız oldu. Lütfen tekrar deneyin.",
     "generalError": "Bir hata oluştu. Lütfen tekrar deneyin.",
     "viewNameRequired": "Görünüm adı gereklidir",
-    "viewSaveFailed": "Görünümü kaydetme başarısız oldu. Lütfen tekrar deneyin."
+    "viewSaveFailed": "Görünümü kaydetme başarısız oldu. Lütfen tekrar deneyin.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Gelen Kutusu",
@@ -1022,7 +1034,9 @@
     "duplicate": "Çoğalt",
     "duplicated": "Görev",
     "duplicatedSuccessfully": "başarıyla çoğaltıldı!",
-    "duplicateError": "Görev çoğaltılamadı"
+    "duplicateError": "Görev çoğaltılamadı",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Projeler yükleniyor...",

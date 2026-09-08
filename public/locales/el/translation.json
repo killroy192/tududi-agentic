@@ -485,7 +485,8 @@
     "loginFailed": "Η σύνδεση απέτυχε. Παρακαλώ δοκιμάστε ξανά.",
     "generalError": "Παρουσιάστηκε σφάλμα. Παρακαλώ δοκιμάστε ξανά.",
     "viewNameRequired": "Απαιτείται όνομα προβολής",
-    "viewSaveFailed": "Αποτυχία αποθήκευσης προβολής. Παρακαλώ δοκιμάστε ξανά."
+    "viewSaveFailed": "Αποτυχία αποθήκευσης προβολής. Παρακαλώ δοκιμάστε ξανά.",
+    "permissionDenied": "Forbidden"
   },
   "dropdown": {
     "createNew": "Δημιουργία Νέου",
@@ -613,7 +614,9 @@
       "recurrenceTypeChanged": "Ο τύπος επανάληψης άλλαξε",
       "recurrence_weekday_changed": "Η ημέρα επανάληψης άλλαξε",
       "recurrence_month_day_changed": "Η ημέρα του μήνα επανάληψης άλλαξε",
-      "recurrence_week_of_month_changed": "Η εβδομάδα του μήνα επανάληψης άλλαξε"
+      "recurrence_week_of_month_changed": "Η εβδομάδα του μήνα επανάληψης άλλαξε",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Μόλις τώρα",
     "minutesAgo": "{{minutes}} λεπτά πριν",
@@ -873,6 +876,15 @@
     "high": "Υψηλή",
     "none": "Καμία"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Δεν Ξεκίνησε",
     "inProgress": "Σε Εξέλιξη",
@@ -1017,7 +1029,9 @@
     "duplicate": "Αντιγραφή",
     "duplicated": "Εργασία",
     "duplicatedSuccessfully": "αντιγράφηκε με επιτυχία!",
-    "duplicateError": "Αποτυχία αντιγραφής εργασίας"
+    "duplicateError": "Αποτυχία αντιγραφής εργασίας",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "dateFormats": {
     "long": "EEEE, d MMMM yyyy",

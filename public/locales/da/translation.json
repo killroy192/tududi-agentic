@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Gentagelsestype ændret",
       "recurrence_weekday_changed": "Ugentlig tilbagevendende ændret",
       "recurrence_month_day_changed": "Månedlig tilbagevendende dag ændret",
-      "recurrence_week_of_month_changed": "Uge i måneden tilbagevendende ændret"
+      "recurrence_week_of_month_changed": "Uge i måneden tilbagevendende ændret",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Lige nu",
     "minutesAgo": "{{minutes}}m siden",
@@ -741,6 +743,15 @@
     "high": "Høj",
     "none": "Ingen"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Ikke Startet",
     "inProgress": "I Gang",
@@ -799,7 +810,8 @@
     "loginFailed": "Login mislykkedes. Prøv venligst igen.",
     "generalError": "Der opstod en fejl. Prøv venligst igen.",
     "viewNameRequired": "Visningsnavn er påkrævet",
-    "viewSaveFailed": "Fejl ved gemning af visning. Prøv venligst igen."
+    "viewSaveFailed": "Fejl ved gemning af visning. Prøv venligst igen.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Indbakke",
@@ -1022,7 +1034,9 @@
     "duplicate": "Duplikér",
     "duplicated": "Opgave",
     "duplicatedSuccessfully": "duplikeret!",
-    "duplicateError": "Kunne ikke duplikere opgaven"
+    "duplicateError": "Kunne ikke duplikere opgaven",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Indlæser projekter...",

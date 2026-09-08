@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "تغيير نوع التكرار",
       "recurrence_weekday_changed": "تم تغيير يوم تكرار الأسبوع",
       "recurrence_month_day_changed": "تم تغيير يوم تكرار الشهر",
-      "recurrence_week_of_month_changed": "تم تغيير أسبوع التكرار من الشهر"
+      "recurrence_week_of_month_changed": "تم تغيير أسبوع التكرار من الشهر",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "الآن",
     "minutesAgo": "{{minutes}} دقيقة مضت",
@@ -741,6 +743,15 @@
     "high": "مرتفع",
     "none": "لا شيء"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "لم يبدأ",
     "inProgress": "قيد التقدم",
@@ -799,7 +810,8 @@
     "loginFailed": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.",
     "generalError": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "viewNameRequired": "اسم العرض مطلوب",
-    "viewSaveFailed": "فشل في حفظ العرض. يرجى المحاولة مرة أخرى."
+    "viewSaveFailed": "فشل في حفظ العرض. يرجى المحاولة مرة أخرى.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "صندوق الوارد",
@@ -1022,7 +1034,9 @@
     "duplicate": "تكرار",
     "duplicated": "المهمة",
     "duplicatedSuccessfully": "تم تكرارها بنجاح!",
-    "duplicateError": "فشل تكرار المهمة"
+    "duplicateError": "فشل تكرار المهمة",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "جارٍ تحميل المشاريع...",

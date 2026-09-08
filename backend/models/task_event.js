@@ -34,6 +34,7 @@ module.exports = (sequelize) => {
                             'created',
                             'status_changed',
                             'priority_changed',
+                            'size_changed',
                             'due_date_changed',
                             'defer_until_changed',
                             'project_changed',
@@ -96,6 +97,7 @@ module.exports = (sequelize) => {
                         [
                             'status',
                             'priority',
+                            'size',
                             'due_date',
                             'defer_until',
                             'project_id',

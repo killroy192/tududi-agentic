@@ -48,6 +48,7 @@ const {
     buildTaskAttributes,
     buildUpdateAttributes,
 } = require('./core/builders');
+const { InvalidSizeError } = require('./core/parsers');
 const { createSubtasks, updateSubtasks } = require('./operations/subtasks');
 const { handleCompletionStatus } = require('./operations/completion');
 const { captureOldValues, logTaskChanges } = require('./utils/logging');
@@ -55,6 +56,13 @@ const {
     handleParentChildOnStatusChange,
 } = require('./operations/parent-child');
 const { TASK_INCLUDES_WITH_SUBTASKS } = require('./utils/constants');
+
+const invalidSizeResponse = (res, error) =>
+    res.status(400).json({
+        error: error.message || 'Invalid size value',
+        field: 'size',
+        details: [error.message || 'Invalid size value'],
+    });
 
 const {
     handleRecurringTasks,
@@ -423,11 +431,19 @@ router.post('/task', async (req, res) => {
         }
 
         const timezone = getSafeTimezone(req.currentUser.timezone);
-        const taskAttributes = buildTaskAttributes(
-            req.body,
-            req.currentUser.id,
-            timezone
-        );
+        let taskAttributes;
+        try {
+            taskAttributes = buildTaskAttributes(
+                req.body,
+                req.currentUser.id,
+                timezone
+            );
+        } catch (error) {
+            if (error instanceof InvalidSizeError || error.field === 'size') {
+                return invalidSizeResponse(res, error);
+            }
+            throw error;
+        }
 
         try {
             // Fetch parent end date if this is a recurring instance
@@ -521,6 +537,9 @@ router.post('/task', async (req, res) => {
 
         res.status(201).json(serializedTask);
     } catch (error) {
+        if (error instanceof InvalidSizeError || error.field === 'size') {
+            return invalidSizeResponse(res, error);
+        }
         logError('Error creating task:', error);
         logError('Error stack:', error.stack);
         logError('Error name:', error.name);
@@ -637,7 +656,15 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
         }
 
         const timezone = getSafeTimezone(req.currentUser.timezone);
-        const taskAttributes = buildUpdateAttributes(req.body, task, timezone);
+        let taskAttributes;
+        try {
+            taskAttributes = buildUpdateAttributes(req.body, task, timezone);
+        } catch (error) {
+            if (error instanceof InvalidSizeError || error.field === 'size') {
+                return invalidSizeResponse(res, error);
+            }
+            throw error;
+        }
 
         try {
             const finalDeferUntil =
@@ -901,6 +928,9 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
 
         res.json(serializedTask);
     } catch (error) {
+        if (error instanceof InvalidSizeError || error.field === 'size') {
+            return invalidSizeResponse(res, error);
+        }
         logError('Error updating task:', error);
         res.status(400).json({
             error: 'There was a problem updating the task.',

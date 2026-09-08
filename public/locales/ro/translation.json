@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Tip de recurență modificat",
       "recurrence_weekday_changed": "Ziua săptămânii pentru recurență a fost schimbată",
       "recurrence_month_day_changed": "Ziua lunii pentru recurență a fost schimbată",
-      "recurrence_week_of_month_changed": "Săptămâna lunii pentru recurență a fost schimbată"
+      "recurrence_week_of_month_changed": "Săptămâna lunii pentru recurență a fost schimbată",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Chiar acum",
     "minutesAgo": "{{minutes}}m în urmă",
@@ -741,6 +743,15 @@
     "high": "Ridicat",
     "none": "Niciuna"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Nefăcut",
     "inProgress": "În Desfășurare",
@@ -799,7 +810,8 @@
     "loginFailed": "Autentificarea a eșuat. Te rugăm să încerci din nou.",
     "generalError": "A apărut o eroare. Te rugăm să încerci din nou.",
     "viewNameRequired": "Numele vizualizării este necesar",
-    "viewSaveFailed": "Salvarea vizualizării a eșuat. Te rugăm să încerci din nou."
+    "viewSaveFailed": "Salvarea vizualizării a eșuat. Te rugăm să încerci din nou.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Căsuța de primire",
@@ -1022,7 +1034,9 @@
     "duplicate": "Duplică",
     "duplicated": "Sarcină",
     "duplicatedSuccessfully": "duplicată cu succes!",
-    "duplicateError": "Nu s-a putut duplica sarcina"
+    "duplicateError": "Nu s-a putut duplica sarcina",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Se încarcă proiectele...",

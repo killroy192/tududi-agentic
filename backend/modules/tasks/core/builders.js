@@ -1,5 +1,5 @@
 const { Task } = require('../../../models');
-const { parsePriority, parseStatus } = require('./parsers');
+const { parsePriority, parseStatus, parseSize } = require('./parsers');
 const {
     processDueDateForStorage,
     processDeferUntilForStorage,
@@ -166,6 +166,11 @@ function buildTaskAttributes(body, userId, timezone, isUpdate = false) {
         completion_based: body.completion_based || false,
     };
 
+    // Omitted size stays unset (NULL). Explicit null clears. Invalid throws.
+    if (body.size !== undefined) {
+        attrs.size = parseSize(body.size);
+    }
+
     if (!isUpdate) {
         attrs.user_id = userId;
     }
@@ -270,6 +275,11 @@ function buildUpdateAttributes(body, task, timezone) {
 
     if (body.involves !== undefined) {
         attrs.involves = Array.isArray(body.involves) ? body.involves : [];
+    }
+
+    // Omitted size leaves existing unchanged. Explicit null clears. Invalid throws.
+    if (body.size !== undefined) {
+        attrs.size = parseSize(body.size);
     }
 
     return attrs;

@@ -23,6 +23,8 @@ interface GroupedTaskListProps {
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     showCompletedTasks?: boolean;
     searchQuery?: string;
+    showSizeChip?: boolean;
+    onSizeChange?: (taskUid: string, size: number | null) => void;
 }
 
 interface TaskGroup {
@@ -50,6 +52,8 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
     onToggleToday,
     showCompletedTasks = false,
     searchQuery = '',
+    showSizeChip = true,
+    onSizeChange,
 }) => {
     const { t } = useTranslation();
 
@@ -365,6 +369,12 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                             showCompletedTasks={
                                                                 showCompletedTasks
                                                             }
+                                                            showSizeChip={
+                                                                showSizeChip
+                                                            }
+                                                            onSizeChange={
+                                                                onSizeChange
+                                                            }
                                                         />
                                                     </div>
                                                 ))}
@@ -451,6 +461,8 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                               projects={projects}
                                               hideProjectName={hideProjectName}
                                               onToggleToday={onToggleToday}
+                                              showSizeChip={showSizeChip}
+                                              onSizeChange={onSizeChange}
                                           />
                                       </div>
                                   ))}
@@ -471,6 +483,8 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                               projects={projects}
                               hideProjectName={hideProjectName}
                               onToggleToday={onToggleToday}
+                              showSizeChip={showSizeChip}
+                              onSizeChange={onSizeChange}
                           />
                       </div>
                   ))}
@@ -503,6 +517,8 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                             projects={projects}
                                             hideProjectName={hideProjectName}
                                             onToggleToday={onToggleToday}
+                                            showSizeChip={showSizeChip}
+                                            onSizeChange={onSizeChange}
                                         />
                                     </div>
                                 </div>
@@ -585,6 +601,8 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                     hideProjectName
                                                 }
                                                 onToggleToday={onToggleToday}
+                                                showSizeChip={showSizeChip}
+                                                onSizeChange={onSizeChange}
                                             />
                                         </div>
                                     ))}

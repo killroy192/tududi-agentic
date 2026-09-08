@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Тип повторення змінено",
       "recurrence_weekday_changed": "Змінено день тижня повторення",
       "recurrence_month_day_changed": "Змінено день місяця повторення",
-      "recurrence_week_of_month_changed": "Змінено тиждень місяця повторення"
+      "recurrence_week_of_month_changed": "Змінено тиждень місяця повторення",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Щойно",
     "minutesAgo": "{{minutes}}м тому",
@@ -472,7 +474,8 @@
     "loginFailed": "Не вдалося увійти. Будь ласка, спробуйте ще раз.",
     "generalError": "Сталася помилка. Будь ласка, спробуйте ще раз.",
     "viewNameRequired": "Назва перегляду є обов'язковою",
-    "viewSaveFailed": "Не вдалося зберегти перегляд. Будь ласка, спробуйте ще раз."
+    "viewSaveFailed": "Не вдалося зберегти перегляд. Будь ласка, спробуйте ще раз.",
+    "permissionDenied": "Forbidden"
   },
   "success": {
     "noteUpdated": "Нотатку успішно оновлено!",
@@ -1036,7 +1039,9 @@
     "duplicate": "Дублікувати",
     "duplicated": "Завдання",
     "duplicatedSuccessfully": "успішно продубльовано!",
-    "duplicateError": "Не вдалося продублювати завдання"
+    "duplicateError": "Не вдалося продублювати завдання",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "calendar": {
     "month": "Місяць",
@@ -1153,6 +1158,15 @@
     "medium": "Середній",
     "high": "Високий",
     "none": "Немає"
+  },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
   },
   "status": {
     "notStarted": "Не розпочато",

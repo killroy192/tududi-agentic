@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Тип повторения изменен",
       "recurrence_weekday_changed": "Изменен день недели повторения",
       "recurrence_month_day_changed": "Изменен день месяца повторения",
-      "recurrence_week_of_month_changed": "Изменена неделя месяца повторения"
+      "recurrence_week_of_month_changed": "Изменена неделя месяца повторения",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Только что",
     "minutesAgo": "{{minutes}}м назад",
@@ -741,6 +743,15 @@
     "high": "Высокий",
     "none": "Нет"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Не начато",
     "inProgress": "В процессе",
@@ -799,7 +810,8 @@
     "viewNameRequired": "Название представления обязательно",
     "viewSaveFailed": "Не удалось сохранить представление. Пожалуйста, попробуйте снова.",
     "loginFailed": "Ошибка входа. Пожалуйста, попробуйте снова.",
-    "generalError": "Произошла ошибка. Пожалуйста, попробуйте снова."
+    "generalError": "Произошла ошибка. Пожалуйста, попробуйте снова.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Входящие",
@@ -1022,7 +1034,9 @@
     "duplicate": "Дублировать",
     "duplicated": "Задача",
     "duplicatedSuccessfully": "успешно продублирована!",
-    "duplicateError": "Не удалось продублировать задачу"
+    "duplicateError": "Не удалось продублировать задачу",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Загрузка проектов...",

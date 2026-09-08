@@ -169,6 +169,8 @@ interface TaskItemProps {
     hideStatusControl?: boolean;
     isKanbanView?: boolean;
     showSuggestionChips?: boolean;
+    showSizeChip?: boolean;
+    onSizeChange?: (taskUid: string, size: number | null) => void;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
@@ -185,6 +187,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
     hideStatusControl = false,
     isKanbanView = false,
     showSuggestionChips = false,
+    showSizeChip = false,
+    onSizeChange,
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -452,6 +456,12 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     onMenuOpenChange={setIsStatusMenuOpen}
                     hideStatusControl={hideStatusControl}
                     isKanbanView={isKanbanView}
+                    showSizeChip={showSizeChip}
+                    onSizeChange={(size) => {
+                        if (task.uid) {
+                            onSizeChange?.(task.uid, size);
+                        }
+                    }}
                 />
 
                 {/* Progress bar at bottom of parent task */}

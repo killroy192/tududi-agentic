@@ -17,13 +17,16 @@ import { Task, PriorityType } from '../../../entities/Task';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
+import SizeControl from '../SizeControl';
 import { getStatusValue } from '../../../constants/taskStatus';
+import { SizeWireValue } from '../../../utils/taskSize';
 
 interface TaskDetailsHeaderProps {
     task: Task;
     onTitleUpdate: (newTitle: string) => Promise<void>;
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
+    onSizeUpdate?: (newSize: SizeWireValue | null) => Promise<void>;
     onDelete: () => void;
     onDuplicate: () => void;
     getProjectLink?: (project: any) => string;
@@ -47,6 +50,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onTitleUpdate,
     onStatusUpdate,
     onPriorityUpdate,
+    onSizeUpdate,
     onDelete,
     onDuplicate,
     getProjectLink,
@@ -487,6 +491,16 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        <SizeControl
+                                            taskUid={task.uid}
+                                            size={task.size}
+                                            variant="field"
+                                            className="flex-shrink-0"
+                                            onSizeChange={(nextSize) => {
+                                                void onSizeUpdate?.(nextSize);
+                                            }}
+                                        />
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

@@ -16,6 +16,8 @@ interface TaskListProps {
     isInCompletedSection?: boolean;
     isUpcomingView?: boolean;
     showSuggestionChips?: boolean;
+    showSizeChip?: boolean;
+    onSizeChange?: (taskUid: string, size: number | null) => void;
 }
 
 const TaskList: React.FC<TaskListProps> = ({
@@ -30,6 +32,8 @@ const TaskList: React.FC<TaskListProps> = ({
     isInCompletedSection = false,
     isUpcomingView = false,
     showSuggestionChips = false,
+    showSizeChip = true,
+    onSizeChange,
 }) => {
     // Conditionally filter tasks based on showCompletedTasks prop
     const filteredTasks = showCompletedTasks
@@ -66,6 +70,8 @@ const TaskList: React.FC<TaskListProps> = ({
                             isUpcomingView={isUpcomingView}
                             showCompletedTasks={showCompletedTasks}
                             showSuggestionChips={showSuggestionChips}
+                            showSizeChip={showSizeChip}
+                            onSizeChange={onSizeChange}
                         />
                     </div>
                 ))

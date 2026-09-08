@@ -213,6 +213,7 @@
       "taskCreated": "Task created",
       "statusChanged": "Status changed",
       "priorityChanged": "Priority changed",
+      "sizeChanged": "Size changed",
       "dueDateChanged": "Due date changed",
       "deferUntilChanged": "Defer date changed",
       "recurrenceEndDateChanged": "Recurrence end date changed",
@@ -232,6 +233,7 @@
       "todayFlagChanged": "Today Flag Changed",
       "status": "Status",
       "priority": "Priority",
+      "size": "Size",
       "dueDate": "Due date",
       "deferUntil": "Defer until",
       "recurrenceEndDate": "Recurrence end date",
@@ -734,6 +736,15 @@
     "medium": "Medium",
     "high": "High"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Not Started",
     "inProgress": "In Progress",
@@ -771,6 +782,7 @@
     "maxLength": "Maximum length is {{length}} characters",
     "serverError": "Server error, please try again later",
     "networkError": "Network error, please check your connection",
+    "permissionDenied": "Forbidden",
     "somethingWentWrong": "Something went wrong, please try again",
     "taskFetch": "Failed to fetch tasks.",
     "projectFetch": "Failed to fetch projects.",
@@ -987,6 +999,8 @@
     "projectCleared": "Project cleared successfully",
     "projectClearError": "Failed to clear project",
     "priorityUpdated": "Priority updated successfully",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size",
     "priorityUpdateError": "Failed to update priority",
     "overview": "Overview",
     "schedule": "Schedule",

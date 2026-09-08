@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Toistuvuustyyppi muuttunut",
       "recurrence_weekday_changed": "Toistopäivä muuttunut",
       "recurrence_month_day_changed": "Toistokuukauden päivä muuttunut",
-      "recurrence_week_of_month_changed": "Toistokuukauden viikko muuttunut"
+      "recurrence_week_of_month_changed": "Toistokuukauden viikko muuttunut",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Juuri nyt",
     "minutesAgo": "{{minutes}}m sitten",
@@ -741,6 +743,15 @@
     "high": "Korkea",
     "none": "Ei mitään"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Ei aloitettu",
     "inProgress": "Käynnissä",
@@ -799,7 +810,8 @@
     "loginFailed": "Kirjautuminen epäonnistui. Yritä uudelleen.",
     "generalError": "Tapahtui virhe. Yritä uudelleen.",
     "viewNameRequired": "Näkymän nimi on pakollinen",
-    "viewSaveFailed": "Näkymän tallentaminen epäonnistui. Yritä uudelleen."
+    "viewSaveFailed": "Näkymän tallentaminen epäonnistui. Yritä uudelleen.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Saapuneet",
@@ -1022,7 +1034,9 @@
     "duplicate": "Monista",
     "duplicated": "Tehtävä",
     "duplicatedSuccessfully": "monistettu!",
-    "duplicateError": "Tehtävän monistaminen epäonnistui"
+    "duplicateError": "Tehtävän monistaminen epäonnistui",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Ladataan projekteja...",

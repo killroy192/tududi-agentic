@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "繰り返しの種類が変更されました",
       "recurrence_weekday_changed": "繰り返し曜日が変更されました",
       "recurrence_month_day_changed": "繰り返し月日が変更されました",
-      "recurrence_week_of_month_changed": "繰り返し月の週が変更されました"
+      "recurrence_week_of_month_changed": "繰り返し月の週が変更されました",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "たった今",
     "minutesAgo": "{{minutes}}分前",
@@ -747,7 +749,8 @@
     "loginFailed": "ログインに失敗しました。再試行してください。",
     "generalError": "エラーが発生しました。再試行してください。",
     "viewNameRequired": "ビュー名は必須です",
-    "viewSaveFailed": "ビューの保存に失敗しました。もう一度お試しください。"
+    "viewSaveFailed": "ビューの保存に失敗しました。もう一度お試しください。",
+    "permissionDenied": "Forbidden"
   },
   "success": {
     "noteUpdated": "ノートが正常に更新されました！",
@@ -1148,7 +1151,9 @@
     "duplicate": "複製",
     "duplicated": "タスク",
     "duplicatedSuccessfully": "を複製しました！",
-    "duplicateError": "タスクの複製に失敗しました"
+    "duplicateError": "タスクの複製に失敗しました",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "calendar": {
     "month": "月",
@@ -1216,6 +1221,15 @@
     "medium": "中",
     "high": "高",
     "none": "なし"
+  },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
   },
   "status": {
     "notStarted": "未開始",

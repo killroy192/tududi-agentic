@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Jenis perulangan diubah",
       "recurrence_weekday_changed": "Hari ulang tahun berubah",
       "recurrence_month_day_changed": "Hari bulan ulang tahun berubah",
-      "recurrence_week_of_month_changed": "Minggu bulan ulang tahun berubah"
+      "recurrence_week_of_month_changed": "Minggu bulan ulang tahun berubah",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Baru saja",
     "minutesAgo": "{{minutes}}m yang lalu",
@@ -741,6 +743,15 @@
     "high": "Tinggi",
     "none": "Tidak ada"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Belum Dimulai",
     "inProgress": "Dalam Proses",
@@ -799,7 +810,8 @@
     "loginFailed": "Gagal masuk. Silakan coba lagi.",
     "generalError": "Terjadi kesalahan. Silakan coba lagi.",
     "viewNameRequired": "Nama tampilan diperlukan",
-    "viewSaveFailed": "Gagal menyimpan tampilan. Silakan coba lagi."
+    "viewSaveFailed": "Gagal menyimpan tampilan. Silakan coba lagi.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Kotak Masuk",
@@ -1022,7 +1034,9 @@
     "duplicate": "Duplikat",
     "duplicated": "Tugas",
     "duplicatedSuccessfully": "berhasil diduplikasi!",
-    "duplicateError": "Gagal menduplikasi tugas"
+    "duplicateError": "Gagal menduplikasi tugas",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Memuat proyek...",

@@ -1,11 +1,13 @@
 const { logError } = require('../../../services/logService');
 const { logTaskUpdate, logEvent } = require('../taskEventService');
+const { parseSize, InvalidSizeError } = require('../core/parsers');
 
 function captureOldValues(task) {
     return {
         name: task.name,
         status: task.status,
         priority: task.priority,
+        size: task.size,
         due_date: task.due_date,
         defer_until: task.defer_until,
         project_id: task.project_id,
@@ -52,6 +54,30 @@ async function logTaskChanges(task, oldValues, reqBody, tagsData, userId) {
                 };
             }
         });
+
+        // Size: normalise inbound before compare so string/int forms don't fabricate events
+        if (reqBody.size !== undefined) {
+            let normalisedSize;
+            try {
+                normalisedSize = parseSize(reqBody.size);
+            } catch (error) {
+                if (!(error instanceof InvalidSizeError)) {
+                    throw error;
+                }
+                // Invalid values are rejected by the route before update; skip logging
+                normalisedSize = undefined;
+            }
+
+            if (
+                normalisedSize !== undefined &&
+                normalisedSize !== oldValues.size
+            ) {
+                changes.size = {
+                    oldValue: oldValues.size,
+                    newValue: normalisedSize,
+                };
+            }
+        }
 
         if (reqBody.due_date !== undefined) {
             const oldDateStr = oldValues.due_date

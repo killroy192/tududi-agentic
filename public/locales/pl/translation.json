@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Zmiana typu powtarzalności",
       "recurrence_weekday_changed": "Zmieniono dzień tygodnia powtarzania",
       "recurrence_month_day_changed": "Zmieniono dzień miesiąca powtarzania",
-      "recurrence_week_of_month_changed": "Zmieniono tydzień miesiąca powtarzania"
+      "recurrence_week_of_month_changed": "Zmieniono tydzień miesiąca powtarzania",
+      "sizeChanged": "Size changed",
+      "size": "Size"
     },
     "justNow": "Właśnie teraz",
     "minutesAgo": "{{minutes}}m temu",
@@ -741,6 +743,15 @@
     "high": "Wysoki",
     "none": "Brak"
   },
+  "size": {
+    "label": "Size",
+    "labelWithValue": "Size: {{value}}",
+    "none": "None",
+    "s": "S",
+    "m": "M",
+    "l": "L",
+    "xl": "XL"
+  },
   "status": {
     "notStarted": "Nie rozpoczęto",
     "inProgress": "W trakcie",
@@ -799,7 +810,8 @@
     "loginFailed": "Logowanie nie powiodło się. Proszę spróbować ponownie.",
     "generalError": "Wystąpił błąd. Proszę spróbować ponownie.",
     "viewNameRequired": "Nazwa widoku jest wymagana",
-    "viewSaveFailed": "Nie udało się zapisać widoku. Proszę spróbować ponownie."
+    "viewSaveFailed": "Nie udało się zapisać widoku. Proszę spróbować ponownie.",
+    "permissionDenied": "Forbidden"
   },
   "inbox": {
     "title": "Skrzynka odbiorcza",
@@ -1022,7 +1034,9 @@
     "duplicate": "Duplikuj",
     "duplicated": "Zadanie",
     "duplicatedSuccessfully": "pomyślnie zduplikowane!",
-    "duplicateError": "Nie udało się zduplikować zadania"
+    "duplicateError": "Nie udało się zduplikować zadania",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Ładowanie projektów...",

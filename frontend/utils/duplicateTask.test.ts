@@ -127,6 +127,19 @@ describe('buildDuplicateTaskPayload', () => {
         expect(payload.updated_at).toBeUndefined();
     });
 
+    it('copies size when present', () => {
+        const withSize = buildDuplicateTaskPayload(baseTask({ size: 3 }));
+        expect(withSize.size).toBe(3);
+
+        const withoutSize = buildDuplicateTaskPayload(
+            baseTask({ size: undefined })
+        );
+        expect(withoutSize.size).toBeUndefined();
+
+        const cleared = buildDuplicateTaskPayload(baseTask({ size: null }));
+        expect(cleared.size).toBeUndefined();
+    });
+
     it('falls back to project_id and area_id when uids are missing', () => {
         const payload = buildDuplicateTaskPayload(
             baseTask({

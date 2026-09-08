@@ -148,6 +148,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: integer
+ *                 enum: [1, 2, 3, 4]
+ *                 nullable: true
+ *                 description: Task effort size (1=S, 2=M, 3=L, 4=XL). Null clears/unset.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]
@@ -271,6 +276,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: integer
+ *                 enum: [1, 2, 3, 4]
+ *                 nullable: true
+ *                 description: Task effort size (1=S, 2=M, 3=L, 4=XL). Null clears/unset.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]
