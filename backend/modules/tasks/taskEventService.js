@@ -2,7 +2,7 @@ const { TaskEvent, sequelize } = require('../../models');
 
 // Helper function to create value object
 const createValueObject = (fieldName, value) =>
-    value ? { [fieldName || 'value']: value } : null;
+    value === undefined ? null : { [fieldName || 'value']: value };
 
 /**
  * Log a task event

@@ -238,7 +238,9 @@
       "recurrenceTypeChanged": "Vrsta ponavljanja spremenjena",
       "recurrence_weekday_changed": "Spremenjen dan ponavljanja",
       "recurrence_month_day_changed": "Spremenjen dan v mesecu ponavljanja",
-      "recurrence_week_of_month_changed": "Spremenjena teden v mesecu ponavljanja"
+      "recurrence_week_of_month_changed": "Spremenjena teden v mesecu ponavljanja",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     }
   },
   "profile": {
@@ -799,7 +801,8 @@
     "loginFailed": "Prijava ni uspela. Poskusite znova.",
     "generalError": "Prišlo je do napake. Poskusite znova.",
     "viewNameRequired": "Ime pogleda je obvezno",
-    "viewSaveFailed": "Shranjevanje pogleda ni uspelo. Poskusite znova."
+    "viewSaveFailed": "Shranjevanje pogleda ni uspelo. Poskusite znova.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Prejeto",
@@ -1022,7 +1025,9 @@
     "duplicate": "Podvoji",
     "duplicated": "Opravilo",
     "duplicatedSuccessfully": "uspešno podvojeno!",
-    "duplicateError": "Podvajanje opravila ni uspelo"
+    "duplicateError": "Podvajanje opravila ni uspelo",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Nalagam projekte...",
@@ -1642,5 +1647,12 @@
     "statDone": "Končano",
     "statActive": "Aktivno",
     "statOverdue": "Zapadlo"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

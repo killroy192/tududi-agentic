@@ -24,6 +24,7 @@ import NoteModal from '../Note/NoteModal';
 import { useStore } from '../../store/useStore';
 import { Project } from '../../entities/Project';
 import { Task } from '../../entities/Task';
+import { SizeValue, sizeToApiValue } from '../../constants/taskSize';
 import { Note } from '../../entities/Note';
 import {
     fetchProjectBySlug,
@@ -364,6 +365,15 @@ const ProjectDetails: React.FC = () => {
             );
         }
     };
+
+    const handleTaskSizeChange = (task: Task, size: SizeValue) => {
+        setTasks((prevTasks) =>
+            prevTasks.map((t) =>
+                t.id === task.id ? { ...t, size: sizeToApiValue(size) } : t
+            )
+        );
+    };
+
 
     const handleTaskDelete = async (taskUid: string | undefined) => {
         if (!taskUid) return;
@@ -1067,6 +1077,7 @@ const ProjectDetails: React.FC = () => {
                                             }
                                             onTaskCreate={handleTaskCreate}
                                             onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
                                             }

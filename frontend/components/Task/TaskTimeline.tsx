@@ -5,6 +5,7 @@ import {
     getTaskTimeline,
     getEventTypeLabel,
     getPriorityLabel,
+    getSizeLabel,
 } from '../../utils/taskEventService';
 import {
     ClockIcon,
@@ -99,6 +100,18 @@ const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskUid, refreshKey }) => {
                     return `${t('timeline.events.priority')}: ${getPriorityLabel(oldPriority)} → ${getPriorityLabel(newPriority)}`;
                 }
                 return t('timeline.events.priorityChanged');
+            }
+            case 'size_changed': {
+                const oldSize = old_value?.size;
+                const newSize = new_value?.size;
+                if (oldSize !== undefined || newSize !== undefined) {
+                    const formatSize = (size: number | null | undefined) =>
+                        size === null || size === undefined
+                            ? t('size.none', 'None')
+                            : getSizeLabel(size);
+                    return `${t('timeline.events.size', 'Size')}: ${formatSize(oldSize)} → ${formatSize(newSize)}`;
+                }
+                return t('timeline.events.sizeChanged', 'Size changed');
             }
             case 'due_date_changed': {
                 const oldDate = old_value?.due_date;

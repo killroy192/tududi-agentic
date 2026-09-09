@@ -233,6 +233,212 @@ describe('Tasks Routes', () => {
         });
     });
 
+    describe('Task size', () => {
+        it('should create without size as null', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'No size task',
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.body.size).toBeNull();
+        });
+
+        it('should create with integer size and return stored integer', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Sized task',
+                size: 3,
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.body.size).toBe(3);
+        });
+
+        it('should create with string size and return stored integer', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'String size task',
+                size: 'M',
+            });
+
+            expect(response.status).toBe(201);
+            expect(response.body.size).toBe(2);
+        });
+
+        it('should reject invalid size on create with size in error', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Bad size',
+                size: 'foo',
+            });
+
+            expect(response.status).toBe(400);
+            const errorText = JSON.stringify(response.body);
+            expect(errorText).toMatch(/size/i);
+        });
+
+        it('should reject size 0 on create', async () => {
+            const response = await agent.post('/api/task').send({
+                name: 'Zero size',
+                size: 0,
+            });
+
+            expect(response.status).toBe(400);
+            expect(JSON.stringify(response.body)).toMatch(/size/i);
+        });
+
+        it('should update size with string or integer', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'Update size',
+                size: 1,
+            });
+
+            const asString = await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 'L' });
+            expect(asString.status).toBe(200);
+            expect(asString.body.size).toBe(3);
+
+            const asInt = await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 4 });
+            expect(asInt.status).toBe(200);
+            expect(asInt.body.size).toBe(4);
+        });
+
+        it('should leave size unchanged when omitted from update', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'Omit size',
+                size: 2,
+                priority: 1,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ name: 'Renamed only' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe(2);
+            expect(response.body.name).toBe('Renamed only');
+        });
+
+        it('should clear size with explicit null', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'Clear size',
+                size: 2,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: null });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBeNull();
+        });
+
+        it('should reject invalid size on update naming the field', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'Invalid update size',
+                size: 1,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 5 });
+
+            expect(response.status).toBe(400);
+            expect(JSON.stringify(response.body)).toMatch(/size/i);
+
+            const stored = await Task.findByPk(created.body.id);
+            expect(stored.size).toBe(1);
+        });
+
+        it('should not change priority on size-only update', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'Size only',
+                size: 1,
+                priority: 2,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 3 });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe(3);
+            expect(response.body.priority).toBe(2);
+        });
+
+        it('should record size transitions in the activity timeline', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'Timeline size',
+            });
+            expect(created.body.size).toBeNull();
+
+            await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 'S' });
+
+            let timeline = await agent.get(
+                `/api/task/${created.body.uid}/timeline`
+            );
+            expect(timeline.status).toBe(200);
+            const unsetToS = timeline.body.find(
+                (e) => e.event_type === 'size_changed'
+            );
+            expect(unsetToS).toBeDefined();
+            expect(unsetToS.old_value).toEqual({ size: null });
+            expect(unsetToS.new_value).toEqual({ size: 1 });
+
+            await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 4 });
+
+            timeline = await agent.get(
+                `/api/task/${created.body.uid}/timeline`
+            );
+            const sToXl = timeline.body.filter(
+                (e) => e.event_type === 'size_changed'
+            );
+            expect(sToXl.length).toBeGreaterThanOrEqual(2);
+            expect(sToXl[sToXl.length - 1].old_value).toEqual({ size: 1 });
+            expect(sToXl[sToXl.length - 1].new_value).toEqual({ size: 4 });
+
+            await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: null });
+
+            timeline = await agent.get(
+                `/api/task/${created.body.uid}/timeline`
+            );
+            const xlToUnset = timeline.body.filter(
+                (e) => e.event_type === 'size_changed'
+            );
+            expect(xlToUnset[xlToUnset.length - 1].old_value).toEqual({
+                size: 4,
+            });
+            expect(xlToUnset[xlToUnset.length - 1].new_value).toEqual({
+                size: null,
+            });
+        });
+
+        it('should not log size change when string matches stored integer', async () => {
+            const created = await agent.post('/api/task').send({
+                name: 'No-op size log',
+                size: 2,
+            });
+
+            await agent
+                .patch(`/api/task/${created.body.uid}`)
+                .send({ size: 'M' });
+
+            const timeline = await agent.get(
+                `/api/task/${created.body.uid}/timeline`
+            );
+            const sizeEvents = timeline.body.filter(
+                (e) => e.event_type === 'size_changed'
+            );
+            expect(sizeEvents).toHaveLength(0);
+        });
+    });
+
     describe('DELETE /api/task/:id', () => {
         let task;
 

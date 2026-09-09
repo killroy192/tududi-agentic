@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Herhalings type gewijzigd",
       "recurrence_weekday_changed": "Herhalingsweekdag gewijzigd",
       "recurrence_month_day_changed": "Herhalingsmaanddag gewijzigd",
-      "recurrence_week_of_month_changed": "Herhalingsweek van de maand gewijzigd"
+      "recurrence_week_of_month_changed": "Herhalingsweek van de maand gewijzigd",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Net nu",
     "minutesAgo": "{{minutes}}m geleden",
@@ -799,7 +801,8 @@
     "loginFailed": "Inloggen mislukt. Probeer het opnieuw.",
     "generalError": "Er is een fout opgetreden. Probeer het opnieuw.",
     "viewNameRequired": "Bekijknaam is vereist",
-    "viewSaveFailed": "Opslaan van de weergave is mislukt. Probeer het opnieuw."
+    "viewSaveFailed": "Opslaan van de weergave is mislukt. Probeer het opnieuw.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Inbox",
@@ -1022,7 +1025,9 @@
     "duplicate": "Dupliceren",
     "duplicated": "Taak",
     "duplicatedSuccessfully": "succesvol gedupliceerd!",
-    "duplicateError": "Taak dupliceren mislukt"
+    "duplicateError": "Taak dupliceren mislukt",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Projecten laden...",
@@ -1642,5 +1647,12 @@
     "statDone": "Voltooid",
     "statActive": "Actief",
     "statOverdue": "Te laat"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

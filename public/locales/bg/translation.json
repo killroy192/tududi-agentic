@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Променен е типът повторяемост",
       "recurrence_weekday_changed": "Променен ден от седмицата на повторението",
       "recurrence_month_day_changed": "Променен ден от месеца на повторението",
-      "recurrence_week_of_month_changed": "Променена седмица от месеца на повторението"
+      "recurrence_week_of_month_changed": "Променена седмица от месеца на повторението",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Току-що",
     "minutesAgo": "{{minutes}}м. назад",
@@ -799,7 +801,8 @@
     "loginFailed": "Входът не успя. Моля, опитайте отново.",
     "generalError": "Възникна грешка. Моля, опитайте отново.",
     "viewNameRequired": "Името на изгледа е задължително",
-    "viewSaveFailed": "Неуспешно запазване на изгледа. Моля, опитайте отново."
+    "viewSaveFailed": "Неуспешно запазване на изгледа. Моля, опитайте отново.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Входяща поща",
@@ -1022,7 +1025,9 @@
     "duplicate": "Дублирай",
     "duplicated": "Задача",
     "duplicatedSuccessfully": "дублирана успешно!",
-    "duplicateError": "Неуспешно дублиране на задачата"
+    "duplicateError": "Неуспешно дублиране на задачата",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Зареждане на проекти...",
@@ -1642,5 +1647,12 @@
     "statDone": "Завършено",
     "statActive": "Активно",
     "statOverdue": "Просрочено"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

@@ -1,11 +1,13 @@
 const { logError } = require('../../../services/logService');
 const { logTaskUpdate, logEvent } = require('../taskEventService');
+const { Task } = require('../../../models');
 
 function captureOldValues(task) {
     return {
         name: task.name,
         status: task.status,
         priority: task.priority,
+        size: task.size,
         due_date: task.due_date,
         defer_until: task.defer_until,
         project_id: task.project_id,
@@ -21,6 +23,16 @@ function captureOldValues(task) {
             ? task.Tags.map((tag) => ({ id: tag.id, name: tag.name }))
             : [],
     };
+}
+
+function normalizeSizeForCompare(value) {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    if (typeof value === 'string') {
+        return Task.getSizeValue(value);
+    }
+    return value;
 }
 
 async function logTaskChanges(task, oldValues, reqBody, tagsData, userId) {
@@ -52,6 +64,17 @@ async function logTaskChanges(task, oldValues, reqBody, tagsData, userId) {
                 };
             }
         });
+
+        if (reqBody.size !== undefined) {
+            const oldNormalized = normalizeSizeForCompare(oldValues.size);
+            const newNormalized = normalizeSizeForCompare(reqBody.size);
+            if (oldNormalized !== newNormalized) {
+                changes.size = {
+                    oldValue: oldValues.size ?? null,
+                    newValue: newNormalized,
+                };
+            }
+        }
 
         if (reqBody.due_date !== undefined) {
             const oldDateStr = oldValues.due_date

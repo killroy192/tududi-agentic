@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { FolderIcon as FolderOutlineIcon } from '@heroicons/react/24/outline';
 import { Task } from '../../entities/Task';
+import { SizeValue, sizeToApiValue } from '../../constants/taskSize';
 import { Note } from '../../entities/Note';
 import { Project } from '../../entities/Project';
 import TaskList from '../Task/TaskList';
@@ -314,6 +315,15 @@ const TagDetails: React.FC = () => {
             console.error('Error updating task:', error);
         }
     };
+
+    const handleTaskSizeChange = (task: Task, size: SizeValue) => {
+        setTasks((prevTasks) =>
+            prevTasks.map((t) =>
+                t.id === task.id ? { ...t, size: sizeToApiValue(size) } : t
+            )
+        );
+    };
+
 
     const handleTaskDelete = async (taskUid: string) => {
         try {
@@ -730,6 +740,7 @@ const TagDetails: React.FC = () => {
                                 tasks={displayTasks}
                                 groupBy="project"
                                 onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle
                                 }
@@ -744,6 +755,7 @@ const TagDetails: React.FC = () => {
                             <TaskList
                                 tasks={displayTasks}
                                 onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle
                                 }

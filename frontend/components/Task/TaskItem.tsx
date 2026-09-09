@@ -158,6 +158,7 @@ import { getApiPath } from '../../config/paths';
 interface TaskItemProps {
     task: Task;
     onTaskUpdate: (task: Task) => Promise<void>;
+    onTaskSizeChange?: (task: Task, size: import('../../constants/taskSize').SizeValue) => void;
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
     projects: Project[];
@@ -174,6 +175,7 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({
     task,
     onTaskUpdate,
+    onTaskSizeChange,
     onTaskCompletionToggle,
     onTaskDelete,
     projects,
@@ -438,6 +440,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     hideProjectName={hideProjectName}
                     onToggleToday={onToggleToday}
                     onTaskUpdate={onTaskUpdate}
+                    onTaskSizeChange={(size) => onTaskSizeChange?.(task, size)}
                     isOverdue={isOverdue}
                     showSubtasks={showSubtasks}
                     hasSubtasks={shouldShowSubtasksIcon}

@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "重复类型已更改",
       "recurrence_weekday_changed": "重复的星期几已更改",
       "recurrence_month_day_changed": "重复的月份天数已更改",
-      "recurrence_week_of_month_changed": "重复的月份周数已更改"
+      "recurrence_week_of_month_changed": "重复的月份周数已更改",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "刚刚",
     "minutesAgo": "{{minutes}}分钟前",
@@ -799,7 +801,8 @@
     "loginFailed": "登录失败。请再试一次。",
     "generalError": "发生错误。请再试一次。",
     "viewNameRequired": "视图名称是必需的",
-    "viewSaveFailed": "保存视图失败。请再试一次。"
+    "viewSaveFailed": "保存视图失败。请再试一次。",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "收件箱",
@@ -1022,7 +1025,9 @@
     "duplicate": "复制",
     "duplicated": "任务",
     "duplicatedSuccessfully": "复制成功！",
-    "duplicateError": "复制任务失败"
+    "duplicateError": "复制任务失败",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "加载项目中...",
@@ -1642,5 +1647,12 @@
     "statDone": "完成",
     "statActive": "活跃",
     "statOverdue": "逾期"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

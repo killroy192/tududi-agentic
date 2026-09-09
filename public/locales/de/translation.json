@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Wiederholungstyp geändert",
       "recurrence_weekday_changed": "Wochentag der Wiederholung geändert",
       "recurrence_month_day_changed": "Tag des Monats der Wiederholung geändert",
-      "recurrence_week_of_month_changed": "Woche des Monats der Wiederholung geändert"
+      "recurrence_week_of_month_changed": "Woche des Monats der Wiederholung geändert",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Gerade eben",
     "minutesAgo": "{{minutes}}m her",
@@ -380,7 +382,8 @@
     "loginFailed": "Anmeldung fehlgeschlagen. Bitte erneut versuchen.",
     "generalError": "Ein Fehler ist aufgetreten. Bitte erneut versuchen.",
     "viewNameRequired": "Der Ansichtsname ist erforderlich",
-    "viewSaveFailed": "Speichern der Ansicht fehlgeschlagen. Bitte versuchen Sie es erneut."
+    "viewSaveFailed": "Speichern der Ansicht fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "success": {
     "noteUpdated": "Notiz erfolgreich aktualisiert!",
@@ -954,7 +957,9 @@
     "duplicate": "Duplizieren",
     "duplicated": "Aufgabe",
     "duplicatedSuccessfully": "erfolgreich dupliziert!",
-    "duplicateError": "Aufgabe konnte nicht dupliziert werden"
+    "duplicateError": "Aufgabe konnte nicht dupliziert werden",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "calendar": {
     "month": "Monat",
@@ -1651,5 +1656,12 @@
     "statDone": "Erledigt",
     "statActive": "Aktiv",
     "statOverdue": "Überfällig"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

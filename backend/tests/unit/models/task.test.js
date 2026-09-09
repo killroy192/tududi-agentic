@@ -71,12 +71,84 @@ describe('Task Model', () => {
             expect(Task.PRIORITY.HIGH).toBe(2);
         });
 
+        it('should have correct size constants', () => {
+            expect(Task.SIZE.S).toBe(1);
+            expect(Task.SIZE.M).toBe(2);
+            expect(Task.SIZE.L).toBe(3);
+            expect(Task.SIZE.XL).toBe(4);
+        });
+
         it('should have correct status constants', () => {
             expect(Task.STATUS.NOT_STARTED).toBe(0);
             expect(Task.STATUS.IN_PROGRESS).toBe(1);
             expect(Task.STATUS.DONE).toBe(2);
             expect(Task.STATUS.ARCHIVED).toBe(3);
             expect(Task.STATUS.WAITING).toBe(4);
+        });
+    });
+
+    describe('size converters', () => {
+        it('should map size values to names', () => {
+            expect(Task.getSizeName(Task.SIZE.S)).toBe('S');
+            expect(Task.getSizeName(Task.SIZE.M)).toBe('M');
+            expect(Task.getSizeName(Task.SIZE.L)).toBe('L');
+            expect(Task.getSizeName(Task.SIZE.XL)).toBe('XL');
+        });
+
+        it('should map size names to values', () => {
+            expect(Task.getSizeValue('S')).toBe(1);
+            expect(Task.getSizeValue('M')).toBe(2);
+            expect(Task.getSizeValue('L')).toBe(3);
+            expect(Task.getSizeValue('XL')).toBe(4);
+            expect(Task.getSizeValue('m')).toBe(2);
+        });
+
+        it('should reject unknown size values and names', () => {
+            expect(() => Task.getSizeName(0)).toThrow(/size/i);
+            expect(() => Task.getSizeName(5)).toThrow(/size/i);
+            expect(() => Task.getSizeValue('foo')).toThrow(/size/i);
+            expect(() => Task.getSizeValue('XS')).toThrow(/size/i);
+        });
+    });
+
+    describe('size field', () => {
+        it('should create without size as null', async () => {
+            const task = await Task.create({
+                name: 'Unset size task',
+                user_id: user.id,
+            });
+
+            await task.reload();
+            expect(task.size).toBeNull();
+        });
+
+        it('should accept size values 1-4', async () => {
+            for (const size of [1, 2, 3, 4]) {
+                const task = await Task.create({
+                    name: `Size ${size}`,
+                    user_id: user.id,
+                    size,
+                });
+                expect(task.size).toBe(size);
+            }
+        });
+
+        it('should reject size 0, 5, and invalid values', async () => {
+            await expect(
+                Task.create({
+                    name: 'Bad size 0',
+                    user_id: user.id,
+                    size: 0,
+                })
+            ).rejects.toThrow();
+
+            await expect(
+                Task.create({
+                    name: 'Bad size 5',
+                    user_id: user.id,
+                    size: 5,
+                })
+            ).rejects.toThrow();
         });
     });
 

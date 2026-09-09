@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Thay đổi loại tần suất",
       "recurrence_weekday_changed": "Ngày trong tuần lặp lại đã thay đổi",
       "recurrence_month_day_changed": "Ngày trong tháng lặp lại đã thay đổi",
-      "recurrence_week_of_month_changed": "Tuần trong tháng lặp lại đã thay đổi"
+      "recurrence_week_of_month_changed": "Tuần trong tháng lặp lại đã thay đổi",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Vừa xong",
     "minutesAgo": "{{minutes}} phút trước",
@@ -799,7 +801,8 @@
     "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
     "generalError": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "viewNameRequired": "Tên chế độ xem là bắt buộc",
-    "viewSaveFailed": "Lưu chế độ xem không thành công. Vui lòng thử lại."
+    "viewSaveFailed": "Lưu chế độ xem không thành công. Vui lòng thử lại.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Hộp thư đến",
@@ -1022,7 +1025,9 @@
     "duplicate": "Nhân bản",
     "duplicated": "Công việc",
     "duplicatedSuccessfully": "đã nhân bản thành công!",
-    "duplicateError": "Không thể nhân bản công việc"
+    "duplicateError": "Không thể nhân bản công việc",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Đang tải dự án...",
@@ -1642,5 +1647,12 @@
     "statDone": "Đã hoàn thành",
     "statActive": "Đang hoạt động",
     "statOverdue": "Quá hạn"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

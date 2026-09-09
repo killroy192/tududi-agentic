@@ -41,6 +41,7 @@ import {
     getTodayDateString,
 } from '../../utils/dateUtils';
 import { buildDuplicateTaskPayload } from '../../utils/duplicateTask';
+import { sizeToApiValue } from '../../constants/taskSize';
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -1268,6 +1269,26 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleSizeUpdate = async (size: any) => {
+        if (!task?.uid) return;
+        taskModifiedRef.current = true;
+        tasksStore.updateTaskInStore({
+            ...task,
+            size: sizeToApiValue(size) as any,
+        });
+    };
+
+    const handleSizeSaved = async () => {
+        if (!uid) return;
+        try {
+            const updatedTask = await fetchTaskByUid(uid);
+            tasksStore.updateTaskInStore(updatedTask);
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error refreshing task after size update:', error);
+        }
+    };
+
     if (loading) {
         return <LoadingScreen />;
     }
@@ -1307,6 +1328,8 @@ const TaskDetails: React.FC = () => {
                     onTitleUpdate={handleTitleUpdate}
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
+                    onSizeUpdate={handleSizeUpdate}
+                    onSizeSaved={handleSizeSaved}
                     onDelete={handleDeleteClick}
                     onDuplicate={handleDuplicate}
                     getProjectLink={getProjectLink}

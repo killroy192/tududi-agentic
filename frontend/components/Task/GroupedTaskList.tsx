@@ -15,6 +15,10 @@ interface GroupedTaskListProps {
     groupedTasks?: GroupedTasks | null;
     groupBy?: 'none' | 'project';
     onTaskUpdate: (task: Task) => Promise<void>;
+    onTaskSizeChange?: (
+        task: Task,
+        size: import('../../constants/taskSize').SizeValue
+    ) => void;
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskCreate?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
@@ -43,6 +47,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
     groupedTasks,
     groupBy = 'none',
     onTaskUpdate,
+    onTaskSizeChange,
     onTaskCompletionToggle,
     onTaskDelete,
     projects,
@@ -346,6 +351,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                             onTaskUpdate={
                                                                 onTaskUpdate
                                                             }
+                                                            onTaskSizeChange={onTaskSizeChange}
                                                             onTaskCompletionToggle={
                                                                 onTaskCompletionToggle
                                                             }
@@ -444,6 +450,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                           <TaskItem
                                               task={task}
                                               onTaskUpdate={onTaskUpdate}
+                                              onTaskSizeChange={onTaskSizeChange}
                                               onTaskCompletionToggle={
                                                   onTaskCompletionToggle
                                               }
@@ -466,6 +473,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                           <TaskItem
                               task={task}
                               onTaskUpdate={onTaskUpdate}
+                              onTaskSizeChange={onTaskSizeChange}
                               onTaskCompletionToggle={onTaskCompletionToggle}
                               onTaskDelete={onTaskDelete}
                               projects={projects}
@@ -496,6 +504,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                         <TaskItem
                                             task={group.template}
                                             onTaskUpdate={onTaskUpdate}
+                                            onTaskSizeChange={onTaskSizeChange}
                                             onTaskCompletionToggle={
                                                 onTaskCompletionToggle
                                             }
@@ -576,6 +585,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                             <TaskItem
                                                 task={instance}
                                                 onTaskUpdate={onTaskUpdate}
+                                                onTaskSizeChange={onTaskSizeChange}
                                                 onTaskCompletionToggle={
                                                     onTaskCompletionToggle
                                                 }

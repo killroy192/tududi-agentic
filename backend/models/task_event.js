@@ -56,6 +56,7 @@ module.exports = (sequelize) => {
                             'completion_based_changed',
                             'recurrence_end_date_changed',
                             'recurring_occurrence_completed',
+                            'size_changed',
                         ],
                     ],
                 },
@@ -70,7 +71,9 @@ module.exports = (sequelize) => {
                 set(value) {
                     this.setDataValue(
                         'old_value',
-                        value ? JSON.stringify(value) : null
+                        value === undefined || value === null
+                            ? null
+                            : JSON.stringify(value)
                     );
                 },
             },
@@ -84,7 +87,9 @@ module.exports = (sequelize) => {
                 set(value) {
                     this.setDataValue(
                         'new_value',
-                        value ? JSON.stringify(value) : null
+                        value === undefined || value === null
+                            ? null
+                            : JSON.stringify(value)
                     );
                 },
             },
@@ -112,6 +117,7 @@ module.exports = (sequelize) => {
                             'recurrence_week_of_month',
                             'completion_based',
                             'recurrence',
+                            'size',
                         ],
                     ],
                 },

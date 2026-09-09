@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "Tipo di ricorrenza modificato",
       "recurrence_weekday_changed": "Giorno della settimana di ricorrenza cambiato",
       "recurrence_month_day_changed": "Giorno del mese di ricorrenza cambiato",
-      "recurrence_week_of_month_changed": "Settimana del mese di ricorrenza cambiata"
+      "recurrence_week_of_month_changed": "Settimana del mese di ricorrenza cambiata",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Proprio adesso",
     "minutesAgo": "{{minutes}}m fa",
@@ -799,7 +801,8 @@
     "viewNameRequired": "Il nome della vista è obbligatorio",
     "viewSaveFailed": "Salvataggio della vista non riuscito. Riprova.",
     "loginFailed": "Accesso non riuscito. Per favore riprova.",
-    "generalError": "Si è verificato un errore. Per favore riprova."
+    "generalError": "Si è verificato un errore. Per favore riprova.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Inbox",
@@ -1022,7 +1025,9 @@
     "duplicate": "Duplica",
     "duplicated": "Attività",
     "duplicatedSuccessfully": "duplicata con successo!",
-    "duplicateError": "Impossibile duplicare l'attività"
+    "duplicateError": "Impossibile duplicare l'attività",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Caricamento progetti...",
@@ -1642,5 +1647,12 @@
     "statDone": "Fatto",
     "statActive": "Attivo",
     "statOverdue": "Scaduto"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

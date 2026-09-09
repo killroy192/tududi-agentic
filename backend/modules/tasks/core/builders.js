@@ -1,5 +1,5 @@
 const { Task } = require('../../../models');
-const { parsePriority, parseStatus } = require('./parsers');
+const { parsePriority, parseStatus, parseSize } = require('./parsers');
 const {
     processDueDateForStorage,
     processDeferUntilForStorage,
@@ -178,6 +178,12 @@ function buildTaskAttributes(body, userId, timezone, isUpdate = false) {
         attrs.involves = Array.isArray(body.involves) ? body.involves : [];
     }
 
+    if (body.size !== undefined) {
+        attrs.size = parseSize(body.size);
+    } else if (!isUpdate) {
+        attrs.size = null;
+    }
+
     return attrs;
 }
 
@@ -270,6 +276,10 @@ function buildUpdateAttributes(body, task, timezone) {
 
     if (body.involves !== undefined) {
         attrs.involves = Array.isArray(body.involves) ? body.involves : [];
+    }
+
+    if (body.size !== undefined) {
+        attrs.size = parseSize(body.size);
     }
 
     return attrs;

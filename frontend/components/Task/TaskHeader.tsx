@@ -16,6 +16,8 @@ import { Task } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
+import TaskSizeControl from '../Shared/TaskSizeControl';
+import { SizeValue } from '../../constants/taskSize';
 import { parseDateString, getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
 
 const tagColorStyle = (color?: string): React.CSSProperties | undefined => {
@@ -34,6 +36,7 @@ interface TaskHeaderProps {
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     onTaskUpdate?: (task: Task) => Promise<void>;
+    onTaskSizeChange?: (size: SizeValue) => void;
     isOverdue?: boolean;
     showSubtasks?: boolean;
     hasSubtasks?: boolean;
@@ -55,6 +58,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     hideProjectName = false,
     onToggleToday: _onToggleToday,
     onTaskUpdate,
+    onTaskSizeChange,
     showSubtasks,
     hasSubtasks,
     onSubtasksToggle,
@@ -174,6 +178,16 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         task.recurring_parent_id ||
         !!formattedDeferUntil;
 
+    const renderSizeControl = () =>
+        !isUpcomingView && !isKanbanView ? (
+            <TaskSizeControl
+                value={task.size}
+                taskUid={task.uid}
+                variant="chip"
+                onSizeUpdated={onTaskSizeChange}
+            />
+        ) : null;
+
     return (
         <div
             className={`${hasMetadata ? 'py-2' : 'py-3'} px-4 cursor-pointer group`}
@@ -195,7 +209,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {/* Full view (md and larger) */}
             <div className="hidden md:flex flex-col md:flex-row md:items-center md:relative">
                 <div
-                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? 'pr-56' : ''}`}
+                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? (!isKanbanView ? 'pr-72' : 'pr-56') : ''}`}
                 >
                     <div className="hidden">
                         <TaskPriorityIcon
@@ -414,16 +428,21 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         )}
                     </div>
                 </div>
-                {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
-                        <TaskStatusControl
-                            task={task}
-                            onToggleCompletion={onToggleCompletion}
-                            onTaskUpdate={onTaskUpdate}
-                            showMobileVariant={false}
-                            className=""
-                            onMenuOpenChange={onMenuOpenChange}
-                        />
+                {!isUpcomingView && !isKanbanView && (
+                    <div className="absolute end-0 top-1/2 -translate-y-1/2 flex items-center gap-2 z-[1]">
+                        {renderSizeControl()}
+                        {!task.habit_mode &&
+                            !hideStatusControl &&
+                            onToggleCompletion && (
+                                <TaskStatusControl
+                                    task={task}
+                                    onToggleCompletion={onToggleCompletion}
+                                    onTaskUpdate={onTaskUpdate}
+                                    showMobileVariant={false}
+                                    className=""
+                                    onMenuOpenChange={onMenuOpenChange}
+                                />
+                            )}
                     </div>
                 )}
             </div>
@@ -455,6 +474,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                 <span className="truncate flex-1">
                                     {task.original_name || task.name}
                                 </span>
+                                {renderSizeControl()}
                                 <SubtasksToggleButton />
                             </span>
                         </div>

@@ -1750,4 +1750,59 @@ describe('Recurring Tasks', () => {
             expect(dueDate.getTime()).not.toBeNaN();
         });
     });
+
+    describe('Size updates do not trigger template regeneration', () => {
+        it('should not delete future instances on size-only update', async () => {
+            const parentTask = await Task.create({
+                name: 'Recurring Parent',
+                user_id: user.id,
+                recurrence_type: 'daily',
+                recurrence_interval: 1,
+                due_date: new Date(),
+                status: Task.STATUS.NOT_STARTED,
+                priority: Task.PRIORITY.MEDIUM,
+            });
+
+            const futureDate1 = new Date();
+            futureDate1.setDate(futureDate1.getDate() + 7);
+            const futureDate2 = new Date();
+            futureDate2.setDate(futureDate2.getDate() + 14);
+
+            const future1 = await Task.create({
+                name: 'Future Instance 1',
+                user_id: user.id,
+                recurring_parent_id: parentTask.id,
+                due_date: futureDate1,
+                status: Task.STATUS.NOT_STARTED,
+            });
+
+            const future2 = await Task.create({
+                name: 'Future Instance 2',
+                user_id: user.id,
+                recurring_parent_id: parentTask.id,
+                due_date: futureDate2,
+                status: Task.STATUS.NOT_STARTED,
+            });
+
+            const response = await agent
+                .patch(`/api/task/${parentTask.uid}`)
+                .send({ size: 3 });
+
+            expect(response.status).toBe(200);
+            expect(response.body.size).toBe(3);
+
+            const stillFuture1 = await Task.findByPk(future1.id);
+            const stillFuture2 = await Task.findByPk(future2.id);
+            expect(stillFuture1).not.toBeNull();
+            expect(stillFuture2).not.toBeNull();
+            expect(stillFuture1.due_date.toISOString()).toBe(
+                future1.due_date.toISOString()
+            );
+            expect(stillFuture2.due_date.toISOString()).toBe(
+                future2.due_date.toISOString()
+            );
+            expect(stillFuture1.recurring_parent_id).toBe(parentTask.id);
+            expect(stillFuture2.recurring_parent_id).toBe(parentTask.id);
+        });
+    });
 });

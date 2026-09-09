@@ -22,6 +22,7 @@ import {
 import { getApiPath } from '../config/paths';
 import { getCsrfToken } from '../utils/csrfService';
 import { isTaskActive } from '../constants/taskStatus';
+import { SizeValue, sizeToApiValue } from '../constants/taskSize';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -416,6 +417,14 @@ const Tasks: React.FC = () => {
             console.error('Error updating task:', error);
             setError('Error updating task.');
         }
+    };
+
+    const handleTaskSizeChange = (task: Task, size: SizeValue) => {
+        setTasks((prevTasks) =>
+            prevTasks.map((t) =>
+                t.id === task.id ? { ...t, size: sizeToApiValue(size) } : t
+            )
+        );
     };
 
     const handleTaskCompletionToggle = (updatedTask: Task) => {
@@ -900,6 +909,7 @@ const Tasks: React.FC = () => {
                                             groupBy="none"
                                             onTaskCreate={handleTaskCreate}
                                             onTaskUpdate={handleTaskUpdate}
+                                            onTaskSizeChange={handleTaskSizeChange}
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
                                             }
@@ -948,6 +958,7 @@ const Tasks: React.FC = () => {
                                         groupBy={groupBy}
                                         onTaskCreate={handleTaskCreate}
                                         onTaskUpdate={handleTaskUpdate}
+                                            onTaskSizeChange={handleTaskSizeChange}
                                         onTaskCompletionToggle={
                                             handleTaskCompletionToggle
                                         }
@@ -963,6 +974,7 @@ const Tasks: React.FC = () => {
                                         tasks={displayTasks}
                                         onTaskCreate={handleTaskCreate}
                                         onTaskUpdate={handleTaskUpdate}
+                                            onTaskSizeChange={handleTaskSizeChange}
                                         onTaskCompletionToggle={
                                             handleTaskCompletionToggle
                                         }

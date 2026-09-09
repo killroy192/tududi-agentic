@@ -10,6 +10,7 @@ export interface Task {
     original_name?: string;
     status: StatusType | number;
     priority?: PriorityType | number;
+    size?: SizeType | number;
     due_date?: string;
     defer_until?: string;
     reminder_at?: string;
@@ -67,6 +68,7 @@ export type StatusType =
     | 'cancelled'
     | 'planned';
 export type PriorityType = 'low' | 'medium' | 'high' | null | undefined;
+export type SizeType = 'S' | 'M' | 'L' | 'XL' | null | undefined;
 export type RecurrenceType =
     | 'none'
     | 'daily'

@@ -5,11 +5,13 @@ import TaskList from './TaskList';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { sortTasksByPriorityDueDateProject } from '../../utils/taskSortUtils';
+import { SizeValue } from '../../constants/taskSize';
 
 interface TodayPlanProps {
     todayPlanTasks: Task[] | undefined;
     projects: Project[];
     onTaskUpdate: (task: Task) => Promise<void>;
+    onTaskSizeChange?: (task: Task, size: SizeValue) => void;
     onTaskDelete: (taskUid: string) => Promise<void>;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     onTaskCompletionToggle?: (task: Task) => void; // New prop
@@ -19,6 +21,7 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
     todayPlanTasks,
     projects,
     onTaskUpdate,
+    onTaskSizeChange,
     onTaskDelete,
     onToggleToday,
     onTaskCompletionToggle, // Destructure new prop
@@ -78,6 +81,7 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
             <TaskList
                 tasks={sortedTasks}
                 onTaskUpdate={onTaskUpdate}
+                onTaskSizeChange={onTaskSizeChange}
                 onTaskDelete={onTaskDelete}
                 projects={projects}
                 onToggleToday={onToggleToday}

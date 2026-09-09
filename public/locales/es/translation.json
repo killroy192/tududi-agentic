@@ -485,7 +485,8 @@
     "loginFailed": "Error de inicio de sesión. Por favor, inténtalo de nuevo.",
     "generalError": "Ocurrió un error. Por favor, inténtalo de nuevo.",
     "viewNameRequired": "Se requiere un nombre de vista",
-    "viewSaveFailed": "Error al guardar la vista. Por favor, inténtalo de nuevo."
+    "viewSaveFailed": "Error al guardar la vista. Por favor, inténtalo de nuevo.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "dropdown": {
     "createNew": "Crear Nuevo",
@@ -613,7 +614,9 @@
       "recurrenceTypeChanged": "Tipo de recurrencia cambiado",
       "recurrence_weekday_changed": "Día de la semana de recurrencia cambiado",
       "recurrence_month_day_changed": "Día del mes de recurrencia cambiado",
-      "recurrence_week_of_month_changed": "Semana del mes de recurrencia cambiada"
+      "recurrence_week_of_month_changed": "Semana del mes de recurrencia cambiada",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Justo ahora",
     "minutesAgo": "{{minutes}}m hace",
@@ -1005,7 +1008,9 @@
     "duplicate": "Duplicar",
     "duplicated": "Tarea",
     "duplicatedSuccessfully": "¡duplicada correctamente!",
-    "duplicateError": "Error al duplicar la tarea"
+    "duplicateError": "Error al duplicar la tarea",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "dateIndicators": {
     "today": "HOY",
@@ -1629,5 +1634,12 @@
     "statDone": "Hecho",
     "statActive": "Activo",
     "statOverdue": "Atrasado"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

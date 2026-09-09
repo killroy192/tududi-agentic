@@ -8,6 +8,7 @@ const baseTask = (overrides: Partial<Task> = {}): Task => ({
     status: 'done',
     completed_at: '2026-01-15T10:00:00.000Z',
     priority: 'high',
+    size: 'L',
     note: 'Include Q1 metrics',
     due_date: '2026-01-20',
     defer_until: '2026-01-18',
@@ -78,6 +79,7 @@ describe('buildDuplicateTaskPayload', () => {
 
         expect(payload.note).toBe('Include Q1 metrics');
         expect(payload.priority).toBe('high');
+        expect(payload.size).toBe('L');
         expect(payload.project_uid).toBe('proj-uid');
         expect(payload.area_uid).toBe('area-uid');
         expect(payload.tags).toEqual([{ name: 'work' }]);

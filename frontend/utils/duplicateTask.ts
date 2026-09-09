@@ -36,6 +36,10 @@ export const buildDuplicateTaskPayload = (source: Task): Task => {
         payload.priority = source.priority;
     }
 
+    if (source.size !== undefined && source.size !== null) {
+        payload.size = source.size;
+    }
+
     if (source.project_uid) {
         payload.project_uid = source.project_uid;
     } else if (source.project_id) {

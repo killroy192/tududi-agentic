@@ -41,6 +41,14 @@ module.exports = (sequelize) => {
                     max: 2,
                 },
             },
+            size: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                validate: {
+                    min: 1,
+                    max: 4,
+                },
+            },
             status: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
@@ -315,6 +323,13 @@ module.exports = (sequelize) => {
         HIGH: 2,
     };
 
+    Task.SIZE = {
+        S: 1,
+        M: 2,
+        L: 3,
+        XL: 4,
+    };
+
     Task.STATUS = {
         NOT_STARTED: 0,
         IN_PROGRESS: 1,
@@ -388,10 +403,30 @@ module.exports = (sequelize) => {
         return statuses[statusName] !== undefined ? statuses[statusName] : 0;
     };
 
+    const getSizeName = (sizeValue) => {
+        const sizes = { 1: 'S', 2: 'M', 3: 'L', 4: 'XL' };
+        if (sizes[sizeValue] === undefined) {
+            throw new Error('Invalid size value');
+        }
+        return sizes[sizeValue];
+    };
+
+    const getSizeValue = (sizeName) => {
+        const sizes = { S: 1, M: 2, L: 3, XL: 4 };
+        const normalized =
+            typeof sizeName === 'string' ? sizeName.toUpperCase() : sizeName;
+        if (sizes[normalized] === undefined) {
+            throw new Error('Invalid size value');
+        }
+        return sizes[normalized];
+    };
+
     Task.getPriorityName = getPriorityName;
     Task.getStatusName = getStatusName;
     Task.getPriorityValue = getPriorityValue;
     Task.getStatusValue = getStatusValue;
+    Task.getSizeName = getSizeName;
+    Task.getSizeValue = getSizeValue;
 
     return Task;
 };

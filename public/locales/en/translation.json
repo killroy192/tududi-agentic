@@ -237,7 +237,9 @@
       "recurrenceEndDate": "Recurrence end date",
       "recurrenceType": "Recurrence type",
       "recurrenceTypeChanged": "Recurrence type changed",
-      "none": "None"
+      "none": "None",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     }
   },
   "profile": {
@@ -792,7 +794,8 @@
     "loginFailed": "Login failed. Please try again.",
     "generalError": "An error occurred. Please try again.",
     "viewNameRequired": "View name is required",
-    "viewSaveFailed": "Failed to save view. Please try again."
+    "viewSaveFailed": "Failed to save view. Please try again.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Inbox",
@@ -1011,7 +1014,9 @@
     "noDeferUntil": "No defer until",
     "deferUntilUpdated": "Defer until updated successfully",
     "deferUntilUpdateError": "Failed to update defer until",
-    "upcoming": "upcoming"
+    "upcoming": "upcoming",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "subtasks": {
     "placeholder": "Add a subtask..."
@@ -1609,5 +1614,12 @@
     "statDone": "Done",
     "statActive": "Active",
     "statOverdue": "Overdue"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

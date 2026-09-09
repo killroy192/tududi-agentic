@@ -5,6 +5,7 @@ import AutoSuggestNextActionBox from './AutoSuggestNextActionBox';
 import NewTask from '../Task/NewTask';
 import TaskList from '../Task/TaskList';
 import { TFunction } from 'i18next';
+import { SizeValue } from '../../constants/taskSize';
 
 interface ProjectTasksSectionProps {
     project: Project | null;
@@ -14,6 +15,7 @@ interface ProjectTasksSectionProps {
     onDismissNextAction: () => void;
     onTaskCreate: (taskName: string) => Promise<void>;
     onTaskUpdate: (task: Task) => Promise<void>;
+    onTaskSizeChange?: (task: Task, size: SizeValue) => void;
     onTaskCompletionToggle: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
     onToggleToday: (taskId: number, task?: Task) => Promise<void>;
@@ -31,6 +33,7 @@ const ProjectTasksSection: React.FC<ProjectTasksSectionProps> = ({
     onDismissNextAction,
     onTaskCreate,
     onTaskUpdate,
+    onTaskSizeChange,
     onTaskCompletionToggle,
     onTaskDelete,
     onToggleToday,
@@ -64,6 +67,7 @@ const ProjectTasksSection: React.FC<ProjectTasksSectionProps> = ({
                         <TaskList
                             tasks={displayTasks}
                             onTaskUpdate={onTaskUpdate}
+                            onTaskSizeChange={onTaskSizeChange}
                             onTaskCompletionToggle={onTaskCompletionToggle}
                             onTaskDelete={onTaskDelete}
                             projects={allProjects}

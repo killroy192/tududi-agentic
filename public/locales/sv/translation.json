@@ -238,7 +238,9 @@
       "recurrenceTypeChanged": "Typ av återkommande ändrad",
       "recurrence_weekday_changed": "Återkommande veckodag ändrad",
       "recurrence_month_day_changed": "Återkommande månad dag ändrad",
-      "recurrence_week_of_month_changed": "Återkommande vecka i månaden ändrad"
+      "recurrence_week_of_month_changed": "Återkommande vecka i månaden ändrad",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     }
   },
   "profile": {
@@ -799,7 +801,8 @@
     "loginFailed": "Inloggning misslyckades. Försök igen.",
     "generalError": "Ett fel inträffade. Försök igen.",
     "viewNameRequired": "Visningsnamn krävs",
-    "viewSaveFailed": "Misslyckades med att spara visning. Försök igen."
+    "viewSaveFailed": "Misslyckades med att spara visning. Försök igen.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Inkorg",
@@ -1022,7 +1025,9 @@
     "duplicate": "Duplicera",
     "duplicated": "Uppgift",
     "duplicatedSuccessfully": "duplicerades!",
-    "duplicateError": "Kunde inte duplicera uppgiften"
+    "duplicateError": "Kunde inte duplicera uppgiften",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Laddar projekt...",
@@ -1642,5 +1647,12 @@
     "statDone": "Utfört",
     "statActive": "Aktiv",
     "statOverdue": "Förfallen"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

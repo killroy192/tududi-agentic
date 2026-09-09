@@ -17,6 +17,7 @@ import { Area } from '../../entities/Area';
 import { Project } from '../../entities/Project';
 import { Goal, GoalStatus, GoalHorizon } from '../../entities/Goal';
 import { Task } from '../../entities/Task';
+import { SizeValue, sizeToApiValue } from '../../constants/taskSize';
 import { fetchTasks } from '../../utils/tasksService';
 import { updateArea } from '../../utils/areasService';
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from '../../utils/goalsService';
@@ -152,6 +153,15 @@ const AreaDetails: React.FC = () => {
         setAreaTasks((prev) => prev.map((t) => (t.uid === updatedTask.uid ? updatedTask : t)));
         tasksStore.setTasks(tasksStore.tasks.map((t: Task) => (t.uid === updatedTask.uid ? updatedTask : t)));
     };
+
+    const handleTaskSizeChange = (task: Task, size: SizeValue) => {
+        setAreaTasks((prevTasks) =>
+            prevTasks.map((t) =>
+                t.id === task.id ? { ...t, size: sizeToApiValue(size) } : t
+            )
+        );
+    };
+
 
     const handleTaskDelete = (taskUid: string) => {
         setAreaTasks((prev) => prev.filter((t) => t.uid !== taskUid));
@@ -609,6 +619,7 @@ const AreaDetails: React.FC = () => {
                                     tasks={activeTasks}
                                     projects={projectsStore.projects}
                                     onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                     onTaskDelete={handleTaskDelete}
                                 />
                             )}
@@ -621,6 +632,7 @@ const AreaDetails: React.FC = () => {
                                         tasks={completedTasks}
                                         projects={projectsStore.projects}
                                         onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                         onTaskDelete={handleTaskDelete}
                                         showCompletedTasks={true}
                                     />

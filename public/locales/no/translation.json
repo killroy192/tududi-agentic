@@ -232,7 +232,9 @@
       "recurrenceTypeChanged": "Gjentakelsestype endret",
       "recurrence_weekday_changed": "Endret ukedag for gjentakelse",
       "recurrence_month_day_changed": "Endret månedlig dag for gjentakelse",
-      "recurrence_week_of_month_changed": "Endret uke i måneden for gjentakelse"
+      "recurrence_week_of_month_changed": "Endret uke i måneden for gjentakelse",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "Akkurat nå",
     "minutesAgo": "{{minutes}}m siden",
@@ -800,7 +802,8 @@
     "loginFailed": "Innlogging feilet. Vennligst prøv igjen.",
     "generalError": "En feil oppstod. Vennligst prøv igjen.",
     "viewNameRequired": "Visningsnavn er påkrevd",
-    "viewSaveFailed": "Kunne ikke lagre visning. Vennligst prøv igjen."
+    "viewSaveFailed": "Kunne ikke lagre visning. Vennligst prøv igjen.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "Innboks",
@@ -1023,7 +1026,9 @@
     "duplicate": "Dupliser",
     "duplicated": "Oppgave",
     "duplicatedSuccessfully": "duplisert!",
-    "duplicateError": "Kunne ikke duplisere oppgaven"
+    "duplicateError": "Kunne ikke duplisere oppgaven",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "Laster prosjekter...",
@@ -1647,5 +1652,12 @@
   },
   "habits": {
     "completeHabit": "Fullfør vane"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

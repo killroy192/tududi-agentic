@@ -231,7 +231,9 @@
       "recurrenceTypeChanged": "반복 유형 변경됨",
       "recurrence_weekday_changed": "주기 요일이 변경되었습니다",
       "recurrence_month_day_changed": "주기 월일이 변경되었습니다",
-      "recurrence_week_of_month_changed": "주기 월의 주가 변경되었습니다"
+      "recurrence_week_of_month_changed": "주기 월의 주가 변경되었습니다",
+      "size": "Size",
+      "sizeChanged": "Size changed"
     },
     "justNow": "방금",
     "minutesAgo": "{{minutes}}분 전",
@@ -799,7 +801,8 @@
     "loginFailed": "로그인에 실패했습니다. 다시 시도해 주세요.",
     "generalError": "오류가 발생했습니다. 다시 시도해 주세요.",
     "viewNameRequired": "뷰 이름은 필수입니다",
-    "viewSaveFailed": "뷰 저장에 실패했습니다. 다시 시도해 주세요."
+    "viewSaveFailed": "뷰 저장에 실패했습니다. 다시 시도해 주세요.",
+    "permissionDenied": "You do not have permission to perform this action"
   },
   "inbox": {
     "title": "받은 편지함",
@@ -1022,7 +1025,9 @@
     "duplicate": "복제",
     "duplicated": "작업",
     "duplicatedSuccessfully": "복제되었습니다!",
-    "duplicateError": "작업 복제에 실패했습니다"
+    "duplicateError": "작업 복제에 실패했습니다",
+    "sizeUpdated": "Size updated successfully",
+    "sizeUpdateError": "Failed to update size"
   },
   "projects": {
     "loading": "프로젝트 로딩 중...",
@@ -1642,5 +1647,12 @@
     "statDone": "완료",
     "statActive": "활성",
     "statOverdue": "기한 초과"
+  },
+  "size": {
+    "none": "None",
+    "label": "Size",
+    "placeholder": "Size",
+    "unset": "Size unset",
+    "currentValue": "Size {{size}}"
   }
 }

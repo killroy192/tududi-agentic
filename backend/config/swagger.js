@@ -90,6 +90,13 @@ const options = {
                             enum: ['low', 'medium', 'high'],
                             description: 'Task priority',
                         },
+                        size: {
+                            type: 'integer',
+                            enum: [1, 2, 3, 4],
+                            nullable: true,
+                            description:
+                                'Task size estimate (1=S, 2=M, 3=L, 4=XL). Null when unset.',
+                        },
                         due_date: {
                             type: 'string',
                             format: 'date-time',

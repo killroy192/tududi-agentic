@@ -167,6 +167,7 @@ export const getEventTypeLabel = (eventType: string): string => {
         created: 'Created',
         status_changed: 'Status Changed',
         priority_changed: 'Priority Changed',
+        size_changed: 'Size Changed',
         due_date_changed: 'Due Date Changed',
         defer_until_changed: 'Defer Date Changed',
         project_changed: 'Project Changed',
@@ -211,4 +212,21 @@ export const getPriorityLabel = (priority: number): string => {
     };
 
     return priorityLabels[priority] || `Priority ${priority}`;
+};
+
+/**
+ * Get human-readable size value (letters stay untranslated)
+ */
+export const getSizeLabel = (size: number | null | undefined): string => {
+    if (size === null || size === undefined) {
+        return 'None';
+    }
+    const sizeLabels: Record<number, string> = {
+        1: 'S',
+        2: 'M',
+        3: 'L',
+        4: 'XL',
+    };
+
+    return sizeLabels[size] || `Size ${size}`;
 };

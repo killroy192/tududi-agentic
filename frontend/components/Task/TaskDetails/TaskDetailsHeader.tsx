@@ -17,6 +17,8 @@ import { Task, PriorityType } from '../../../entities/Task';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
+import TaskSizeControl from '../../Shared/TaskSizeControl';
+import { SizeValue } from '../../../constants/taskSize';
 import { getStatusValue } from '../../../constants/taskStatus';
 
 interface TaskDetailsHeaderProps {
@@ -24,6 +26,8 @@ interface TaskDetailsHeaderProps {
     onTitleUpdate: (newTitle: string) => Promise<void>;
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
+    onSizeUpdate: (newSize: SizeValue) => Promise<void>;
+    onSizeSaved?: () => Promise<void>;
     onDelete: () => void;
     onDuplicate: () => void;
     getProjectLink?: (project: any) => string;
@@ -47,6 +51,8 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onTitleUpdate,
     onStatusUpdate,
     onPriorityUpdate,
+    onSizeUpdate,
+    onSizeSaved,
     onDelete,
     onDuplicate,
     getProjectLink,
@@ -487,6 +493,18 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        <TaskSizeControl
+                                            value={task.size}
+                                            taskUid={task.uid}
+                                            variant="field"
+                                            onSizeUpdated={(size) => {
+                                                void onSizeUpdate(size);
+                                            }}
+                                            onSizeSaved={() => {
+                                                void onSizeSaved?.();
+                                            }}
+                                        />
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

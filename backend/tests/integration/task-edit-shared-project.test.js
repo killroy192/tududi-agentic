@@ -138,4 +138,35 @@ describe('Task Editing in Shared Projects', () => {
         expect(response.status).toBe(200);
         expect(response.body.name).toBe('Updated by Shared User');
     });
+
+    test('shared user with RO access cannot update task size', async () => {
+        const { Permission } = require('../../models');
+
+        const taskResponse = await ownerAgent.post('/api/task').send({
+            name: 'RO size task',
+            project_id: project.id,
+            priority: 1,
+            size: 2,
+        });
+        const task = taskResponse.body;
+
+        await Permission.update(
+            { access_level: 'ro' },
+            {
+                where: {
+                    resource_uid: project.uid,
+                    user_id: sharedUser.id,
+                },
+            }
+        );
+
+        const response = await sharedUserAgent
+            .patch(`/api/task/${task.uid}`)
+            .send({ size: 4 });
+
+        expect(response.status).toBe(403);
+
+        const stored = await Task.findByPk(task.id);
+        expect(stored.size).toBe(2);
+    });
 });

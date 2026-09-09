@@ -6,6 +6,7 @@ export interface TaskEvent {
         | 'created'
         | 'status_changed'
         | 'priority_changed'
+        | 'size_changed'
         | 'due_date_changed'
         | 'defer_until_changed'
         | 'recurrence_end_date_changed'

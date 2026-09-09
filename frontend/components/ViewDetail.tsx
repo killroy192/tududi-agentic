@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { Task } from '../entities/Task';
+import { SizeValue, sizeToApiValue } from '../constants/taskSize';
 import { Note } from '../entities/Note';
 import { Project } from '../entities/Project';
 import TaskList from './Task/TaskList';
@@ -522,6 +523,15 @@ const ViewDetail: React.FC = () => {
         }
     };
 
+    const handleTaskSizeChange = (task: Task, size: SizeValue) => {
+        setTasks((prevTasks) =>
+            prevTasks.map((t) =>
+                t.id === task.id ? { ...t, size: sizeToApiValue(size) } : t
+            )
+        );
+    };
+
+
     const handleTaskDelete = async (taskUid: string) => {
         try {
             const response = await fetch(
@@ -992,6 +1002,7 @@ const ViewDetail: React.FC = () => {
                                 tasks={displayTasks}
                                 groupBy="project"
                                 onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle
                                 }
@@ -1006,6 +1017,7 @@ const ViewDetail: React.FC = () => {
                             <TaskList
                                 tasks={displayTasks}
                                 onTaskUpdate={handleTaskUpdate}
+                                onTaskSizeChange={handleTaskSizeChange}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle
                                 }
