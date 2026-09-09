@@ -1,0 +1,84 @@
+---
+description: Prepare mock API responses for deterministic Playwright e2e tests.
+globs: e2e/*.ts,e2e/**/*.ts
+alwaysApply: false
+---
+# Mock APIs for Deterministic E2E Tests
+
+Use this rule when preparing mock data for API calls in Playwright e2e tests. Isolate UI from backend flakiness by intercepting network requests and fulfilling them with fixed payloads.
+
+## When to mock
+
+- UI behavior under test depends on specific API shapes, statuses, or empty/error states
+- The real backend is slow, flaky, or would make the assertion non-deterministic
+- You need a fixed fixture (empty list, single item, error) rather than live data
+
+Do not mock when the test’s purpose is full-stack integration against a real backend.
+
+## Patterns
+
+1. Register `page.route` **before** `page.goto` / navigation that triggers the request.
+2. Match only the endpoints the test needs (`**/api/...`); leave unrelated traffic alone unless blocking assets for speed.
+3. Prefer small, explicit fixtures colocated with the test or under `e2e/fixtures/`.
+4. Cover success, empty, and error responses when those states matter to the UI.
+5. Keep payloads realistic enough for the UI (required fields, types) — omit unused fields.
+
+## Examples
+
+❌ BAD: Relying on a live, potentially unstable backend
+```typescript
+test('display products', async ({ page }) => {
+  await page.goto('/products'); // Fetches from real API
+  await expect(page.getByText('Product A')).toBeVisible();
+});
+```
+
+✅ GOOD: Mock the API with fixed data
+```typescript
+test('display mocked products', async ({ page }) => {
+  await page.route('**/api/products', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: 1, name: 'Mock Product' }]),
+    });
+  });
+  await page.goto('/products');
+  await expect(page.getByText('Mock Product')).toBeVisible();
+});
+```
+
+✅ GOOD: Empty and error fixtures
+```typescript
+await page.route('**/api/tasks', (route) => {
+  route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify([]),
+  });
+});
+
+await page.route('**/api/tasks', (route) => {
+  route.fulfill({
+    status: 500,
+    contentType: 'application/json',
+    body: JSON.stringify({ error: 'Internal Server Error' }),
+  });
+});
+```
+
+✅ GOOD: Shared fixture
+```typescript
+// e2e/fixtures/tasks.ts
+export const mockTasks = [{ id: 1, name: 'Buy milk', status: 'pending' }];
+
+// in test
+import { mockTasks } from '../fixtures/tasks';
+await page.route('**/api/tasks', (route) =>
+  route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(mockTasks),
+  }),
+);
+```
