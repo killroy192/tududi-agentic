@@ -5,12 +5,12 @@ import { Person } from '../../../entities/Person';
 import { fetchPeople } from '../../../utils/peopleService';
 import PersonDropdown from '../../Shared/PersonDropdown';
 
-interface TaskAssignedToCardProps {
+interface TaskDetailsPeopleProps {
     task: Task;
     onAssign: (personUid: string | null) => Promise<void>;
 }
 
-const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({ task, onAssign }) => {
+const TaskDetailsPeople: React.FC<TaskDetailsPeopleProps> = ({ task, onAssign }) => {
     const [people, setPeople] = useState<Person[]>([]);
 
     useEffect(() => {
@@ -34,4 +34,4 @@ const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({ task, onAssign 
     );
 };
 
-export default TaskAssignedToCard;
+export default TaskDetailsPeople;

@@ -8,7 +8,7 @@ import { TaskIteration } from '../../../utils/tasksService';
 import { getTodayDateString, parseDateString } from '../../../utils/dateUtils';
 import { resolveUserLocale } from '../../../utils/localeUtils';
 
-interface TaskRecurrenceCardProps {
+interface TaskDetailsRecurrenceProps {
     task: Task;
     parentTask: Task | null;
     loadingParent: boolean;
@@ -24,7 +24,16 @@ interface TaskRecurrenceCardProps {
         completion_based: boolean;
     };
     onStartEdit: () => void;
-    onChange: (field: string, value: any) => void;
+    onChange: (
+        field: string,
+        value:
+            | RecurrenceType
+            | number
+            | boolean
+            | number[]
+            | string
+            | null
+    ) => void;
     onSave: () => void;
     onCancel: () => void;
     loadingIterations: boolean;
@@ -32,7 +41,7 @@ interface TaskRecurrenceCardProps {
     canEdit: boolean;
 }
 
-const TaskRecurrenceCard: React.FC<TaskRecurrenceCardProps> = ({
+const TaskDetailsRecurrence: React.FC<TaskDetailsRecurrenceProps> = ({
     task,
     parentTask,
     loadingParent,
@@ -303,4 +312,4 @@ const TaskRecurrenceCard: React.FC<TaskRecurrenceCardProps> = ({
     );
 };
 
-export default TaskRecurrenceCard;
+export default TaskDetailsRecurrence;

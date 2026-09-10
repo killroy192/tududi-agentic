@@ -6,17 +6,17 @@ import TagInput from '../../Tag/TagInput';
 import { Task } from '../../../entities/Task';
 import { Tag } from '../../../entities/Tag';
 
-interface TaskTagsCardProps {
+interface TaskDetailsTagsProps {
     task: Task;
     availableTags: Tag[];
     hasLoadedTags: boolean;
     isLoadingTags: boolean;
     onUpdate: (tags: string[]) => Promise<void>;
     onLoadTags: () => void;
-    getTagLink?: (tag: any) => string;
+    getTagLink?: (tag: Tag) => string;
 }
 
-const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
+const TaskDetailsTags: React.FC<TaskDetailsTagsProps> = ({
     task,
     availableTags,
     hasLoadedTags,
@@ -28,15 +28,15 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
     const { t } = useTranslation();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTags, setEditedTags] = useState<string[]>(
-        task?.tags?.map((tag: any) => tag.name) || []
+        task?.tags?.map((tag) => tag.name) || []
     );
 
     useEffect(() => {
-        setEditedTags(task?.tags?.map((tag: any) => tag.name) || []);
+        setEditedTags(task?.tags?.map((tag) => tag.name) || []);
     }, [task?.tags]);
 
     const handleStartEdit = () => {
-        setEditedTags(task?.tags?.map((tag: any) => tag.name) || []);
+        setEditedTags(task?.tags?.map((tag) => tag.name) || []);
         if (!hasLoadedTags && !isLoadingTags) {
             onLoadTags();
         }
@@ -44,7 +44,7 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
     };
 
     const handleSave = async () => {
-        const currentTags = task.tags?.map((tag: any) => tag.name) || [];
+        const currentTags = task.tags?.map((tag) => tag.name) || [];
         if (
             editedTags.length === currentTags.length &&
             editedTags.every((tag, idx) => tag === currentTags[idx])
@@ -58,7 +58,7 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
     };
 
     const handleCancel = () => {
-        setEditedTags(task.tags?.map((tag: any) => tag.name) || []);
+        setEditedTags(task.tags?.map((tag) => tag.name) || []);
         setIsEditing(false);
     };
 
@@ -94,7 +94,7 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
                     </div>
                 ) : task.tags && task.tags.length > 0 ? (
                     <div>
-                        {task.tags.map((tag: any, index: number) => (
+                        {task.tags.map((tag, index) => (
                             <div
                                 key={tag.uid || tag.id || tag.name}
                                 className={`group flex w-full items-center justify-between px-3 py-2.5 bg-white dark:bg-gray-900 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
@@ -143,4 +143,4 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
     );
 };
 
-export default TaskTagsCard;
+export default TaskDetailsTags;

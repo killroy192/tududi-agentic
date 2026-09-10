@@ -1,24 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import { Task } from '../../entities/Task';
-import { Project } from '../../entities/Project';
-import { Area } from '../../entities/Area';
-import {
-    updateTask,
-    deleteTask,
-    fetchTaskByUid,
-    fetchTaskNextIterations,
-    fetchSubtasks,
-    TaskIteration,
-    toggleTaskCompletion,
-} from '../../utils/tasksService';
-import { createProject } from '../../utils/projectsService';
-import { fetchAttachments } from '../../utils/attachmentsService';
 import { useStore } from '../../store/useStore';
-import { useToast } from '../Shared/ToastContext';
 import LoadingScreen from '../Shared/LoadingScreen';
 import TaskTimeline from './TaskTimeline';
 import {
@@ -26,22 +11,23 @@ import {
     TaskContentCard,
     TaskProjectCard,
     TaskAreaCard,
-    TaskTagsCard,
-    TaskSubtasksCard,
-    TaskRecurrenceCard,
+    TaskDetailsTags,
+    TaskDetailsSubtasks,
+    TaskDetailsRecurrence,
     TaskDueDateCard,
     TaskDeferUntilCard,
-    TaskAttachmentsCard,
-    TaskAssignedToCard,
+    TaskDetailsAttachments,
+    TaskDetailsPeople,
+    TaskDetailsAI,
 } from './TaskDetails/';
-import TaskAIInsights, { TaskAIInsightsHandle } from '../AI/TaskAIInsights';
-import {
-    isTaskOverdueInTodayPlan,
-    isTaskPastDue,
-    getTodayDateString,
-} from '../../utils/dateUtils';
-import { buildDuplicateTaskPayload } from '../../utils/duplicateTask';
-import { sizeToApiValue } from '../../constants/taskSize';
+import type { TaskDetailsAIHandle } from './TaskDetails/TaskDetailsAI';
+import { useTaskDetailsRouteLifecycle } from './TaskDetails/hooks/useTaskDetailsRouteLifecycle';
+import { useTaskDetailsLoad } from './TaskDetails/hooks/useTaskDetailsLoad';
+import { useTaskDetailsStoresBootstrap } from './TaskDetails/hooks/useTaskDetailsStoresBootstrap';
+import { useTaskDetailsRecurrenceData } from './TaskDetails/hooks/useTaskDetailsRecurrenceData';
+import { useTaskDetailsOverdueUi } from './TaskDetails/hooks/useTaskDetailsOverdueUi';
+import { useTaskDetailsEditForms } from './TaskDetails/hooks/useTaskDetailsEditForms';
+import { useTaskDetailsActions } from './TaskDetails/hooks/useTaskDetailsActions';
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -49,1245 +35,80 @@ const TaskDetails: React.FC = () => {
     const location = useLocation();
     const { t } = useTranslation();
     const isNewTask = location.state?.isNew === true;
-    const isNewTaskRef = useRef(isNewTask);
-    const taskModifiedRef = useRef(false);
-    const { showSuccessToast, showErrorToast } = useToast();
 
-    // Clear navigation state so refresh/back doesn't re-trigger edit mode
-    useEffect(() => {
-        if (isNewTask) {
-            navigate(location.pathname, { replace: true, state: {} });
-        }
-    }, [isNewTask, navigate, location.pathname]);
-
-    // Clean up abandoned new tasks: if user navigates away without modifying anything, delete the task
-    useEffect(() => {
-        const taskUid = uid;
-        return () => {
-            if (isNewTaskRef.current && !taskModifiedRef.current && taskUid) {
-                deleteTask(taskUid).catch((err) =>
-                    console.error('Error cleaning up abandoned new task:', err)
-                );
-                const store = useStore.getState();
-                store.tasksStore.setTasks(
-                    store.tasksStore.tasks.filter((t: Task) => t.uid !== taskUid)
-                );
-            }
-        };
-    }, [uid]);
-
-    const projectsStore = useStore((state: any) => state.projectsStore);
-    const tagsStore = useStore((state: any) => state.tagsStore);
-    const tasksStore = useStore((state: any) => state.tasksStore);
-    const areasStore = useStore((state: any) => state.areasStore);
-    const task = useStore((state: any) =>
-        state.tasksStore.tasks.find((t: Task) => t.uid === uid)
+    const { markTaskModified } = useTaskDetailsRouteLifecycle(
+        uid,
+        isNewTask,
+        location.pathname
     );
 
-    const subtasks = task?.subtasks || [];
+    const {
+        task,
+        subtasks,
+        loading,
+        error,
+        attachmentCount,
+        setAttachmentCount,
+        hasLoadedSubtasks,
+        setHasLoadedSubtasks,
+        pendingSubtasks,
+        setPendingSubtasks,
+        lastKnownSubtaskCount,
+    } = useTaskDetailsLoad(uid);
 
-    const [loading, setLoading] = useState(!task);
-    const [error, setError] = useState<string | null>(null);
-    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-    const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-    const [isDuplicating, setIsDuplicating] = useState(false);
-    const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
-    const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] = useState(false);
-    const [nextIterations, setNextIterations] = useState<TaskIteration[]>([]);
-    const [loadingIterations, setLoadingIterations] = useState(false);
-    const [parentTask, setParentTask] = useState<Task | null>(null);
-    const [loadingParent, setLoadingParent] = useState(false);
-    const [pendingSubtasks, setPendingSubtasks] = useState<Task[]>([]);
-    const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
-    const actionsMenuRef = useRef<HTMLDivElement>(null);
+    const { tagsStore, areasStore, projectsStore } =
+        useTaskDetailsStoresBootstrap();
+
+    const {
+        nextIterations,
+        setNextIterations,
+        loadingIterations,
+        setLoadingIterations,
+        parentTask,
+        loadingParent,
+    } = useTaskDetailsRecurrenceData(task);
+
+    const {
+        isOverdue,
+        isPastDue,
+        isOverdueBubbleVisible,
+        handleOverdueIconClick,
+        handleDismissOverdueAlert,
+    } = useTaskDetailsOverdueUi(task);
+
+    const editForms = useTaskDetailsEditForms(task);
+
+    const actions = useTaskDetailsActions({
+        uid,
+        task,
+        subtasks,
+        hasLoadedSubtasks,
+        setHasLoadedSubtasks,
+        setPendingSubtasks,
+        lastKnownSubtaskCount,
+        markTaskModified,
+        recurrenceForm: editForms.recurrenceForm,
+        setIsEditingRecurrence: editForms.setIsEditingRecurrence,
+        editedDueDate: editForms.editedDueDate,
+        setIsEditingDueDate: editForms.setIsEditingDueDate,
+        setEditedDueDate: editForms.setEditedDueDate,
+        editedDeferUntil: editForms.editedDeferUntil,
+        setIsEditingDeferUntil: editForms.setIsEditingDeferUntil,
+        setEditedDeferUntil: editForms.setEditedDeferUntil,
+        parentTask,
+        setNextIterations,
+        setLoadingIterations,
+    });
+
     const aiAssistantEnabled = useStore(
-        (state: any) => state.userSettingsStore.aiAssistantEnabled
+        (state) => state.userSettingsStore.aiAssistantEnabled
     );
-    const aiInsightsRef = useRef<TaskAIInsightsHandle>(null);
+    const aiInsightsRef = useRef<TaskDetailsAIHandle>(null);
     const [aiInsightsActive, setAiInsightsActive] = useState(false);
 
     const handleAiInsightsClick = useCallback(() => {
         aiInsightsRef.current?.activate();
     }, []);
-    const lastKnownSubtaskCount = useRef<number>(0);
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as Node;
-            if (
-                actionsMenuOpen &&
-                actionsMenuRef.current &&
-                !actionsMenuRef.current.contains(target)
-            ) {
-                setActionsMenuOpen(false);
-            }
-
-            if (isOverdueBubbleVisible) {
-                const clickedOverdueToggle =
-                    typeof e.composedPath === 'function'
-                        ? e
-                              .composedPath()
-                              .some(
-                                  (node) =>
-                                      node instanceof HTMLElement &&
-                                      node.hasAttribute('data-overdue-toggle')
-                              )
-                        : target instanceof HTMLElement &&
-                          !!target.closest('[data-overdue-toggle]');
-
-                if (!clickedOverdueToggle) {
-                    setIsOverdueBubbleVisible(false);
-                }
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [actionsMenuOpen, isOverdueBubbleVisible]);
-    const [isEditingDueDate, setIsEditingDueDate] = useState(false);
-    const [editedDueDate, setEditedDueDate] = useState<string>(
-        task?.due_date || ''
-    );
-    const [isEditingDeferUntil, setIsEditingDeferUntil] = useState(false);
-    const [editedDeferUntil, setEditedDeferUntil] = useState<string>(
-        task?.defer_until || ''
-    );
-    const [isEditingRecurrence, setIsEditingRecurrence] = useState(false);
-    const [recurrenceForm, setRecurrenceForm] = useState({
-        recurrence_type: task?.recurrence_type || 'none',
-        recurrence_interval: task?.recurrence_interval || 1,
-        recurrence_end_date: task?.recurrence_end_date || '',
-        recurrence_weekday: task?.recurrence_weekday ?? null,
-        recurrence_weekdays: task?.recurrence_weekdays || [],
-        recurrence_month_day: task?.recurrence_month_day ?? null,
-        recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-        completion_based: task?.completion_based || false,
-    });
-    const [activePill, setActivePill] = useState('overview');
-    const [attachmentCount, setAttachmentCount] = useState(0);
-    const [hasLoadedSubtasks, setHasLoadedSubtasks] = useState(false);
-
-    useEffect(() => {
-        setEditedDueDate(task?.due_date || '');
-    }, [task?.due_date]);
-
-    useEffect(() => {
-        setRecurrenceForm({
-            recurrence_type: task?.recurrence_type || 'none',
-            recurrence_interval: task?.recurrence_interval || 1,
-            recurrence_end_date: task?.recurrence_end_date || '',
-            recurrence_weekday: task?.recurrence_weekday ?? null,
-            recurrence_weekdays: task?.recurrence_weekdays || [],
-            recurrence_month_day: task?.recurrence_month_day ?? null,
-            recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-            completion_based: task?.completion_based || false,
-        });
-    }, [
-        task?.recurrence_type,
-        task?.recurrence_interval,
-        task?.recurrence_end_date,
-        task?.recurrence_weekday,
-        task?.recurrence_weekdays,
-        task?.recurrence_month_day,
-        task?.recurrence_week_of_month,
-        task?.completion_based,
-    ]);
-
-    useEffect(() => {
-        if (!tagsStore.hasLoaded && !tagsStore.isLoading) {
-            tagsStore.loadTags();
-        }
-    }, [tagsStore.hasLoaded, tagsStore.isLoading]);
-
-    useEffect(() => {
-        if (!areasStore.hasLoaded && !areasStore.isLoading) {
-            areasStore.loadAreas();
-        }
-    }, [areasStore.hasLoaded, areasStore.isLoading]);
-
-    const handleStartRecurrenceEdit = () => {
-        setRecurrenceForm({
-            recurrence_type: task?.recurrence_type || 'none',
-            recurrence_interval: task?.recurrence_interval || 1,
-            recurrence_end_date: task?.recurrence_end_date || '',
-            recurrence_weekday: task?.recurrence_weekday ?? null,
-            recurrence_weekdays: task?.recurrence_weekdays || [],
-            recurrence_month_day: task?.recurrence_month_day ?? null,
-            recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-            completion_based: task?.completion_based || false,
-        });
-        setIsEditingRecurrence(true);
-    };
-
-    const isOverdue = task ? isTaskOverdueInTodayPlan(task) : false;
-    const isPastDue = task ? isTaskPastDue(task) : false;
-
-    useEffect(() => {
-        if (!isOverdue) {
-            setIsOverdueBubbleVisible(false);
-        }
-    }, [isOverdue]);
-
-    const handleOverdueIconClick = () => {
-        if (!isOverdue) {
-            return;
-        }
-        setIsOverdueBubbleVisible((prev) => !prev);
-    };
-
-    const handleDismissOverdueAlert = () => {
-        setIsOverdueBubbleVisible(false);
-    };
-
-    const handleRecurrenceChange = (field: string, value: any) => {
-        setRecurrenceForm((prev) => {
-            const updated = { ...prev, [field]: value };
-
-            if (
-                field === 'recurrence_type' &&
-                value === 'monthly' &&
-                !prev.recurrence_month_day
-            ) {
-                updated.recurrence_month_day = new Date().getDate();
-            }
-
-            return updated;
-        });
-    };
-
-    const handleSaveRecurrence = async () => {
-        if (!task?.uid) {
-            setIsEditingRecurrence(false);
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            const recurrencePayload: Partial<Task> = {
-                recurrence_type: recurrenceForm.recurrence_type,
-                recurrence_interval: recurrenceForm.recurrence_interval || 1,
-                recurrence_end_date: recurrenceForm.recurrence_end_date || null,
-                recurrence_weekday:
-                    recurrenceForm.recurrence_type === 'weekly' ||
-                    recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_weekday ?? null
-                        : null,
-                recurrence_weekdays:
-                    recurrenceForm.recurrence_type === 'weekly'
-                        ? recurrenceForm.recurrence_weekdays || []
-                        : null,
-                recurrence_month_day:
-                    recurrenceForm.recurrence_type === 'monthly'
-                        ? recurrenceForm.recurrence_month_day ?? null
-                        : null,
-                recurrence_week_of_month:
-                    recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_week_of_month ?? null
-                        : null,
-                completion_based: recurrenceForm.completion_based,
-            };
-
-            await updateTask(task.uid, recurrencePayload);
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.recurrenceUpdated', 'Recurrence updated successfully')
-            );
-            setIsEditingRecurrence(false);
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating recurrence:', error);
-            showErrorToast(
-                t('task.recurrenceUpdateError', 'Failed to update recurrence')
-            );
-            setIsEditingRecurrence(false);
-        }
-    };
-
-    const handleCancelRecurrenceEdit = () => {
-        setIsEditingRecurrence(false);
-        setRecurrenceForm({
-            recurrence_type: task?.recurrence_type || 'none',
-            recurrence_interval: task?.recurrence_interval || 1,
-            recurrence_end_date: task?.recurrence_end_date || '',
-            recurrence_weekday: task?.recurrence_weekday ?? null,
-            recurrence_weekdays: task?.recurrence_weekdays || [],
-            recurrence_month_day: task?.recurrence_month_day ?? null,
-            recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-            completion_based: task?.completion_based || false,
-        });
-    };
-
-    const handleStartDueDateEdit = () => {
-        setEditedDueDate(task?.due_date || '');
-        setIsEditingDueDate(true);
-    };
-
-    const handleSaveDueDate = async () => {
-        if (!task?.uid) {
-            setIsEditingDueDate(false);
-            setEditedDueDate(task?.due_date || '');
-            return;
-        }
-
-        if ((editedDueDate || '') === (task.due_date || '')) {
-            setIsEditingDueDate(false);
-            return;
-        }
-
-        if (task.defer_until && editedDueDate) {
-            const deferDate = new Date(task.defer_until);
-            const dueDate = new Date(editedDueDate);
-
-            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
-                // Due dates are date-only; allow defer until any time on the same calendar day
-                const dueDateEndOfDay = new Date(dueDate);
-                dueDateEndOfDay.setUTCHours(23, 59, 59, 999);
-                if (deferDate > dueDateEndOfDay) {
-                    showErrorToast(
-                        t(
-                            'task.dueDateBeforeDeferError',
-                            'Due date cannot be before the defer until date'
-                        )
-                    );
-                    return;
-                }
-            }
-        }
-
-        if (editedDueDate) {
-            const todayStr = getTodayDateString();
-            const dueDateStr = editedDueDate.split('T')[0];
-
-            if (dueDateStr < todayStr) {
-                showErrorToast(
-                    t(
-                        'task.dueDateInPastWarning',
-                        'Warning: You are setting a due date in the past'
-                    )
-                );
-            }
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                due_date: editedDueDate || null,
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.dueDateUpdated', 'Due date updated successfully')
-            );
-            setIsEditingDueDate(false);
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating due date:', error);
-            showErrorToast(
-                t('task.dueDateUpdateError', 'Failed to update due date')
-            );
-            setEditedDueDate(task.due_date || '');
-            setIsEditingDueDate(false);
-        }
-    };
-
-    const handleCancelDueDateEdit = () => {
-        setIsEditingDueDate(false);
-        setEditedDueDate(task?.due_date || '');
-    };
-
-    const handleStartDeferUntilEdit = () => {
-        setEditedDeferUntil(task?.defer_until || '');
-        setIsEditingDeferUntil(true);
-    };
-
-    const handleSaveDeferUntil = async () => {
-        if (!task?.uid) {
-            setIsEditingDeferUntil(false);
-            setEditedDeferUntil(task?.defer_until || '');
-            return;
-        }
-
-        if ((editedDeferUntil || '') === (task.defer_until || '')) {
-            setIsEditingDeferUntil(false);
-            return;
-        }
-
-        if (editedDeferUntil && task.due_date) {
-            const deferDate = new Date(editedDeferUntil);
-            const dueDate = new Date(task.due_date);
-
-            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
-                // For recurring instances, skip strict frontend validation
-                // Backend will validate against parent's recurrence_end_date
-                if (!task.recurring_parent_id) {
-                    // Due dates are date-only; allow any time on the same calendar day
-                    const dueDateEndOfDay = new Date(dueDate);
-                    dueDateEndOfDay.setUTCHours(23, 59, 59, 999);
-                    if (deferDate > dueDateEndOfDay) {
-                        showErrorToast(
-                            t(
-                                'task.deferAfterDueError',
-                                'Defer until date cannot be after the due date'
-                            )
-                        );
-                        return;
-                    }
-                }
-            }
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                defer_until: editedDeferUntil || null,
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.deferUntilUpdated', 'Defer until successfully updated')
-            );
-            setIsEditingDeferUntil(false);
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error: any) {
-            console.error('Error updating defer until:', error);
-            showErrorToast(
-                error?.message ||
-                    t(
-                        'task.deferUntilUpdateError',
-                        'Failed to update defer until'
-                    )
-            );
-            setEditedDeferUntil(task?.defer_until || '');
-            setIsEditingDeferUntil(false);
-        }
-    };
-
-    const handleCancelDeferUntilEdit = () => {
-        setIsEditingDeferUntil(false);
-        setEditedDeferUntil(task?.defer_until || '');
-    };
-
-    useEffect(() => {
-        const fetchTaskData = async () => {
-            if (!uid) {
-                setError('No task uid provided');
-                setLoading(false);
-                return;
-            }
-
-            if (!task) {
-                try {
-                    setLoading(true);
-                    const fetchedTask = await fetchTaskByUid(uid);
-                    tasksStore.setTasks([...tasksStore.tasks, fetchedTask]);
-                } catch (fetchError) {
-                    setError('Task not found');
-                    console.error('Error fetching task:', fetchError);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchTaskData();
-    }, [uid, task, tasksStore]);
-
-    useEffect(() => {
-        const loadAttachmentCount = async () => {
-            if (task?.uid) {
-                try {
-                    const attachments = await fetchAttachments(task.uid);
-                    setAttachmentCount(attachments.length);
-                } catch (error) {
-                    console.error('Error loading attachment count:', error);
-                }
-            }
-        };
-
-        loadAttachmentCount();
-    }, [task?.uid]);
-
-    useEffect(() => {
-        setHasLoadedSubtasks(false);
-        lastKnownSubtaskCount.current = 0;
-    }, [uid]);
-
-    useEffect(() => {
-        const loadSubtasks = async () => {
-            if (!task?.uid) {
-                return;
-            }
-
-            const currentCount = task?.subtasks?.length || 0;
-            const subtasksDisappeared =
-                lastKnownSubtaskCount.current > 0 && currentCount === 0;
-            const needsInitialLoad = !hasLoadedSubtasks && currentCount === 0;
-
-            if (needsInitialLoad || subtasksDisappeared) {
-                try {
-                    const fetchedSubtasks = await fetchSubtasks(task.uid);
-                    setHasLoadedSubtasks(true);
-                    lastKnownSubtaskCount.current = fetchedSubtasks.length;
-
-                    const existingIndex = tasksStore.tasks.findIndex(
-                        (t: Task) => t.uid === task.uid
-                    );
-                    if (existingIndex >= 0) {
-                        const updatedTasks = [...tasksStore.tasks];
-                        updatedTasks[existingIndex] = {
-                            ...task,
-                            subtasks: fetchedSubtasks,
-                        };
-                        tasksStore.setTasks(updatedTasks);
-                    }
-                } catch (error) {
-                    console.error('Error loading subtasks:', error);
-                    setHasLoadedSubtasks(true);
-                }
-            } else if (currentCount > 0) {
-                lastKnownSubtaskCount.current = currentCount;
-            }
-        };
-
-        loadSubtasks();
-    }, [task?.uid, task?.subtasks, hasLoadedSubtasks, tasksStore]);
-
-    useEffect(() => {
-        setPendingSubtasks(subtasks);
-    }, [subtasks]);
-
-    useEffect(() => {
-        const loadNextIterations = async () => {
-            if (
-                task?.id &&
-                task.recurrence_type &&
-                task.recurrence_type !== 'none'
-            ) {
-                try {
-                    setLoadingIterations(true);
-                    const iterations = await fetchTaskNextIterations(task.uid!);
-                    setNextIterations(iterations);
-                } catch (error) {
-                    console.error('Error loading next iterations:', error);
-                    setNextIterations([]);
-                } finally {
-                    setLoadingIterations(false);
-                }
-            } else if (
-                task?.recurring_parent_id &&
-                parentTask?.uid &&
-                parentTask.recurrence_type &&
-                parentTask.recurrence_type !== 'none'
-            ) {
-                try {
-                    setLoadingIterations(true);
-
-                    const iterations = await fetchTaskNextIterations(
-                        parentTask.uid
-                    );
-
-                    setNextIterations(iterations);
-                } catch (error) {
-                    console.error(
-                        'Error loading next iterations for child task:',
-                        error
-                    );
-                    setNextIterations([]);
-                } finally {
-                    setLoadingIterations(false);
-                }
-            } else {
-                setNextIterations([]);
-            }
-        };
-
-        loadNextIterations();
-    }, [
-        task?.id,
-        task?.recurrence_type,
-        task?.due_date,
-        task?.recurring_parent_id,
-        parentTask?.id,
-        parentTask?.recurrence_type,
-    ]);
-
-    useEffect(() => {
-        const loadParentTask = async () => {
-            if (task?.recurring_parent_uid) {
-                try {
-                    setLoadingParent(true);
-                    const parent = await fetchTaskByUid(
-                        task.recurring_parent_uid
-                    );
-                    setParentTask(parent);
-                } catch (error) {
-                    console.error('Error fetching parent task:', error);
-                    setParentTask(null);
-                } finally {
-                    setLoadingParent(false);
-                }
-            }
-        };
-
-        loadParentTask();
-    }, [task?.recurring_parent_uid]);
-
-    const handleSaveSubtasks = async (subtasksToSave: Task[]) => {
-        if (!task?.uid) {
-            return;
-        }
-
-        const hasChanges =
-            subtasksToSave.length !== subtasks.length ||
-            subtasksToSave.some(
-                (ps, i) =>
-                    !subtasks[i] ||
-                    ps.name !== subtasks[i].name ||
-                    ps.status !== subtasks[i].status ||
-                    (ps as any)._isNew ||
-                    (ps as any)._isEdited ||
-                    (ps as any)._statusChanged
-            );
-
-        if (!hasChanges) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { subtasks: subtasksToSave });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                lastKnownSubtaskCount.current =
-                    updatedTask.subtasks?.length || 0;
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating subtasks:', error);
-            showErrorToast(
-                t('task.subtasksUpdateError', 'Failed to update subtasks')
-            );
-            setPendingSubtasks([...subtasks]);
-        }
-    };
-
-    const handleProjectSelection = async (project: Project) => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { project_id: project.id });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.projectUpdated', 'Project updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating project:', error);
-            showErrorToast(
-                t('task.projectUpdateError', 'Failed to update project')
-            );
-        }
-    };
-
-    const handleClearProject = async () => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { project_id: null });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.projectCleared', 'Project cleared successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error clearing project:', error);
-            showErrorToast(
-                t('task.projectClearError', 'Failed to clear project')
-            );
-        }
-    };
-
-    const refreshRecurringSetup = useCallback(
-        async (latestTask?: Task | null) => {
-            if (!latestTask) {
-                setNextIterations([]);
-                return;
-            }
-
-            const isTemplateTask =
-                latestTask.recurrence_type &&
-                latestTask.recurrence_type !== 'none' &&
-                !latestTask.recurring_parent_id;
-            const canUseParentIterations =
-                !!latestTask.recurring_parent_id &&
-                !!parentTask?.id &&
-                parentTask?.recurrence_type &&
-                parentTask.recurrence_type !== 'none';
-
-            if (!isTemplateTask && !canUseParentIterations) {
-                setNextIterations([]);
-                return;
-            }
-
-            try {
-                setLoadingIterations(true);
-                if (isTemplateTask) {
-                    const iterations = await fetchTaskNextIterations(
-                        latestTask.uid!
-                    );
-                    setNextIterations(iterations);
-                } else if (canUseParentIterations && parentTask?.uid) {
-                    const iterations = await fetchTaskNextIterations(
-                        parentTask.uid
-                    );
-                    setNextIterations(iterations);
-                }
-            } catch (error) {
-                console.error('Error refreshing recurring setup:', error);
-                setNextIterations([]);
-            } finally {
-                setLoadingIterations(false);
-            }
-        },
-        [parentTask?.id, parentTask?.recurrence_type]
-    );
-
-    const handleCompletionToggle = async () => {
-        if (!task?.uid) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            const updatedTaskResponse = await toggleTaskCompletion(
-                task.uid,
-                task
-            );
-            const mergedTask = {
-                ...task,
-                ...updatedTaskResponse,
-                subtasks: updatedTaskResponse.subtasks || task.subtasks || [],
-            };
-
-            if (uid) {
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = mergedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            await refreshRecurringSetup(mergedTask);
-            setTimelineRefreshKey((prev) => prev + 1);
-            showSuccessToast(
-                t('task.statusUpdated', 'Status updated successfully')
-            );
-        } catch (error) {
-            console.error('Error toggling task completion:', error);
-            showErrorToast(
-                t('task.statusUpdateError', 'Failed to update status')
-            );
-        }
-    };
-
-    const handleStatusUpdate = async (newStatus: number) => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                status: newStatus,
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.statusUpdated', 'Status updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating status:', error);
-            showErrorToast(
-                t('task.statusUpdateError', 'Failed to update status')
-            );
-        }
-    };
-
-    const handleDeleteClick = () => {
-        if (task) {
-            setTaskToDelete(task);
-            setIsConfirmDialogOpen(true);
-        }
-    };
-
-    const handleDuplicate = async () => {
-        if (!task?.uid || isDuplicating) {
-            return;
-        }
-
-        setIsDuplicating(true);
-        try {
-            let subtasksForCopy = task.subtasks || [];
-            if (!hasLoadedSubtasks && subtasksForCopy.length === 0) {
-                subtasksForCopy = await fetchSubtasks(task.uid);
-                setHasLoadedSubtasks(true);
-                lastKnownSubtaskCount.current = subtasksForCopy.length;
-
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === task.uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = {
-                        ...task,
-                        subtasks: subtasksForCopy,
-                    };
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            const payload = buildDuplicateTaskPayload({
-                ...task,
-                subtasks: subtasksForCopy,
-            });
-            const createdTask = await tasksStore.createTask(payload);
-
-            const taskLink = (
-                <span>
-                    {t('task.duplicated', 'Task')}{' '}
-                    <a
-                        href={`/task/${createdTask.uid}`}
-                        className="text-green-200 underline hover:text-green-100"
-                    >
-                        {createdTask.name}
-                    </a>{' '}
-                    {t(
-                        'task.duplicatedSuccessfully',
-                        'duplicated successfully!'
-                    )}
-                </span>
-            );
-            showSuccessToast(taskLink);
-        } catch (error) {
-            console.error('Error duplicating task:', error);
-            showErrorToast(
-                t('task.duplicateError', 'Failed to duplicate task')
-            );
-        } finally {
-            setIsDuplicating(false);
-        }
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (taskToDelete?.uid) {
-            try {
-                taskModifiedRef.current = true;
-                await deleteTask(taskToDelete.uid);
-                showSuccessToast(
-                    t('task.deleteSuccess', 'Task deleted successfully')
-                );
-                navigate(location.state?.from || '/today');
-            } catch (error) {
-                console.error('Error deleting task:', error);
-                showErrorToast(t('task.deleteError', 'Failed to delete task'));
-            }
-        }
-        setIsConfirmDialogOpen(false);
-        setTaskToDelete(null);
-    };
-
-    const getProjectLink = (project: Project) => {
-        if (project.uid) {
-            const slug = project.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            return `/project/${project.uid}-${slug}`;
-        }
-        return `/project/${project.id}`;
-    };
-
-    const getTagLink = (tag: any) => {
-        if (tag.uid) {
-            const slug = tag.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            return `/tag/${tag.uid}-${slug}`;
-        }
-        return `/tag/${encodeURIComponent(tag.name)}`;
-    };
-
-    const handleTitleUpdate = async (newTitle: string) => {
-        if (!task?.uid || !newTitle.trim()) {
-            return;
-        }
-
-        if (newTitle.trim() === task.name) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { name: newTitle.trim() });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.titleUpdated', 'Task title updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating task title:', error);
-            showErrorToast(
-                t('task.titleUpdateError', 'Failed to update task title')
-            );
-            throw error;
-        }
-    };
-
-    const handleContentUpdate = async (newContent: string) => {
-        if (!task?.uid) {
-            return;
-        }
-
-        const trimmedContent = newContent.trim();
-
-        if (trimmedContent === (task.note || '').trim()) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { note: trimmedContent });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.contentUpdated', 'Task content updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating task content:', error);
-            showErrorToast(
-                t('task.contentUpdateError', 'Failed to update task content')
-            );
-            throw error;
-        }
-    };
-
-    const handleProjectCreateInlineWrapper = async (name: string) => {
-        if (!task?.uid || !name.trim()) return;
-
-        try {
-            taskModifiedRef.current = true;
-            const newProject = await createProject({ name });
-
-            projectsStore.setProjects([...projectsStore.projects, newProject]);
-
-            await updateTask(task.uid, { project_id: newProject.id });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('project.createdAndAssigned', 'Project created and assigned')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error creating project:', error);
-            showErrorToast(
-                t('project.createError', 'Failed to create project')
-            );
-            throw error;
-        }
-    };
-
-    const handleAreaSelection = async (area: Area) => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { area_id: area.id });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                tasksStore.updateTaskInStore(updatedTask);
-            }
-
-            showSuccessToast(
-                t('task.areaUpdated', 'Area updated successfully')
-            );
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating area:', error);
-            showErrorToast(t('task.areaUpdateError', 'Failed to update area'));
-        }
-    };
-
-    const handleClearArea = async () => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { area_id: null });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                tasksStore.updateTaskInStore(updatedTask);
-            }
-
-            showSuccessToast(
-                t('task.areaCleared', 'Area cleared successfully')
-            );
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error clearing area:', error);
-            showErrorToast(t('task.areaClearError', 'Failed to clear area'));
-        }
-    };
-
-    const handleAssignPerson = async (personUid: string | null) => {
-        if (!task?.uid) return;
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { assigned_to: personUid });
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                tasksStore.updateTaskInStore(updatedTask);
-            }
-        } catch (error) {
-            console.error('Error assigning person:', error);
-            showErrorToast('Failed to update assignment');
-        }
-    };
-
-    const getAreaLink = (area: Area) => {
-        if (area.uid) {
-            const slug = area.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            return `/area/${area.uid}-${slug}`;
-        }
-        return `/area/${area.id}`;
-    };
-
-    const handleTagsUpdate = async (tags: string[]) => {
-        if (!task?.uid) {
-            return;
-        }
-
-        const currentTags = task.tags?.map((tag: any) => tag.name) || [];
-        if (
-            tags.length === currentTags.length &&
-            tags.every((tag, idx) => tag === currentTags[idx])
-        ) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                tags: tags.map((name) => ({ name })),
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = {
-                        ...updatedTask,
-                        subtasks: updatedTask.subtasks || task.subtasks || [],
-                    };
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.tagsUpdated', 'Tags updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error: any) {
-            console.error('Error updating tags:', error);
-            const details = error?.details;
-            if (details && Array.isArray(details) && details.length > 0) {
-                showErrorToast(details.join('. '));
-            } else {
-                showErrorToast(
-                    error?.message ||
-                        t('task.tagsUpdateError', 'Failed to update tags')
-                );
-            }
-            throw error;
-        }
-    };
-
-    const handlePriorityUpdate = async (priority: any) => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                priority: priority,
-            });
-            const updatedTask = await fetchTaskByUid(uid!);
-            tasksStore.updateTaskInStore(updatedTask);
-            setTimelineRefreshKey((prev) => prev + 1);
-            showSuccessToast(
-                t('task.priorityUpdated', 'Priority updated successfully')
-            );
-        } catch (error) {
-            console.error('Error updating priority:', error);
-            showErrorToast(
-                t('task.priorityUpdateError', 'Failed to update priority')
-            );
-            throw error;
-        }
-    };
-
-    const handleSizeUpdate = async (size: any) => {
-        if (!task?.uid) return;
-        taskModifiedRef.current = true;
-        tasksStore.updateTaskInStore({
-            ...task,
-            size: sizeToApiValue(size) as any,
-        });
-    };
-
-    const handleSizeSaved = async () => {
-        if (!uid) return;
-        try {
-            const updatedTask = await fetchTaskByUid(uid);
-            tasksStore.updateTaskInStore(updatedTask);
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error refreshing task after size update:', error);
-        }
-    };
 
     if (loading) {
         return <LoadingScreen />;
@@ -1325,24 +146,26 @@ const TaskDetails: React.FC = () => {
             <div className="w-full">
                 <TaskDetailsHeader
                     task={task}
-                    onTitleUpdate={handleTitleUpdate}
-                    onStatusUpdate={handleStatusUpdate}
-                    onPriorityUpdate={handlePriorityUpdate}
-                    onSizeUpdate={handleSizeUpdate}
-                    onSizeSaved={handleSizeSaved}
-                    onDelete={handleDeleteClick}
-                    onDuplicate={handleDuplicate}
-                    getProjectLink={getProjectLink}
-                    getTagLink={getTagLink}
-                    activePill={activePill}
-                    onPillChange={setActivePill}
+                    onTitleUpdate={actions.handleTitleUpdate}
+                    onStatusUpdate={actions.handleStatusUpdate}
+                    onPriorityUpdate={actions.handlePriorityUpdate}
+                    onSizeUpdate={actions.handleSizeUpdate}
+                    onSizeSaved={actions.handleSizeSaved}
+                    onDelete={actions.handleDeleteClick}
+                    onDuplicate={actions.handleDuplicate}
+                    getProjectLink={actions.getProjectLink}
+                    getTagLink={actions.getTagLink}
+                    activePill={actions.activePill}
+                    onPillChange={actions.setActivePill}
                     showOverdueIcon={isOverdue}
                     showPastDueBadge={isPastDue}
                     onOverdueIconClick={handleOverdueIconClick}
                     isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
                     onDismissOverdueAlert={handleDismissOverdueAlert}
-                    onQuickStatusToggle={handleCompletionToggle}
-                    onAiInsightsClick={aiAssistantEnabled ? handleAiInsightsClick : undefined}
+                    onQuickStatusToggle={actions.handleCompletionToggle}
+                    onAiInsightsClick={
+                        aiAssistantEnabled ? handleAiInsightsClick : undefined
+                    }
                     aiInsightsActive={aiInsightsActive}
                     attachmentCount={attachmentCount}
                     autoEditTitle={isNewTask}
@@ -1350,41 +173,43 @@ const TaskDetails: React.FC = () => {
 
                 {aiAssistantEnabled && (
                     <div className="mb-4 mt-6">
-                        <TaskAIInsights
+                        <TaskDetailsAI
                             ref={aiInsightsRef}
                             task={task}
-                            project={projectsStore.projects.find(
-                                (p: any) => p.id === task.project_id
-                            ) || null}
+                            project={
+                                projectsStore.projects.find(
+                                    (p) => p.id === task.project_id
+                                ) || null
+                            }
                             onActiveChange={setAiInsightsActive}
                         />
                     </div>
                 )}
 
                 <div className="mb-6 mt-6">
-                    {activePill === 'overview' && (
+                    {actions.activePill === 'overview' && (
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                             <div className="lg:col-span-3 space-y-8">
                                 <TaskContentCard
                                     content={task.note || ''}
-                                    onUpdate={handleContentUpdate}
+                                    onUpdate={actions.handleContentUpdate}
                                 />
-                                <TaskSubtasksCard
+                                <TaskDetailsSubtasks
                                     task={task}
                                     subtasks={pendingSubtasks}
                                     onSubtasksChange={setPendingSubtasks}
-                                    onSave={handleSaveSubtasks}
+                                    onSave={actions.handleSaveSubtasks}
                                 />
-                                <TaskRecurrenceCard
+                                <TaskDetailsRecurrence
                                     task={task}
                                     parentTask={parentTask}
                                     loadingParent={loadingParent}
-                                    isEditing={isEditingRecurrence}
-                                    recurrenceForm={recurrenceForm}
-                                    onStartEdit={handleStartRecurrenceEdit}
-                                    onChange={handleRecurrenceChange}
-                                    onSave={handleSaveRecurrence}
-                                    onCancel={handleCancelRecurrenceEdit}
+                                    isEditing={editForms.isEditingRecurrence}
+                                    recurrenceForm={editForms.recurrenceForm}
+                                    onStartEdit={editForms.handleStartRecurrenceEdit}
+                                    onChange={editForms.handleRecurrenceChange}
+                                    onSave={actions.handleSaveRecurrence}
+                                    onCancel={editForms.handleCancelRecurrenceEdit}
                                     loadingIterations={loadingIterations}
                                     nextIterations={nextIterations}
                                     canEdit={!task.recurring_parent_id}
@@ -1395,92 +220,88 @@ const TaskDetails: React.FC = () => {
                                 <TaskProjectCard
                                     task={task}
                                     projects={projectsStore.projects}
-                                    onProjectSelect={handleProjectSelection}
-                                    onProjectClear={handleClearProject}
+                                    onProjectSelect={actions.handleProjectSelection}
+                                    onProjectClear={actions.handleClearProject}
                                     onProjectCreate={
-                                        handleProjectCreateInlineWrapper
+                                        actions.handleProjectCreateInlineWrapper
                                     }
-                                    getProjectLink={getProjectLink}
+                                    getProjectLink={actions.getProjectLink}
                                 />
 
                                 <TaskAreaCard
                                     task={task}
                                     areas={areasStore.areas}
-                                    onAreaSelect={handleAreaSelection}
-                                    onAreaClear={handleClearArea}
-                                    getAreaLink={getAreaLink}
+                                    onAreaSelect={actions.handleAreaSelection}
+                                    onAreaClear={actions.handleClearArea}
+                                    getAreaLink={actions.getAreaLink}
                                 />
 
-                                <TaskAssignedToCard
+                                <TaskDetailsPeople
                                     task={task}
-                                    onAssign={handleAssignPerson}
+                                    onAssign={actions.handleAssignPerson}
                                 />
 
-                                <TaskTagsCard
+                                <TaskDetailsTags
                                     task={task}
                                     availableTags={tagsStore.tags}
                                     hasLoadedTags={tagsStore.hasLoaded}
                                     isLoadingTags={tagsStore.isLoading}
-                                    onUpdate={handleTagsUpdate}
+                                    onUpdate={actions.handleTagsUpdate}
                                     onLoadTags={() => tagsStore.loadTags()}
-                                    getTagLink={getTagLink}
+                                    getTagLink={actions.getTagLink}
                                 />
 
                                 <TaskDueDateCard
                                     task={task}
-                                    isEditing={isEditingDueDate}
-                                    editedDueDate={editedDueDate}
-                                    onChangeDate={setEditedDueDate}
-                                    onStartEdit={handleStartDueDateEdit}
-                                    onSave={handleSaveDueDate}
-                                    onCancel={handleCancelDueDateEdit}
+                                    isEditing={editForms.isEditingDueDate}
+                                    editedDueDate={editForms.editedDueDate}
+                                    onChangeDate={editForms.setEditedDueDate}
+                                    onStartEdit={editForms.handleStartDueDateEdit}
+                                    onSave={actions.handleSaveDueDate}
+                                    onCancel={editForms.handleCancelDueDateEdit}
                                 />
 
                                 <TaskDeferUntilCard
                                     task={task}
-                                    isEditing={isEditingDeferUntil}
-                                    editedDeferUntil={editedDeferUntil}
-                                    onChangeDateTime={setEditedDeferUntil}
-                                    onStartEdit={handleStartDeferUntilEdit}
-                                    onSave={handleSaveDeferUntil}
-                                    onCancel={handleCancelDeferUntilEdit}
+                                    isEditing={editForms.isEditingDeferUntil}
+                                    editedDeferUntil={editForms.editedDeferUntil}
+                                    onChangeDateTime={editForms.setEditedDeferUntil}
+                                    onStartEdit={editForms.handleStartDeferUntilEdit}
+                                    onSave={actions.handleSaveDeferUntil}
+                                    onCancel={editForms.handleCancelDeferUntilEdit}
                                 />
                             </div>
                         </div>
                     )}
 
-                    {activePill === 'attachments' && (
+                    {actions.activePill === 'attachments' && (
                         <div className="grid grid-cols-1">
-                            <TaskAttachmentsCard
-                                taskUid={task.uid}
+                            <TaskDetailsAttachments
+                                taskUid={task.uid!}
                                 onAttachmentsCountChange={setAttachmentCount}
                             />
                         </div>
                     )}
 
-                    {activePill === 'activity' && (
+                    {actions.activePill === 'activity' && (
                         <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
                             <TaskTimeline
-                                taskUid={task.uid}
-                                refreshKey={timelineRefreshKey}
+                                taskUid={task.uid!}
+                                refreshKey={actions.timelineRefreshKey}
                             />
                         </div>
                     )}
-
                 </div>
 
-                {isConfirmDialogOpen && taskToDelete && (
+                {actions.isConfirmDialogOpen && actions.taskToDelete && (
                     <ConfirmDialog
                         title={t('task.deleteConfirmTitle', 'Delete Task')}
                         message={t(
                             'task.deleteConfirmMessage',
                             'Are you sure you want to delete this task? This action cannot be undone.'
                         )}
-                        onConfirm={handleDeleteConfirm}
-                        onCancel={() => {
-                            setIsConfirmDialogOpen(false);
-                            setTaskToDelete(null);
-                        }}
+                        onConfirm={actions.handleDeleteConfirm}
+                        onCancel={actions.clearDeleteDialog}
                     />
                 )}
             </div>

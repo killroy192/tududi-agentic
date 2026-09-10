@@ -2,14 +2,14 @@ import React from 'react';
 import TaskSubtasksSection from '../TaskForm/TaskSubtasksSection';
 import { Task } from '../../../entities/Task';
 
-interface TaskSubtasksCardProps {
+interface TaskDetailsSubtasksProps {
     task: Task;
     subtasks: Task[];
     onSubtasksChange: (subtasks: Task[]) => void;
     onSave: (subtasks: Task[]) => void;
 }
 
-const TaskSubtasksCard: React.FC<TaskSubtasksCardProps> = ({
+const TaskDetailsSubtasks: React.FC<TaskDetailsSubtasksProps> = ({
     task,
     subtasks,
     onSubtasksChange,
@@ -27,4 +27,4 @@ const TaskSubtasksCard: React.FC<TaskSubtasksCardProps> = ({
     );
 };
 
-export default TaskSubtasksCard;
+export default TaskDetailsSubtasks;

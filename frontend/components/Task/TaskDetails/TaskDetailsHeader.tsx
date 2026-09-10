@@ -14,6 +14,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { Task, PriorityType } from '../../../entities/Task';
+import { Project } from '../../../entities/Project';
+import { Tag } from '../../../entities/Tag';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
@@ -30,8 +32,8 @@ interface TaskDetailsHeaderProps {
     onSizeSaved?: () => Promise<void>;
     onDelete: () => void;
     onDuplicate: () => void;
-    getProjectLink?: (project: any) => string;
-    getTagLink?: (tag: any) => string;
+    getProjectLink?: (project: Project) => string;
+    getTagLink?: (tag: Tag) => string;
     activePill: string;
     onPillChange: (pill: string) => void;
     showOverdueIcon?: boolean;
@@ -560,10 +562,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 <TagIcon className="h-4 w-4 mr-1" />
                                                 <span>
                                                     {task.tags.map(
-                                                        (
-                                                            tag: any,
-                                                            index: number
-                                                        ) => (
+                                                        (tag, index) => (
                                                             <React.Fragment
                                                                 key={
                                                                     tag.uid ||

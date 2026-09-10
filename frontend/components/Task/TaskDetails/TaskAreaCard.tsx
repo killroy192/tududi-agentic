@@ -25,7 +25,7 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const effectiveArea = task.Area || (task.Project as any)?.Area || null;
+    const effectiveArea = task.Area || task.Project?.area || null;
     const isInherited = !task.Area && !!task.Project?.area_id;
 
     useEffect(() => {
