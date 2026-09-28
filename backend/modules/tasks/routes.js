@@ -49,6 +49,7 @@ const {
     buildUpdateAttributes,
 } = require('./core/builders');
 const { createSubtasks, updateSubtasks } = require('./operations/subtasks');
+const { duplicateTask } = require('./operations/duplicate');
 const { handleCompletionStatus } = require('./operations/completion');
 const { captureOldValues, logTaskChanges } = require('./utils/logging');
 const {
@@ -555,6 +556,40 @@ router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+router.post(
+    '/task/:uid/duplicate',
+    requireTaskWriteAccess,
+    async (req, res) => {
+        try {
+            const result = await duplicateTask(
+                req.params.uid,
+                req.currentUser.id,
+                req.currentUser.timezone
+            );
+
+            if (result.error) {
+                return res.status(result.status).json({ error: result.error });
+            }
+
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                Pragma: 'no-cache',
+                Expires: '0',
+            });
+
+            res.status(201).json(result.task);
+        } catch (error) {
+            logError('Error duplicating task:', error);
+            res.status(400).json({
+                error: 'There was a problem duplicating the task.',
+                details: error.errors
+                    ? error.errors.map((e) => e.message)
+                    : [error.message],
+            });
+        }
+    }
+);
 
 router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
     try {

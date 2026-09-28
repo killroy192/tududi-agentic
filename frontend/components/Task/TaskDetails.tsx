@@ -9,6 +9,7 @@ import { Area } from '../../entities/Area';
 import {
     updateTask,
     deleteTask,
+    duplicateTask,
     fetchTaskByUid,
     fetchTaskNextIterations,
     fetchSubtasks,
@@ -904,6 +905,41 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleDuplicate = async () => {
+        if (!task?.uid) return;
+
+        try {
+            const newTask = await duplicateTask(task.uid);
+            tasksStore.addTask(newTask);
+            showSuccessToast(
+                <span>
+                    {t('task.duplicated', 'Task')}{' '}
+                    <a
+                        href={`/task/${newTask.uid}`}
+                        className="text-green-200 underline hover:text-green-100"
+                    >
+                        {newTask.name}
+                    </a>{' '}
+                    {t(
+                        'task.duplicatedSuccessfully',
+                        'duplicated successfully!'
+                    )}{' '}
+                    <a
+                        href={`/task/${newTask.uid}`}
+                        className="text-green-200 underline hover:text-green-100 font-medium"
+                    >
+                        {t('common.open', 'Open')}
+                    </a>
+                </span>
+            );
+        } catch (error) {
+            console.error('Error duplicating task:', error);
+            showErrorToast(
+                t('task.duplicateError', 'Failed to duplicate task')
+            );
+        }
+    };
+
     const handleDeleteConfirm = async () => {
         if (taskToDelete?.uid) {
             try {
@@ -1248,6 +1284,7 @@ const TaskDetails: React.FC = () => {
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
                     onDelete={handleDeleteClick}
+                    onDuplicate={handleDuplicate}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
                     activePill={activePill}

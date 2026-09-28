@@ -470,6 +470,11 @@ const Tasks: React.FC = () => {
         }
     };
 
+    const handleTaskDuplicated = (newTask: Task) => {
+        setTasks((prevTasks) => [newTask, ...prevTasks]);
+        setTotalCount((prevCount) => prevCount + 1);
+    };
+
     const handleSortChange = (order: string) => {
         setOrderBy(order);
         localStorage.setItem('order_by', order);
@@ -904,6 +909,7 @@ const Tasks: React.FC = () => {
                                                 handleTaskCompletionToggle
                                             }
                                             onTaskDelete={handleTaskDelete}
+                                            onTaskDuplicated={handleTaskDuplicated}
                                             projects={projects}
                                             hideProjectName={false}
                                             onToggleToday={undefined}
@@ -952,6 +958,7 @@ const Tasks: React.FC = () => {
                                             handleTaskCompletionToggle
                                         }
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         hideProjectName={false}
                                         onToggleToday={undefined}
@@ -967,6 +974,7 @@ const Tasks: React.FC = () => {
                                             handleTaskCompletionToggle
                                         }
                                         onTaskDelete={handleTaskDelete}
+                                        onTaskDuplicated={handleTaskDuplicated}
                                         projects={projects}
                                         onToggleToday={undefined}
                                         showCompletedTasks={showCompleted}

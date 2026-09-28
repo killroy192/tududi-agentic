@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
     CalendarDaysIcon,
@@ -7,6 +7,7 @@ import {
     ListBulletIcon,
     ChevronDownIcon,
     CheckIcon,
+    EllipsisHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import { TagIcon, FolderIcon, FireIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,7 @@ interface TaskHeaderProps {
     // Props for edit and delete functionality
     onEdit?: (e: React.MouseEvent) => void;
     onDelete?: (e: React.MouseEvent) => void;
+    onDuplicate?: (e: React.MouseEvent) => void;
     isUpcomingView?: boolean;
     onMenuOpenChange?: (isOpen: boolean) => void;
     hideStatusControl?: boolean;
@@ -60,7 +62,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     onSubtasksToggle,
     // Props for edit and delete functionality
     onEdit: _onEdit,
-    onDelete: _onDelete,
+    onDelete,
+    onDuplicate,
     isUpcomingView = false,
     onMenuOpenChange,
     hideStatusControl = false,
@@ -69,7 +72,88 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     const { t } = useTranslation();
     void _onToggleToday;
     void _onEdit;
-    void _onDelete;
+    const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+    const desktopActionsMenuRef = useRef<HTMLDivElement>(null);
+    const mobileActionsMenuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            const inDesktop =
+                desktopActionsMenuRef.current?.contains(target) ?? false;
+            const inMobile =
+                mobileActionsMenuRef.current?.contains(target) ?? false;
+            if (actionsMenuOpen && !inDesktop && !inMobile) {
+                setActionsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside);
+    }, [actionsMenuOpen]);
+
+    const showActionsMenu = Boolean(onDuplicate || onDelete);
+
+    const renderActionsMenu = (menuRef: React.RefObject<HTMLDivElement>) => {
+        if (!showActionsMenu) return null;
+
+        return (
+            <div ref={menuRef} className="relative flex-shrink-0">
+                <button
+                    type="button"
+                    className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setActionsMenuOpen((open) => !open);
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={actionsMenuOpen}
+                    aria-label={t('common.moreActions', 'More actions')}
+                >
+                    <EllipsisHorizontalIcon className="h-5 w-5" />
+                </button>
+                {actionsMenuOpen && (
+                    <div
+                        className="absolute right-0 top-full mt-1 z-40 w-40 rounded-lg shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {onDuplicate && (
+                            <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-t-lg"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setActionsMenuOpen(false);
+                                    onDuplicate(e);
+                                }}
+                            >
+                                {t('task.duplicate', 'Duplicate')}
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button
+                                type="button"
+                                className={`w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                                    onDuplicate ? 'rounded-b-lg' : 'rounded-lg'
+                                }`}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setActionsMenuOpen(false);
+                                    onDelete(e);
+                                }}
+                            >
+                                {t('common.delete', 'Delete')}
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const SubtasksToggleButton = () => {
         if (!hasSubtasks || !onSubtasksToggle) return null;
 
@@ -195,7 +279,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {/* Full view (md and larger) */}
             <div className="hidden md:flex flex-col md:flex-row md:items-center md:relative">
                 <div
-                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? 'pr-56' : ''}`}
+                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? (showActionsMenu ? 'pr-72' : 'pr-56') : showActionsMenu ? 'pr-12' : ''}`}
                 >
                     <div className="hidden">
                         <TaskPriorityIcon
@@ -415,7 +499,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                     </div>
                 </div>
                 {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 z-[1]">
+                        {renderActionsMenu(desktopActionsMenuRef)}
                         <TaskStatusControl
                             task={task}
                             onToggleCompletion={onToggleCompletion}
@@ -424,6 +509,12 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                             className=""
                             onMenuOpenChange={onMenuOpenChange}
                         />
+                    </div>
+                )}
+                {(!onToggleCompletion || hideStatusControl || task.habit_mode || isUpcomingView) &&
+                    showActionsMenu && (
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
+                        {renderActionsMenu(desktopActionsMenuRef)}
                     </div>
                 )}
             </div>
@@ -456,6 +547,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                     {task.original_name || task.name}
                                 </span>
                                 <SubtasksToggleButton />
+                                {renderActionsMenu(mobileActionsMenuRef)}
                             </span>
                         </div>
 

@@ -66,6 +66,7 @@ interface TasksStore {
     createTask: (taskData: Task) => Promise<Task>;
     updateTask: (taskUid: string, taskData: Task) => Promise<Task>;
     deleteTask: (taskUid: string) => Promise<void>;
+    duplicateTask: (taskUid: string) => Promise<Task>;
     toggleTaskCompletion: (taskUid: string) => Promise<Task>;
     loadTaskById: (taskId: number) => Promise<Task>;
     loadTaskByUid: (uid: string) => Promise<Task>;
@@ -486,6 +487,28 @@ export const useStore = create<StoreState>((set: any) => ({
                 }));
             } catch (error) {
                 console.error('deleteTask: Failed to delete task:', error);
+                set((state) => ({
+                    tasksStore: { ...state.tasksStore, isError: true },
+                }));
+                throw error;
+            }
+        },
+        duplicateTask: async (taskUid) => {
+            const { duplicateTask } = await import('../utils/tasksService');
+            try {
+                const newTask = await duplicateTask(taskUid);
+                set((state) => ({
+                    tasksStore: {
+                        ...state.tasksStore,
+                        tasks: [newTask, ...state.tasksStore.tasks],
+                    },
+                }));
+                return newTask;
+            } catch (error) {
+                console.error(
+                    'duplicateTask: Failed to duplicate task:',
+                    error
+                );
                 set((state) => ({
                     tasksStore: { ...state.tasksStore, isError: true },
                 }));
