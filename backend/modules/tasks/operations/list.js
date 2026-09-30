@@ -31,12 +31,16 @@ async function buildGroupedTasks(
     );
 }
 
-async function serializeGroupedTasks(groupedTasks, timezone) {
+async function serializeGroupedTasks(groupedTasks, timezone, options = {}) {
     if (!groupedTasks) return null;
 
     const serialized = {};
     for (const [groupName, groupTasks] of Object.entries(groupedTasks)) {
-        serialized[groupName] = await serializeTasks(groupTasks, timezone);
+        serialized[groupName] = await serializeTasks(
+            groupTasks,
+            timezone,
+            options
+        );
     }
     return serialized;
 }

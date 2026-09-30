@@ -1,6 +1,9 @@
 const { DataTypes } = require('sequelize');
 const { uid } = require('../utils/uid');
 
+// Relative effort (t-shirt) sizes. Unset is stored as NULL.
+const TASK_SIZES = ['S', 'M', 'L', 'XL'];
+
 module.exports = (sequelize) => {
     const Task = sequelize.define(
         'Task',
@@ -48,6 +51,17 @@ module.exports = (sequelize) => {
                 validate: {
                     min: 0,
                     max: 6,
+                },
+            },
+            size: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                defaultValue: null,
+                validate: {
+                    isIn: {
+                        args: [TASK_SIZES],
+                        msg: `Size must be one of: ${TASK_SIZES.join(', ')}`,
+                    },
                 },
             },
             note: {
@@ -324,6 +338,8 @@ module.exports = (sequelize) => {
         CANCELLED: 5,
         PLANNED: 6,
     };
+
+    Task.SIZES = TASK_SIZES;
 
     Task.RECURRENCE_TYPE = {
         NONE: 'none',

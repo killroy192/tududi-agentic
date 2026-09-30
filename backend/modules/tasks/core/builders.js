@@ -1,5 +1,5 @@
 const { Task } = require('../../../models');
-const { parsePriority, parseStatus } = require('./parsers');
+const { parsePriority, parseStatus, parseSize } = require('./parsers');
 const {
     processDueDateForStorage,
     processDeferUntilForStorage,
@@ -140,6 +140,8 @@ function buildTaskAttributes(body, userId, timezone, isUpdate = false) {
     const attrs = {
         name: body.name?.trim(),
         priority: parsePriority(body.priority),
+        // Omitted or null size means unset; invalid values throw before create.
+        size: parseSize(body.size) ?? null,
         due_date: processDueDateForStorage(dueDate, timezone),
         defer_until: processDeferUntilForStorage(body.defer_until, timezone),
         status: parseStatus(body.status),
@@ -262,6 +264,11 @@ function buildUpdateAttributes(body, task, timezone) {
             body.defer_until,
             timezone
         );
+    }
+
+    // Omitted size keeps the stored value; null clears; invalid throws.
+    if (body.size !== undefined) {
+        attrs.size = parseSize(body.size);
     }
 
     if (body.assigned_to !== undefined) {

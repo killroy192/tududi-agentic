@@ -148,6 +148,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [S, M, L, XL]
+ *                 description: Relative effort estimate. Omit or send null to leave unset. Any other value is rejected with 400 and no task is created.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]
@@ -271,6 +276,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [S, M, L, XL]
+ *                 description: Relative effort estimate. Omit to keep the stored value, send null to clear it. Any other value is rejected with 400 and the stored size is unchanged.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]

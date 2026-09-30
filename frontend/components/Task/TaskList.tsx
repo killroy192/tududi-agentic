@@ -66,6 +66,7 @@ const TaskList: React.FC<TaskListProps> = ({
                             isUpcomingView={isUpcomingView}
                             showCompletedTasks={showCompletedTasks}
                             showSuggestionChips={showSuggestionChips}
+                            isSizeEditable
                         />
                     </div>
                 ))

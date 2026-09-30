@@ -36,6 +36,7 @@ const {
     getUpcomingRangeInUTC,
 } = require('../../utils/timezone-utils');
 const permissionsService = require('../../services/permissionsService');
+const { ValidationError } = require('../../shared/errors');
 const { isValidUid } = require('../../utils/slug-utils');
 
 const {
@@ -191,6 +192,8 @@ function expandRecurringTasks(
             const virtualTask = {
                 ...(task.toJSON ? task.toJSON() : task),
                 due_date: occurrence.due_date,
+                // Size is per entity; new occurrences always start unset.
+                size: null,
                 is_virtual_occurrence: true,
                 occurrence_index: index,
                 virtual_id: `${task.id}_occurrence_${index}`,
@@ -324,8 +327,11 @@ router.get('/tasks', async (req, res) => {
             language || 'en'
         );
 
-        const serializationOptions =
-            type === 'today' ? { preserveOriginalName: true } : {};
+        const canEdit = await permissionsService.createTaskEditResolver(userId);
+        const serializationOptions = {
+            canEdit,
+            ...(type === 'today' ? { preserveOriginalName: true } : {}),
+        };
 
         const response = {
             tasks: await serializeTasks(
@@ -337,7 +343,8 @@ router.get('/tasks', async (req, res) => {
 
         const serializedGrouped = await serializeGroupedTasks(
             groupedTasks,
-            timezone
+            timezone,
+            { canEdit }
         );
         if (serializedGrouped) {
             response.groupedTasks = serializedGrouped;
@@ -510,7 +517,7 @@ router.post('/task', async (req, res) => {
         const serializedTask = await serializeTask(
             taskWithAssociations,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            { skipDisplayNameTransform: true, canEdit: () => true }
         );
 
         res.set({
@@ -521,6 +528,9 @@ router.post('/task', async (req, res) => {
 
         res.status(201).json(serializedTask);
     } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
         logError('Error creating task:', error);
         logError('Error stack:', error.stack);
         logError('Error name:', error.name);
@@ -543,10 +553,13 @@ router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
             return res.status(404).json({ error: 'Task not found.' });
         }
 
+        const canEdit = await permissionsService.createTaskEditResolver(
+            req.currentUser.id
+        );
         const serializedTask = await serializeTask(
             task,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            { skipDisplayNameTransform: true, canEdit }
         );
 
         res.json(serializedTask);
@@ -896,11 +909,14 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
         const serializedTask = await serializeTask(
             taskWithAssociations,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            { skipDisplayNameTransform: true, canEdit: () => true }
         );
 
         res.json(serializedTask);
     } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({ error: error.message });
+        }
         logError('Error updating task:', error);
         res.status(400).json({
             error: 'There was a problem updating the task.',

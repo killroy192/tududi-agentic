@@ -90,6 +90,18 @@ const options = {
                             enum: ['low', 'medium', 'high'],
                             description: 'Task priority',
                         },
+                        size: {
+                            type: 'string',
+                            nullable: true,
+                            enum: ['S', 'M', 'L', 'XL'],
+                            description:
+                                'Relative effort estimate (S, M, L, XL). null when unset.',
+                        },
+                        can_edit: {
+                            type: 'boolean',
+                            description:
+                                'Whether the current user may edit this task. Present on task reads used by the UI.',
+                        },
                         due_date: {
                             type: 'string',
                             format: 'date-time',

@@ -3,7 +3,7 @@ const taskRepository = require('../repository');
 const permissionsService = require('../../../services/permissionsService');
 const { logError } = require('../../../services/logService');
 const { serializeTask } = require('../core/serializers');
-const { parsePriority, parseStatus } = require('../core/parsers');
+const { parsePriority, parseStatus, parseSize } = require('../core/parsers');
 
 async function getSubtasks(parentTaskId, userId, timezone) {
     const parent = await taskRepository.findById(parentTaskId);
@@ -42,8 +42,9 @@ async function getSubtasks(parentTaskId, userId, timezone) {
         }
     );
 
+    const canEdit = await permissionsService.createTaskEditResolver(userId);
     const serializedSubtasks = await Promise.all(
-        subtasks.map((subtask) => serializeTask(subtask, timezone))
+        subtasks.map((subtask) => serializeTask(subtask, timezone, { canEdit }))
     );
 
     return { error: null, subtasks: serializedSubtasks };
@@ -66,6 +67,8 @@ async function createSubtasks(parentTaskId, subtasks, userId) {
             parent_task_id: parentTaskId,
             user_id: userId,
             priority: parsePriority(subtask.priority) || Task.PRIORITY.LOW,
+            // Subtasks keep their own size; nothing is copied from the parent.
+            size: parseSize(subtask.size) ?? null,
             status: parseStatus(subtask.status),
             completed_at:
                 subtask.status === 'done' || subtask.status === Task.STATUS.DONE
@@ -156,6 +159,10 @@ async function updateSubtasks(taskId, subtasks, userId) {
                 if (subtask.priority !== undefined) {
                     updateData.priority =
                         parsePriority(subtask.priority) || Task.PRIORITY.LOW;
+                }
+
+                if (subtask.size !== undefined) {
+                    updateData.size = parseSize(subtask.size);
                 }
             }
 

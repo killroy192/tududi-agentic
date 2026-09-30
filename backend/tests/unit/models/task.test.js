@@ -62,6 +62,57 @@ describe('Task Model', () => {
 
             await expect(Task.create(taskData)).rejects.toThrow();
         });
+
+        describe('size', () => {
+            it('should default to unset (null)', async () => {
+                const task = await Task.create({
+                    name: 'Test Task',
+                    user_id: user.id,
+                });
+
+                expect(task.size).toBeNull();
+            });
+
+            it.each(['S', 'M', 'L', 'XL'])(
+                'should accept size %s',
+                async (size) => {
+                    const task = await Task.create({
+                        name: 'Test Task',
+                        user_id: user.id,
+                        size,
+                    });
+
+                    expect(task.size).toBe(size);
+                }
+            );
+
+            it('should accept explicit null size', async () => {
+                const task = await Task.create({
+                    name: 'Test Task',
+                    user_id: user.id,
+                    size: null,
+                });
+
+                expect(task.size).toBeNull();
+            });
+
+            it.each(['XS', 'XXL', 's', 'huge', '', 3])(
+                'should reject unsupported size %p',
+                async (size) => {
+                    await expect(
+                        Task.create({
+                            name: 'Test Task',
+                            user_id: user.id,
+                            size,
+                        })
+                    ).rejects.toThrow();
+                }
+            );
+
+            it('should expose the allowed sizes as a constant', () => {
+                expect(Task.SIZES).toEqual(['S', 'M', 'L', 'XL']);
+            });
+        });
     });
 
     describe('constants', () => {

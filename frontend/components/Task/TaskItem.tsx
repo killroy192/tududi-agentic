@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize, normalizeTaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import TaskHeader from './TaskHeader';
 import { useToast } from '../Shared/ToastContext';
 import TaskPriorityIcon from '../Shared/Icons/TaskPriorityIcon';
+import SizeDropdown from '../Shared/SizeDropdown';
+import SizeBadge from '../Shared/SizeBadge';
+import { useStore } from '../../store/useStore';
 import { isTaskCompleted } from '../../constants/taskStatus';
 import {
     ExclamationTriangleIcon,
@@ -169,6 +172,11 @@ interface TaskItemProps {
     hideStatusControl?: boolean;
     isKanbanView?: boolean;
     showSuggestionChips?: boolean;
+    /**
+     * Render the size as an inline dropdown that saves on change.
+     * Off by default so dense views (Kanban, Eisenhower) only show a badge.
+     */
+    isSizeEditable?: boolean;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
@@ -185,6 +193,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     hideStatusControl = false,
     isKanbanView = false,
     showSuggestionChips = false,
+    isSizeEditable = false,
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -193,6 +202,16 @@ const TaskItem: React.FC<TaskItemProps> = ({
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const { showErrorToast, showUndoToast } = useToast();
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+
+    // Size is kept locally so a save can be shown immediately and reverted on failure.
+    const [size, setSize] = useState<TaskSize | null>(() =>
+        normalizeTaskSize(task.size)
+    );
+    const [isSavingSize, setIsSavingSize] = useState(false);
+
+    useEffect(() => {
+        setSize(normalizeTaskSize(task.size));
+    }, [task.id, task.size]);
 
     // Status menu state
     const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
@@ -401,6 +420,52 @@ const TaskItem: React.FC<TaskItemProps> = ({
         }
     };
 
+    // Virtual upcoming occurrences are not persisted, and the API refuses size
+    // edits for read-only shares; both fall back to a display-only badge.
+    const canEditSize =
+        isSizeEditable &&
+        task.can_edit !== false &&
+        !task.is_virtual_occurrence &&
+        !!task.uid;
+
+    const handleSizeChange = async (nextSize: TaskSize | null) => {
+        if (!task.uid || isSavingSize || nextSize === size) return;
+
+        const previousSize = size;
+        setSize(nextSize);
+        setIsSavingSize(true);
+
+        try {
+            const response = await updateTask(task.uid, { size: nextSize });
+            const mergedTask: Task = {
+                ...task,
+                ...response,
+                subtasks: response.subtasks || task.subtasks || [],
+            };
+
+            // Keep the details view (store-backed) and the host list in sync.
+            useStore.getState().tasksStore.updateTaskInStore(mergedTask);
+            onTaskCompletionToggle?.(mergedTask);
+        } catch (error) {
+            console.error('Error updating task size:', error);
+            setSize(previousSize);
+            showErrorToast(t('task.sizeUpdateError', 'Failed to update size'));
+        } finally {
+            setIsSavingSize(false);
+        }
+    };
+
+    const sizeSlot = canEditSize ? (
+        <SizeDropdown
+            value={size}
+            onChange={handleSizeChange}
+            variant="compact"
+            testId="task-size"
+        />
+    ) : (
+        <SizeBadge size={size} />
+    );
+
     // Use the project from the task's included data if available, otherwise find from projectList
     let project =
         task.Project || projectList.find((p) => p.id === task.project_id);
@@ -452,6 +517,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     onMenuOpenChange={setIsStatusMenuOpen}
                     hideStatusControl={hideStatusControl}
                     isKanbanView={isKanbanView}
+                    sizeSlot={sizeSlot}
                 />
 
                 {/* Progress bar at bottom of parent task */}

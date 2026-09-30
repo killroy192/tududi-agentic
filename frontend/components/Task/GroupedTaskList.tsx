@@ -365,6 +365,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                             showCompletedTasks={
                                                                 showCompletedTasks
                                                             }
+                                                            isSizeEditable
                                                         />
                                                     </div>
                                                 ))}
@@ -451,6 +452,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                               projects={projects}
                                               hideProjectName={hideProjectName}
                                               onToggleToday={onToggleToday}
+                                              isSizeEditable
                                           />
                                       </div>
                                   ))}
@@ -471,6 +473,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                               projects={projects}
                               hideProjectName={hideProjectName}
                               onToggleToday={onToggleToday}
+                              isSizeEditable
                           />
                       </div>
                   ))}
@@ -503,6 +506,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                             projects={projects}
                                             hideProjectName={hideProjectName}
                                             onToggleToday={onToggleToday}
+                                            isSizeEditable
                                         />
                                     </div>
                                 </div>
@@ -585,6 +589,7 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                     hideProjectName
                                                 }
                                                 onToggleToday={onToggleToday}
+                                                isSizeEditable
                                             />
                                         </div>
                                     ))}

@@ -6,6 +6,7 @@ const { Task, Tag, Project, sequelize } = require('../../models');
 const searchRepository = require('./repository');
 const { parseSearchParams, priorityToInt } = require('./validation');
 const { serializeTasks } = require('../tasks/core/serializers');
+const permissionsService = require('../../services/permissionsService');
 const { UnauthorizedError } = require('../../shared/errors');
 
 class SearchService {
@@ -233,8 +234,10 @@ class SearchService {
             params.offset
         );
 
+        const canEdit = await permissionsService.createTaskEditResolver(userId);
         const serializedTasks = await serializeTasks(tasks, timezone, {
             skipDisplayNameTransform: true,
+            canEdit,
         });
 
         return {

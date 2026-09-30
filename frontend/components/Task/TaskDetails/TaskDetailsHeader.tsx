@@ -13,8 +13,9 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
-import { Task, PriorityType } from '../../../entities/Task';
+import { Task, PriorityType, TaskSize } from '../../../entities/Task';
 import BackButton from '../../Shared/BackButton';
+import SizeDropdown from '../../Shared/SizeDropdown';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
 import { getStatusValue } from '../../../constants/taskStatus';
@@ -24,6 +25,7 @@ interface TaskDetailsHeaderProps {
     onTitleUpdate: (newTitle: string) => Promise<void>;
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
+    onSizeUpdate: (newSize: TaskSize | null) => Promise<void>;
     onDelete: () => void;
     getProjectLink?: (project: any) => string;
     getTagLink?: (tag: any) => string;
@@ -46,6 +48,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onTitleUpdate,
     onStatusUpdate,
     onPriorityUpdate,
+    onSizeUpdate,
     onDelete,
     getProjectLink,
     getTagLink,
@@ -231,6 +234,18 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     const handlePriorityChange = async (newPriority: PriorityType) => {
         setPriorityDropdownOpen(false);
         await onPriorityUpdate(newPriority);
+    };
+
+    // Same access rule as PATCH: rw/admin may edit. Absent flag → assume editable.
+    const canEditTask = task.can_edit !== false;
+
+    const handleSizeChange = async (newSize: TaskSize | null) => {
+        try {
+            await onSizeUpdate(newSize);
+        } catch {
+            // The parent already reported the failure; the displayed value
+            // comes from the store, which only changes on success.
+        }
     };
 
     const getPriorityIcon = (
@@ -485,6 +500,15 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* Size control - Next to priority */}
+                                        <SizeDropdown
+                                            value={task.size}
+                                            onChange={handleSizeChange}
+                                            disabled={!canEditTask}
+                                            className="sm:ml-1"
+                                            testId="task-details-size"
+                                        />
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

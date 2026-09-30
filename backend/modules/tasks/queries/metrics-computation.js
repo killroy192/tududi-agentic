@@ -302,27 +302,39 @@ async function getTaskMetrics(userId, timezone) {
 
     const response = await buildMetricsResponse(metrics);
 
+    const canEdit = await permissionsService.createTaskEditResolver(userId);
+    const options = { canEdit };
+
     const serializedLists = {
         tasks_in_progress: await serializeTasks(
             metrics.tasks_in_progress,
-            timezone
+            timezone,
+            options
         ),
         tasks_today_plan: await serializeTasks(
             metrics.today_plan_tasks,
-            timezone
+            timezone,
+            options
         ),
         tasks_due_today: await serializeTasks(
             metrics.tasks_due_today,
-            timezone
+            timezone,
+            options
         ),
-        tasks_overdue: await serializeTasks(metrics.tasks_overdue, timezone),
+        tasks_overdue: await serializeTasks(
+            metrics.tasks_overdue,
+            timezone,
+            options
+        ),
         suggested_tasks: await serializeTasks(
             metrics.suggested_tasks,
-            timezone
+            timezone,
+            options
         ),
         tasks_completed_today: await serializeTasks(
             metrics.tasks_completed_today,
-            timezone
+            timezone,
+            options
         ),
     };
 

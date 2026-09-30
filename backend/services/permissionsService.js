@@ -3,6 +3,11 @@ const { Project, Task, Note, Permission } = require('../models');
 const { isAdmin } = require('./rolesService');
 
 const ACCESS = { NONE: 'none', RO: 'ro', RW: 'rw', ADMIN: 'admin' };
+const ACCESS_LEVELS = { none: 0, ro: 1, rw: 2, admin: 3 };
+
+function canWrite(accessLevel) {
+    return (ACCESS_LEVELS[accessLevel] || 0) >= ACCESS_LEVELS[ACCESS.RW];
+}
 
 async function getSharedUidsForUser(resourceType, userId) {
     const rows = await Permission.findAll({
@@ -95,6 +100,77 @@ async function getAccess(userId, resourceType, resourceUid) {
     return perm ? perm.access_level : ACCESS.NONE;
 }
 
+/**
+ * Build a predicate that answers "may this user edit this task?" for any task
+ * already loaded in memory. It mirrors the precedence of getAccess('task'):
+ * admin → task owner → access inherited from the parent project (owner or
+ * shared) → direct task share. Unlike getAccess it runs a fixed number of
+ * queries up front, so it can be applied to every row of a task list.
+ *
+ * @param {number} userId
+ * @returns {Promise<(task: {user_id:number, project_id?:number|null, uid?:string}) => boolean>}
+ */
+async function createTaskEditResolver(userId) {
+    if (await isAdmin(userId)) return () => true;
+
+    const [taskPermissions, projectPermissions, ownedProjects] =
+        await Promise.all([
+            Permission.findAll({
+                where: { user_id: userId, resource_type: 'task' },
+                attributes: ['resource_uid', 'access_level'],
+                raw: true,
+            }),
+            Permission.findAll({
+                where: { user_id: userId, resource_type: 'project' },
+                attributes: ['resource_uid', 'access_level'],
+                raw: true,
+            }),
+            Project.findAll({
+                where: { user_id: userId },
+                attributes: ['id'],
+                raw: true,
+            }),
+        ]);
+
+    const taskAccessByUid = new Map(
+        taskPermissions.map((p) => [p.resource_uid, p.access_level])
+    );
+    const projectAccessByUid = new Map(
+        projectPermissions.map((p) => [p.resource_uid, p.access_level])
+    );
+
+    const projectAccessById = new Map(
+        ownedProjects.map((p) => [p.id, ACCESS.RW])
+    );
+    if (projectAccessByUid.size > 0) {
+        const sharedProjects = await Project.findAll({
+            where: { uid: { [Op.in]: Array.from(projectAccessByUid.keys()) } },
+            attributes: ['id', 'uid'],
+            raw: true,
+        });
+        sharedProjects.forEach((p) => {
+            if (!projectAccessById.has(p.id)) {
+                projectAccessById.set(p.id, projectAccessByUid.get(p.uid));
+            }
+        });
+    }
+
+    return (task) => {
+        if (!task) return false;
+        if (task.user_id === userId) return true;
+
+        const projectAccess = task.project_id
+            ? projectAccessById.get(task.project_id)
+            : undefined;
+        if (projectAccess && projectAccess !== ACCESS.NONE) {
+            return canWrite(projectAccess);
+        }
+
+        const taskAccess = task.uid ? taskAccessByUid.get(task.uid) : undefined;
+        return taskAccess ? canWrite(taskAccess) : false;
+    };
+}
+
 async function ownershipOrPermissionWhere(resourceType, userId, cache = null) {
     // Check cache first (request-scoped)
     const cacheKey = `permission_${resourceType}_${userId}`;
@@ -172,6 +248,8 @@ async function ownershipOrPermissionWhere(resourceType, userId, cache = null) {
 module.exports = {
     ACCESS,
     getAccess,
+    canWrite,
+    createTaskEditResolver,
     ownershipOrPermissionWhere,
     getSharedUidsForUser,
 };

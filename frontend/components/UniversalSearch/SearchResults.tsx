@@ -9,6 +9,8 @@ import {
     TagIcon,
 } from '@heroicons/react/24/outline';
 import { searchUniversal } from '../../utils/searchService';
+import SizeBadge from '../Shared/SizeBadge';
+import { TaskSize } from '../../entities/Task';
 
 interface SearchResultsProps {
     searchQuery: string;
@@ -30,6 +32,7 @@ interface SearchResult {
     description?: string;
     priority?: string;
     status?: string;
+    size?: TaskSize | null;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
@@ -257,6 +260,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                                         </p>
                                     )}
                                 </div>
+                                {result.type === 'Task' && (
+                                    <SizeBadge
+                                        size={result.size}
+                                        className="ml-3"
+                                    />
+                                )}
                             </button>
                         ))}
                     </div>

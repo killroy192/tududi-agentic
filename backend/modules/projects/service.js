@@ -185,7 +185,7 @@ class ProjectsService {
     /**
      * Get project by UID.
      */
-    async getByUid(uid, userTimezone) {
+    async getByUid(uid, userTimezone, userId = null) {
         const validatedUid = validateUid(uid);
         const project =
             await projectsRepository.findByUidWithIncludes(validatedUid);
@@ -197,10 +197,16 @@ class ProjectsService {
         const safeTimezone = getSafeTimezone(userTimezone);
         const projectJson = project.toJSON();
 
+        // Per-task edit flag for the current user (same rules as task update).
+        const canEditTask = userId
+            ? await permissionsService.createTaskEditResolver(userId)
+            : null;
+
         const normalizedTasks = projectJson.Tasks
             ? projectJson.Tasks.map((task) => {
                   const normalizedTask = {
                       ...task,
+                      ...(canEditTask ? { can_edit: canEditTask(task) } : {}),
                       tags: sortTags(task.Tags),
                       subtasks: (task.Subtasks || []).map((subtask) => ({
                           ...subtask,

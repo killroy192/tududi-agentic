@@ -1,4 +1,5 @@
 import { getApiPath } from '../config/paths';
+import { TaskSize } from '../entities/Task';
 
 interface SearchParams {
     query: string;
@@ -22,6 +23,7 @@ interface SearchResult {
     description?: string;
     priority?: string;
     status?: string;
+    size?: TaskSize | null;
 }
 
 interface Pagination {

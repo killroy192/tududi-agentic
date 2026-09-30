@@ -10,6 +10,15 @@ export interface Task {
     original_name?: string;
     status: StatusType | number;
     priority?: PriorityType | number;
+    /** Relative effort estimate. `null`/`undefined` means unset. */
+    size?: TaskSize | null;
+    /**
+     * Whether the current user may edit this task (same rules as PATCH).
+     * Absent means unknown; the UI then assumes editable and lets the API decide.
+     */
+    can_edit?: boolean;
+    /** Set on expanded upcoming rows that reuse a recurring template's identity. */
+    is_virtual_occurrence?: boolean;
     due_date?: string;
     defer_until?: string;
     reminder_at?: string;
@@ -67,6 +76,15 @@ export type StatusType =
     | 'cancelled'
     | 'planned';
 export type PriorityType = 'low' | 'medium' | 'high' | null | undefined;
+export type TaskSize = 'S' | 'M' | 'L' | 'XL';
+export const TASK_SIZES: readonly TaskSize[] = ['S', 'M', 'L', 'XL'];
+
+/** Returns the size when it is a supported value, otherwise `null` (unset). */
+export const normalizeTaskSize = (value: unknown): TaskSize | null =>
+    typeof value === 'string' &&
+    (TASK_SIZES as readonly string[]).includes(value)
+        ? (value as TaskSize)
+        : null;
 export type RecurrenceType =
     | 'none'
     | 'daily'

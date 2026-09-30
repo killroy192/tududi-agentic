@@ -77,8 +77,17 @@ async function serializeTask(
         recurringParentUid = parentTask?.uid || null;
     }
 
+    // Optional per-user edit flag. `options.canEdit` is a predicate built by
+    // permissionsService.createTaskEditResolver (or a constant function).
+    // When absent, `can_edit` is omitted and clients fall back to API enforcement.
+    const canEditFlag =
+        typeof options.canEdit === 'function'
+            ? { can_edit: Boolean(options.canEdit(taskJson)) }
+            : {};
+
     return {
         ...taskWithoutSubtasks,
+        ...canEditFlag,
         name: displayName,
         original_name: taskJson.name,
         uid: task.uid,

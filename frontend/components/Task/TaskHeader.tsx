@@ -45,6 +45,8 @@ interface TaskHeaderProps {
     onMenuOpenChange?: (isOpen: boolean) => void;
     hideStatusControl?: boolean;
     isKanbanView?: boolean;
+    /** Size control or badge rendered at the end of the title row. */
+    sizeSlot?: React.ReactNode;
 }
 
 const TaskHeader: React.FC<TaskHeaderProps> = ({
@@ -65,6 +67,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     onMenuOpenChange,
     hideStatusControl = false,
     isKanbanView = false,
+    sizeSlot,
 }) => {
     const { t } = useTranslation();
     void _onToggleToday;
@@ -222,6 +225,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                         </span>
                                     </div>
                                     <SubtasksToggleButton />
+                                    {sizeSlot}
                                 </div>
                                 {/* Show project and tags info in upcoming view */}
                                 {project && !hideProjectName && (
@@ -294,6 +298,11 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                 <div className="flex-shrink-0">
                                     <SubtasksToggleButton />
                                 </div>
+                                {sizeSlot && (
+                                    <div className="ml-auto flex-shrink-0">
+                                        {sizeSlot}
+                                    </div>
+                                )}
                             </div>
                         )}
                         {/* Project, tags, due date, and recurrence in same row, with spacing when they exist */}
@@ -456,6 +465,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                     {task.original_name || task.name}
                                 </span>
                                 <SubtasksToggleButton />
+                                {sizeSlot}
                             </span>
                         </div>
 

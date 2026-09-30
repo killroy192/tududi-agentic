@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Area } from '../../entities/Area';
 import {
@@ -1208,6 +1208,23 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleSizeUpdate = async (size: TaskSize | null) => {
+        if (!task?.uid) return;
+
+        try {
+            taskModifiedRef.current = true;
+            await updateTask(task.uid, { size });
+            const updatedTask = await fetchTaskByUid(uid!);
+            tasksStore.updateTaskInStore(updatedTask);
+            // Size changes are not logged, so the timeline is left untouched.
+            showSuccessToast(t('task.sizeUpdated', 'Size updated successfully'));
+        } catch (error) {
+            console.error('Error updating size:', error);
+            showErrorToast(t('task.sizeUpdateError', 'Failed to update size'));
+            throw error;
+        }
+    };
+
     if (loading) {
         return <LoadingScreen />;
     }
@@ -1247,6 +1264,7 @@ const TaskDetails: React.FC = () => {
                     onTitleUpdate={handleTitleUpdate}
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
+                    onSizeUpdate={handleSizeUpdate}
                     onDelete={handleDeleteClick}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
