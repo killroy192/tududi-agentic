@@ -109,9 +109,11 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
                     'File uploaded successfully'
                 )
             );
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : undefined;
             showErrorToast(
-                error.message ||
+                message ||
                     t('task.attachments.uploadError', 'Failed to upload file')
             );
         } finally {
@@ -146,9 +148,11 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
             if (previewAttachment?.uid === attachmentToDelete.uid) {
                 setPreviewAttachment(null);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : undefined;
             showErrorToast(
-                error.message ||
+                message ||
                     t(
                         'task.attachments.deleteError',
                         'Failed to delete attachment'

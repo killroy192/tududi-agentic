@@ -3,21 +3,40 @@ import { UserIcon } from '@heroicons/react/24/outline';
 import { Task } from '../../../entities/Task';
 import { Person } from '../../../entities/Person';
 import { fetchPeople } from '../../../utils/peopleService';
+import { updateTask } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
 import PersonDropdown from '../../Shared/PersonDropdown';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndUpdateTaskInStore } from './taskDetailsStoreUpdates';
 
 interface TaskAssignedToCardProps {
     task: Task;
-    onAssign: (personUid: string | null) => Promise<void>;
 }
 
-const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({ task, onAssign }) => {
+const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({ task }) => {
+    const { showErrorToast } = useToast();
+    const { markModified } = useTaskDetailsPageContext();
     const [people, setPeople] = useState<Person[]>([]);
 
     useEffect(() => {
-        fetchPeople().catch(console.error).then((p) => {
-            if (p) setPeople(p);
-        });
+        fetchPeople()
+            .catch(console.error)
+            .then((p) => {
+                if (p) setPeople(p);
+            });
     }, []);
+
+    const handleAssignPerson = async (personUid: string | null) => {
+        if (!task.uid) return;
+        try {
+            markModified();
+            await updateTask(task.uid, { assigned_to: personUid });
+            await refetchAndUpdateTaskInStore(task.uid);
+        } catch (error) {
+            console.error('Error assigning person:', error);
+            showErrorToast('Failed to update assignment');
+        }
+    };
 
     return (
         <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 transition-colors p-3">
@@ -28,7 +47,7 @@ const TaskAssignedToCard: React.FC<TaskAssignedToCardProps> = ({ task, onAssign 
             <PersonDropdown
                 personUid={task.assigned_to ?? null}
                 people={people}
-                onChange={onAssign}
+                onChange={handleAssignPerson}
             />
         </div>
     );

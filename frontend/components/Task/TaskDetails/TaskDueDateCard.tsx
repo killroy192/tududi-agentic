@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     CalendarIcon,
@@ -10,35 +10,111 @@ import {
     parseDateString,
     formatDateByCountry,
     getUserTimezone,
+    getTodayDateString,
 } from '../../../utils/dateUtils';
 import { getCountryFromTimezone } from '../../../utils/localeUtils';
+import { updateTask } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndSetTask } from './taskDetailsStoreUpdates';
 
 interface TaskDueDateCardProps {
     task: Task;
-    isEditing: boolean;
-    editedDueDate: string;
-    onChangeDate: (value: string) => void;
-    onStartEdit: () => void;
-    onSave: () => void;
-    onCancel: () => void;
 }
 
-const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({
-    task,
-    isEditing,
-    editedDueDate,
-    onChangeDate,
-    onStartEdit,
-    onSave,
-    onCancel,
-}) => {
+const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({ task }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline } = useTaskDetailsPageContext();
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedDueDate, setEditedDueDate] = useState<string>(
+        task.due_date || ''
+    );
+
+    useEffect(() => {
+        setEditedDueDate(task.due_date || '');
+    }, [task.due_date]);
+
+    const handleStartEdit = () => {
+        setEditedDueDate(task.due_date || '');
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditedDueDate(task.due_date || '');
+    };
+
+    const handleSave = async () => {
+        if (!task.uid) {
+            setIsEditing(false);
+            setEditedDueDate(task.due_date || '');
+            return;
+        }
+
+        if ((editedDueDate || '') === (task.due_date || '')) {
+            setIsEditing(false);
+            return;
+        }
+
+        if (task.defer_until && editedDueDate) {
+            const deferDate = new Date(task.defer_until);
+            const dueDate = new Date(editedDueDate);
+
+            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
+                const dueDateEndOfDay = new Date(dueDate);
+                dueDateEndOfDay.setUTCHours(23, 59, 59, 999);
+                if (deferDate > dueDateEndOfDay) {
+                    showErrorToast(
+                        t(
+                            'task.dueDateBeforeDeferError',
+                            'Due date cannot be before the defer until date'
+                        )
+                    );
+                    return;
+                }
+            }
+        }
+
+        if (editedDueDate) {
+            const todayStr = getTodayDateString();
+            const dueDateStr = editedDueDate.split('T')[0];
+
+            if (dueDateStr < todayStr) {
+                showErrorToast(
+                    t(
+                        'task.dueDateInPastWarning',
+                        'Warning: You are setting a due date in the past'
+                    )
+                );
+            }
+        }
+
+        try {
+            markModified();
+            await updateTask(task.uid, {
+                due_date: editedDueDate || null,
+            });
+            await refetchAndSetTask(task.uid);
+            showSuccessToast(
+                t('task.dueDateUpdated', 'Due date updated successfully')
+            );
+            setIsEditing(false);
+            bumpTimeline();
+        } catch (error) {
+            console.error('Error updating due date:', error);
+            showErrorToast(
+                t('task.dueDateUpdateError', 'Failed to update due date')
+            );
+            setEditedDueDate(task.due_date || '');
+            setIsEditing(false);
+        }
+    };
 
     const getDueDateDisplay = (dueDate: string) => {
         const date = parseDateString(dueDate);
         if (!date) return null;
 
-        // Format date based on user's timezone-derived country
         const timezone = getUserTimezone();
         const country = getCountryFromTimezone(timezone);
         const formattedDate = formatDateByCountry(date, country);
@@ -102,7 +178,7 @@ const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({
                     <div className="space-y-3">
                         <TaskDueDateSection
                             value={editedDueDate}
-                            onChange={onChangeDate}
+                            onChange={setEditedDueDate}
                             placeholder={t(
                                 'forms.task.dueDatePlaceholder',
                                 'Select due date'
@@ -110,13 +186,13 @@ const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({
                         />
                         <div className="flex justify-end space-x-2">
                             <button
-                                onClick={onSave}
+                                onClick={handleSave}
                                 className="px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
                             >
                                 {t('common.save', 'Save')}
                             </button>
                             <button
-                                onClick={onCancel}
+                                onClick={handleCancel}
                                 className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                                 {t('common.cancel', 'Cancel')}
@@ -126,7 +202,7 @@ const TaskDueDateCard: React.FC<TaskDueDateCardProps> = ({
                 ) : (
                     <button
                         type="button"
-                        onClick={onStartEdit}
+                        onClick={handleStartEdit}
                         className="flex w-full items-center justify-between text-left"
                     >
                         {task.due_date ? (

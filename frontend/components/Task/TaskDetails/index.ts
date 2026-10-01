@@ -1,4 +1,5 @@
 export { default as TaskDetailsHeader } from './TaskDetailsHeader';
+export { default as TaskDetailsAI } from './TaskDetailsAI';
 export { default as TaskContentCard } from './TaskContentCard';
 export { default as TaskProjectCard } from './TaskProjectCard';
 export { default as TaskTagsCard } from './TaskTagsCard';

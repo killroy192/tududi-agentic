@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     PencilSquareIcon,
@@ -6,25 +6,35 @@ import {
     PencilIcon,
 } from '@heroicons/react/24/outline';
 import MarkdownRenderer from '../../Shared/MarkdownRenderer';
+import { Task } from '../../../entities/Task';
+import { updateTask } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndSetTask } from './taskDetailsStoreUpdates';
 
 interface TaskContentCardProps {
-    content: string;
-    onUpdate: (newContent: string) => Promise<void>;
+    task?: Task;
+    content?: string;
+    onUpdate?: (newContent: string) => Promise<void>;
 }
 
 const TaskContentCard: React.FC<TaskContentCardProps> = ({
-    content,
-    onUpdate,
+    task,
+    content: contentProp,
+    onUpdate: onUpdateProp,
 }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline } = useTaskDetailsPageContext();
+    const noteContent = contentProp ?? task?.note ?? '';
     const [isEditing, setIsEditing] = useState(false);
-    const [editedContent, setEditedContent] = useState(content);
+    const [editedContent, setEditedContent] = useState(noteContent);
     const [contentTab, setContentTab] = useState<'edit' | 'preview'>('edit');
     const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
-        setEditedContent(content);
-    }, [content]);
+        setEditedContent(noteContent);
+    }, [noteContent]);
 
     useEffect(() => {
         if (isEditing && contentTextareaRef.current) {
@@ -32,19 +42,70 @@ const TaskContentCard: React.FC<TaskContentCardProps> = ({
         }
     }, [isEditing]);
 
+    const handleContentUpdate = useCallback(
+        async (newContent: string) => {
+            if (onUpdateProp) {
+                return onUpdateProp(newContent);
+            }
+
+            if (!task?.uid) {
+                return;
+            }
+
+            const trimmedContent = newContent.trim();
+
+            if (trimmedContent === (task.note || '').trim()) {
+                return;
+            }
+
+            try {
+                markModified();
+                await updateTask(task.uid, { note: trimmedContent });
+                await refetchAndSetTask(task.uid);
+                showSuccessToast(
+                    t('task.contentUpdated', 'Task content updated successfully')
+                );
+                bumpTimeline();
+            } catch (error) {
+                console.error('Error updating task content:', error);
+                showErrorToast(
+                    t('task.contentUpdateError', 'Failed to update task content')
+                );
+                throw error;
+            }
+        },
+        [
+            onUpdateProp,
+            task?.uid,
+            task?.note,
+            markModified,
+            bumpTimeline,
+            showSuccessToast,
+            showErrorToast,
+            t,
+        ]
+    );
+
     const handleStartEdit = () => {
         setIsEditing(true);
     };
 
     const handleSave = async () => {
-        if (editedContent !== content) {
-            await onUpdate(editedContent);
+        if (onUpdateProp) {
+            if (editedContent !== noteContent) {
+                await onUpdateProp(editedContent);
+            }
+        } else {
+            const trimmed = editedContent.trim();
+            if (trimmed !== noteContent.trim()) {
+                await handleContentUpdate(editedContent);
+            }
         }
         setIsEditing(false);
     };
 
     const handleCancel = () => {
-        setEditedContent(content);
+        setEditedContent(noteContent);
         setIsEditing(false);
     };
 
@@ -61,7 +122,6 @@ const TaskContentCard: React.FC<TaskContentCardProps> = ({
             {isEditing ? (
                 <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 p-6">
                     <div className="relative">
-                        {/* Floating toggle buttons */}
                         <div className="absolute top-2 right-2 z-10 flex space-x-1">
                             <button
                                 type="button"
@@ -144,7 +204,7 @@ const TaskContentCard: React.FC<TaskContentCardProps> = ({
                         </div>
                     </div>
                 </div>
-            ) : content ? (
+            ) : noteContent ? (
                 <div
                     onClick={handleStartEdit}
                     className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 p-6 cursor-pointer transition-colors"
@@ -154,9 +214,9 @@ const TaskContentCard: React.FC<TaskContentCardProps> = ({
                     )}
                 >
                     <MarkdownRenderer
-                        content={content}
+                        content={noteContent}
                         className="prose dark:prose-invert max-w-none"
-                        onContentChange={onUpdate}
+                        onContentChange={handleContentUpdate}
                     />
                 </div>
             ) : (

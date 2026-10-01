@@ -1,31 +1,53 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowRightIcon, RectangleStackIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+    ArrowRightIcon,
+    RectangleStackIcon,
+    XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { Area } from '../../../entities/Area';
 import { Task } from '../../../entities/Task';
+import { updateTask } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { useStore, StoreState } from '../../../store/useStore';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndUpdateTaskInStore } from './taskDetailsStoreUpdates';
+import { getAreaLink } from './taskDetailsLinks';
 
 interface TaskAreaCardProps {
     task: Task;
-    areas: Area[];
-    onAreaSelect: (area: Area) => Promise<void>;
-    onAreaClear: () => Promise<void>;
-    getAreaLink: (area: Area) => string;
+    areas?: Area[];
 }
 
 const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
     task,
-    areas,
-    onAreaSelect,
-    onAreaClear,
-    getAreaLink,
+    areas: areasProp,
 }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline } = useTaskDetailsPageContext();
+    const storeAreas = useStore((s: StoreState) => s.areasStore.areas);
+    const hasLoadedAreas = useStore(
+        (s: StoreState) => s.areasStore.hasLoaded
+    );
+    const isLoadingAreas = useStore(
+        (s: StoreState) => s.areasStore.isLoading
+    );
+    const loadAreas = useStore((s: StoreState) => s.areasStore.loadAreas);
+    const areas = areasProp ?? storeAreas;
+
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const effectiveArea = task.Area || (task.Project as any)?.Area || null;
+    useEffect(() => {
+        if (!hasLoadedAreas && !isLoadingAreas) {
+            loadAreas();
+        }
+    }, [hasLoadedAreas, isLoadingAreas, loadAreas]);
+
+    const effectiveArea = task.Area || task.Project?.area || null;
     const isInherited = !task.Area && !!task.Project?.area_id;
 
     useEffect(() => {
@@ -51,16 +73,42 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
         a.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleSelect = async (area: Area) => {
-        await onAreaSelect(area);
-        setDropdownOpen(false);
-        setSearchQuery('');
+    const handleAreaSelection = async (area: Area) => {
+        if (!task.uid) return;
+
+        try {
+            markModified();
+            await updateTask(task.uid, { area_id: area.id });
+            await refetchAndUpdateTaskInStore(task.uid);
+            showSuccessToast(
+                t('task.areaUpdated', 'Area updated successfully')
+            );
+            bumpTimeline();
+            setDropdownOpen(false);
+            setSearchQuery('');
+        } catch (error) {
+            console.error('Error updating area:', error);
+            showErrorToast(t('task.areaUpdateError', 'Failed to update area'));
+        }
     };
 
-    const handleClear = async () => {
-        await onAreaClear();
-        setDropdownOpen(false);
-        setSearchQuery('');
+    const handleClearArea = async () => {
+        if (!task.uid) return;
+
+        try {
+            markModified();
+            await updateTask(task.uid, { area_id: null });
+            await refetchAndUpdateTaskInStore(task.uid);
+            showSuccessToast(
+                t('task.areaCleared', 'Area cleared successfully')
+            );
+            bumpTimeline();
+            setDropdownOpen(false);
+            setSearchQuery('');
+        } catch (error) {
+            console.error('Error clearing area:', error);
+            showErrorToast(t('task.areaClearError', 'Failed to clear area'));
+        }
     };
 
     if (task.Project) {
@@ -71,7 +119,14 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                     <div className="flex items-center gap-2 min-w-0">
                         <span
                             className="inline-block w-3 h-3 rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                            style={effectiveArea.color ? { backgroundColor: effectiveArea.color, borderColor: effectiveArea.color } : {}}
+                            style={
+                                effectiveArea.color
+                                    ? {
+                                          backgroundColor: effectiveArea.color,
+                                          borderColor: effectiveArea.color,
+                                      }
+                                    : {}
+                            }
                         />
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
                             {effectiveArea.name}
@@ -110,7 +165,7 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                         <div className="mt-2 max-h-48 overflow-y-auto space-y-0.5">
                             {effectiveArea && (
                                 <button
-                                    onClick={handleClear}
+                                    onClick={handleClearArea}
                                     className="w-full text-left text-sm px-3 py-1.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                                 >
                                     <XMarkIcon className="h-3.5 w-3.5" />
@@ -125,12 +180,23 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                                 filteredAreas.map((area) => (
                                     <button
                                         key={area.id}
-                                        onClick={() => handleSelect(area)}
+                                        onClick={() =>
+                                            handleAreaSelection(area)
+                                        }
                                         className="w-full text-left text-sm px-3 py-1.5 rounded text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
                                     >
                                         <span
                                             className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                                            style={area.color ? { backgroundColor: area.color, borderColor: area.color } : {}}
+                                            style={
+                                                area.color
+                                                    ? {
+                                                          backgroundColor:
+                                                              area.color,
+                                                          borderColor:
+                                                              area.color,
+                                                      }
+                                                    : {}
+                                            }
                                         />
                                         {area.name}
                                     </button>
@@ -144,11 +210,21 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                     <div className="flex items-center justify-between gap-2">
                         <div
                             className="flex items-center gap-2 min-w-0 cursor-pointer flex-1"
-                            onClick={() => !isInherited && setDropdownOpen(true)}
+                            onClick={() =>
+                                !isInherited && setDropdownOpen(true)
+                            }
                         >
                             <span
                                 className="inline-block w-3 h-3 rounded-full flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                                style={effectiveArea.color ? { backgroundColor: effectiveArea.color, borderColor: effectiveArea.color } : {}}
+                                style={
+                                    effectiveArea.color
+                                        ? {
+                                              backgroundColor:
+                                                  effectiveArea.color,
+                                              borderColor: effectiveArea.color,
+                                          }
+                                        : {}
+                                }
                             />
                             <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                 {effectiveArea.name}
@@ -166,7 +242,7 @@ const TaskAreaCard: React.FC<TaskAreaCardProps> = ({
                                 </Link>
                             )}
                             <button
-                                onClick={handleClear}
+                                onClick={handleClearArea}
                                 className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                 title={t('area.clearArea', 'Remove area')}
                             >

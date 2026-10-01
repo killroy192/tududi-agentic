@@ -2,10 +2,33 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TaskContentCard from '../TaskContentCard';
+import { TaskDetailsPageProvider } from '../TaskDetailsPageContext';
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string, fallback: string) => fallback }),
 }));
+
+jest.mock('../../../Shared/ToastContext', () => ({
+    useToast: () => ({
+        showSuccessToast: jest.fn(),
+        showErrorToast: jest.fn(),
+        showUndoToast: jest.fn(),
+    }),
+}));
+
+const pageContextValue = {
+    markModified: jest.fn(),
+    bumpTimeline: jest.fn(),
+    refreshRecurrence: jest.fn().mockResolvedValue(undefined),
+    registerRecurrenceRefresh: jest.fn(),
+};
+
+const renderWithProviders = (ui: React.ReactElement) =>
+    render(
+        <TaskDetailsPageProvider value={pageContextValue}>
+            {ui}
+        </TaskDetailsPageProvider>
+    );
 
 // Capture props passed to MarkdownRenderer so we can assert on them
 let capturedMarkdownProps: any = null;
@@ -51,7 +74,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('passes onContentChange to MarkdownRenderer in view mode', () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />);
+        renderWithProviders(
+            <TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />
+        );
 
         expect(capturedMarkdownProps).not.toBeNull();
         expect(capturedMarkdownProps.onContentChange).toBeDefined();
@@ -59,7 +84,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('checkboxes are enabled in view mode', () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />);
+        renderWithProviders(
+            <TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />
+        );
 
         const checkbox = screen.getByRole('checkbox');
         expect(checkbox).not.toBeDisabled();
@@ -67,7 +94,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('clicking a checkbox calls onUpdate with toggled content', async () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />);
+        renderWithProviders(
+            <TaskContentCard content="- [ ] Do something" onUpdate={onUpdate} />
+        );
 
         const checkbox = screen.getByRole('checkbox');
         fireEvent.click(checkbox);
@@ -78,7 +107,9 @@ describe('TaskContentCard - checkbox interactivity', () => {
 
     it('clicking a checked checkbox calls onUpdate to uncheck it', async () => {
         const onUpdate = jest.fn().mockResolvedValue(undefined);
-        render(<TaskContentCard content="- [x] Do something" onUpdate={onUpdate} />);
+        renderWithProviders(
+            <TaskContentCard content="- [x] Do something" onUpdate={onUpdate} />
+        );
 
         const checkbox = screen.getByRole('checkbox');
         fireEvent.click(checkbox);

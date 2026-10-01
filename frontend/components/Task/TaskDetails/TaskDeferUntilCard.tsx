@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import TaskDeferUntilSection from '../TaskForm/TaskDeferUntilSection';
@@ -9,27 +9,96 @@ import {
     getUserTimezone,
 } from '../../../utils/dateUtils';
 import { getCountryFromTimezone } from '../../../utils/localeUtils';
+import { updateTask } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndSetTask } from './taskDetailsStoreUpdates';
 
 interface TaskDeferUntilCardProps {
     task: Task;
-    isEditing: boolean;
-    editedDeferUntil: string;
-    onChangeDateTime: (value: string) => void;
-    onStartEdit: () => void;
-    onSave: () => void;
-    onCancel: () => void;
 }
 
-const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
-    task,
-    isEditing,
-    editedDeferUntil,
-    onChangeDateTime,
-    onStartEdit,
-    onSave,
-    onCancel,
-}) => {
+const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({ task }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline } = useTaskDetailsPageContext();
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedDeferUntil, setEditedDeferUntil] = useState<string>(
+        task.defer_until || ''
+    );
+
+    useEffect(() => {
+        setEditedDeferUntil(task.defer_until || '');
+    }, [task.defer_until]);
+
+    const handleStartEdit = () => {
+        setEditedDeferUntil(task.defer_until || '');
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditedDeferUntil(task.defer_until || '');
+    };
+
+    const handleSave = async () => {
+        if (!task.uid) {
+            setIsEditing(false);
+            setEditedDeferUntil(task.defer_until || '');
+            return;
+        }
+
+        if ((editedDeferUntil || '') === (task.defer_until || '')) {
+            setIsEditing(false);
+            return;
+        }
+
+        if (editedDeferUntil && task.due_date) {
+            const deferDate = new Date(editedDeferUntil);
+            const dueDate = new Date(task.due_date);
+
+            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
+                if (!task.recurring_parent_id) {
+                    const dueDateEndOfDay = new Date(dueDate);
+                    dueDateEndOfDay.setUTCHours(23, 59, 59, 999);
+                    if (deferDate > dueDateEndOfDay) {
+                        showErrorToast(
+                            t(
+                                'task.deferAfterDueError',
+                                'Defer until date cannot be after the due date'
+                            )
+                        );
+                        return;
+                    }
+                }
+            }
+        }
+
+        try {
+            markModified();
+            await updateTask(task.uid, {
+                defer_until: editedDeferUntil || null,
+            });
+            await refetchAndSetTask(task.uid);
+            showSuccessToast(
+                t('task.deferUntilUpdated', 'Defer until successfully updated')
+            );
+            setIsEditing(false);
+            bumpTimeline();
+        } catch (error: unknown) {
+            console.error('Error updating defer until:', error);
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : t(
+                          'task.deferUntilUpdateError',
+                          'Failed to update defer until'
+                      );
+            showErrorToast(message);
+            setEditedDeferUntil(task.defer_until || '');
+            setIsEditing(false);
+        }
+    };
 
     const getDeferUntilDisplay = (deferUntil: string) => {
         const date = new Date(deferUntil);
@@ -38,9 +107,6 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
         const timezone = getUserTimezone();
         const country = getCountryFromTimezone(timezone);
 
-        // A value stored as UTC midnight came from a CalDAV DATE-only field.
-        // Display it without a time component to avoid spurious offset noise
-        // (e.g. UTC+2 would otherwise show "02:00").
         const isDateOnly =
             date.getUTCHours() === 0 &&
             date.getUTCMinutes() === 0 &&
@@ -116,8 +182,7 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
             }
         }
 
-        const isPast = date.getTime() < new Date().getTime();
-        return { formattedDateTime, relativeText, isPast };
+        return { formattedDateTime, relativeText };
     };
 
     return (
@@ -130,7 +195,7 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
                     <div className="space-y-3">
                         <TaskDeferUntilSection
                             value={editedDeferUntil}
-                            onChange={onChangeDateTime}
+                            onChange={setEditedDeferUntil}
                             placeholder={t(
                                 'forms.task.deferUntilPlaceholder',
                                 'Select defer until date and time'
@@ -138,13 +203,13 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
                         />
                         <div className="flex justify-end space-x-2">
                             <button
-                                onClick={onSave}
+                                onClick={handleSave}
                                 className="px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
                             >
                                 {t('common.save', 'Save')}
                             </button>
                             <button
-                                onClick={onCancel}
+                                onClick={handleCancel}
                                 className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                                 {t('common.cancel', 'Cancel')}
@@ -154,7 +219,7 @@ const TaskDeferUntilCard: React.FC<TaskDeferUntilCardProps> = ({
                 ) : (
                     <button
                         type="button"
-                        onClick={onStartEdit}
+                        onClick={handleStartEdit}
                         className="flex w-full items-center justify-between text-left"
                     >
                         {task.defer_until ? (

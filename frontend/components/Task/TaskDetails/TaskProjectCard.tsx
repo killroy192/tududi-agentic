@@ -5,25 +5,34 @@ import { ArrowRightIcon, FolderIcon } from '@heroicons/react/24/outline';
 import ProjectDropdown from '../../Shared/ProjectDropdown';
 import { Project } from '../../../entities/Project';
 import { Task } from '../../../entities/Task';
+import { updateTask } from '../../../utils/tasksService';
+import { createProject } from '../../../utils/projectsService';
+import { useToast } from '../../Shared/ToastContext';
+import { useStore, StoreState } from '../../../store/useStore';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndSetTask } from './taskDetailsStoreUpdates';
+import { getProjectLink } from './taskDetailsLinks';
 
 interface TaskProjectCardProps {
     task: Task;
-    projects: Project[];
-    onProjectSelect: (project: Project) => Promise<void>;
-    onProjectClear: () => Promise<void>;
-    onProjectCreate: (name: string) => Promise<void>;
-    getProjectLink: (project: Project) => string;
+    projects?: Project[];
 }
 
 const TaskProjectCard: React.FC<TaskProjectCardProps> = ({
     task,
-    projects,
-    onProjectSelect,
-    onProjectClear,
-    onProjectCreate,
-    getProjectLink,
+    projects: projectsProp,
 }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline } = useTaskDetailsPageContext();
+    const storeProjects = useStore(
+        (s: StoreState) => s.projectsStore.projects
+    );
+    const setProjects = useStore(
+        (s: StoreState) => s.projectsStore.setProjects
+    );
+    const projects = projectsProp ?? storeProjects;
+
     const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
     const [projectName, setProjectName] = useState('');
     const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -58,23 +67,69 @@ const TaskProjectCard: React.FC<TaskProjectCardProps> = ({
     };
 
     const handleProjectSelection = async (project: Project) => {
-        await onProjectSelect(project);
-        setProjectDropdownOpen(false);
-        setProjectName('');
+        if (!task.uid) return;
+
+        try {
+            markModified();
+            await updateTask(task.uid, { project_id: project.id });
+            await refetchAndSetTask(task.uid);
+            showSuccessToast(
+                t('task.projectUpdated', 'Project updated successfully')
+            );
+            bumpTimeline();
+            setProjectDropdownOpen(false);
+            setProjectName('');
+        } catch (error) {
+            console.error('Error updating project:', error);
+            showErrorToast(
+                t('task.projectUpdateError', 'Failed to update project')
+            );
+        }
     };
 
     const handleClearProject = async () => {
-        await onProjectClear();
-        setProjectDropdownOpen(false);
-        setProjectName('');
+        if (!task.uid) return;
+
+        try {
+            markModified();
+            await updateTask(task.uid, { project_id: null });
+            await refetchAndSetTask(task.uid);
+            showSuccessToast(
+                t('task.projectCleared', 'Project cleared successfully')
+            );
+            bumpTimeline();
+            setProjectDropdownOpen(false);
+            setProjectName('');
+        } catch (error) {
+            console.error('Error clearing project:', error);
+            showErrorToast(
+                t('task.projectClearError', 'Failed to clear project')
+            );
+        }
     };
 
     const handleCreateProjectInline = async (name: string) => {
+        if (!task.uid || !name.trim()) return;
+
         setIsCreatingProject(true);
         try {
-            await onProjectCreate(name);
+            markModified();
+            const newProject = await createProject({ name });
+            setProjects([...projects, newProject]);
+            await updateTask(task.uid, { project_id: newProject.id });
+            await refetchAndSetTask(task.uid);
+            showSuccessToast(
+                t('project.createdAndAssigned', 'Project created and assigned')
+            );
+            bumpTimeline();
             setProjectDropdownOpen(false);
             setProjectName('');
+        } catch (error) {
+            console.error('Error creating project:', error);
+            showErrorToast(
+                t('project.createError', 'Failed to create project')
+            );
+            throw error;
         } finally {
             setIsCreatingProject(false);
         }

@@ -1,5 +1,12 @@
-import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
+import React, {
+    useRef,
+    useState,
+    useEffect,
+    useLayoutEffect,
+    useCallback,
+} from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     CheckIcon,
     XMarkIcon,
@@ -14,58 +21,308 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { Task, PriorityType, TaskSize } from '../../../entities/Task';
+import { Tag } from '../../../entities/Tag';
 import BackButton from '../../Shared/BackButton';
+import ConfirmDialog from '../../Shared/ConfirmDialog';
 import SizeDropdown from '../../Shared/SizeDropdown';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
 import { getStatusValue } from '../../../constants/taskStatus';
+import {
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion,
+} from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { useStore, StoreState } from '../../../store/useStore';
+import {
+    isTaskOverdueInTodayPlan,
+    isTaskPastDue,
+} from '../../../utils/dateUtils';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import {
+    refetchAndSetTask,
+    refetchAndUpdateTaskInStore,
+} from './taskDetailsStoreUpdates';
+import { getProjectLink, getTagLink } from './taskDetailsLinks';
 
 interface TaskDetailsHeaderProps {
     task: Task;
-    onTitleUpdate: (newTitle: string) => Promise<void>;
-    onStatusUpdate: (newStatus: number) => Promise<void>;
-    onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
-    onSizeUpdate: (newSize: TaskSize | null) => Promise<void>;
-    onDelete: () => void;
-    getProjectLink?: (project: any) => string;
-    getTagLink?: (tag: any) => string;
     activePill: string;
     onPillChange: (pill: string) => void;
-    showOverdueIcon?: boolean;
-    showPastDueBadge?: boolean;
-    onOverdueIconClick?: () => void;
-    isOverdueAlertVisible?: boolean;
-    onDismissOverdueAlert?: () => void;
-    onQuickStatusToggle?: () => void;
-    onAiInsightsClick?: () => void;
-    aiInsightsActive?: boolean;
     attachmentCount?: number;
     autoEditTitle?: boolean;
+    onAiInsightsClick?: () => void;
+    aiInsightsActive?: boolean;
 }
 
 const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     task,
-    onTitleUpdate,
-    onStatusUpdate,
-    onPriorityUpdate,
-    onSizeUpdate,
-    onDelete,
-    getProjectLink,
-    getTagLink,
     activePill,
     onPillChange,
-    showOverdueIcon = false,
-    showPastDueBadge = false,
-    onOverdueIconClick,
-    isOverdueAlertVisible = false,
-    onDismissOverdueAlert,
-    onQuickStatusToggle,
-    onAiInsightsClick,
-    aiInsightsActive = false,
     attachmentCount = 0,
     autoEditTitle = false,
+    onAiInsightsClick,
+    aiInsightsActive = false,
 }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline, refreshRecurrence } =
+        useTaskDetailsPageContext();
+    const tasksStore = useStore((state: StoreState) => state.tasksStore);
+
+    const isOverdue = isTaskOverdueInTodayPlan(task);
+    const isPastDue = isTaskPastDue(task);
+    const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] = useState(false);
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+
+    useEffect(() => {
+        if (!isOverdue) {
+            setIsOverdueBubbleVisible(false);
+        }
+    }, [isOverdue]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!isOverdueBubbleVisible) {
+                return;
+            }
+
+            const target = e.target as Node;
+            const clickedOverdueToggle =
+                typeof e.composedPath === 'function'
+                    ? e
+                          .composedPath()
+                          .some(
+                              (node) =>
+                                  node instanceof HTMLElement &&
+                                  node.hasAttribute('data-overdue-toggle')
+                          )
+                    : target instanceof HTMLElement &&
+                      !!target.closest('[data-overdue-toggle]');
+
+            if (!clickedOverdueToggle) {
+                setIsOverdueBubbleVisible(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOverdueBubbleVisible]);
+
+    const handleOverdueIconClick = () => {
+        if (!isOverdue) {
+            return;
+        }
+        setIsOverdueBubbleVisible((prev) => !prev);
+    };
+
+    const handleDismissOverdueAlert = () => {
+        setIsOverdueBubbleVisible(false);
+    };
+
+    const handleTitleUpdate = useCallback(
+        async (newTitle: string) => {
+            if (!task.uid || !newTitle.trim()) {
+                return;
+            }
+
+            if (newTitle.trim() === task.name) {
+                return;
+            }
+
+            try {
+                markModified();
+                await updateTask(task.uid, { name: newTitle.trim() });
+                await refetchAndSetTask(task.uid);
+                showSuccessToast(
+                    t('task.titleUpdated', 'Task title updated successfully')
+                );
+                bumpTimeline();
+            } catch (error) {
+                console.error('Error updating task title:', error);
+                showErrorToast(
+                    t('task.titleUpdateError', 'Failed to update task title')
+                );
+                throw error;
+            }
+        },
+        [
+            task.uid,
+            task.name,
+            markModified,
+            bumpTimeline,
+            showSuccessToast,
+            showErrorToast,
+            t,
+        ]
+    );
+
+    const handleStatusUpdate = useCallback(
+        async (newStatus: number) => {
+            if (!task.uid) {
+                return;
+            }
+
+            try {
+                markModified();
+                await updateTask(task.uid, { status: newStatus });
+                await refetchAndSetTask(task.uid);
+                showSuccessToast(
+                    t('task.statusUpdated', 'Status updated successfully')
+                );
+                bumpTimeline();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showErrorToast(
+                    t('task.statusUpdateError', 'Failed to update status')
+                );
+            }
+        },
+        [
+            task.uid,
+            markModified,
+            bumpTimeline,
+            showSuccessToast,
+            showErrorToast,
+            t,
+        ]
+    );
+
+    const handlePriorityUpdate = useCallback(
+        async (priority: PriorityType) => {
+            if (!task.uid) {
+                return;
+            }
+
+            try {
+                markModified();
+                await updateTask(task.uid, { priority });
+                await refetchAndUpdateTaskInStore(task.uid);
+                bumpTimeline();
+                showSuccessToast(
+                    t('task.priorityUpdated', 'Priority updated successfully')
+                );
+            } catch (error) {
+                console.error('Error updating priority:', error);
+                showErrorToast(
+                    t('task.priorityUpdateError', 'Failed to update priority')
+                );
+                throw error;
+            }
+        },
+        [
+            task.uid,
+            markModified,
+            bumpTimeline,
+            showSuccessToast,
+            showErrorToast,
+            t,
+        ]
+    );
+
+    const handleSizeUpdate = useCallback(
+        async (size: TaskSize | null) => {
+            if (!task.uid) {
+                return;
+            }
+
+            try {
+                markModified();
+                await updateTask(task.uid, { size });
+                await refetchAndUpdateTaskInStore(task.uid);
+                showSuccessToast(
+                    t('task.sizeUpdated', 'Size updated successfully')
+                );
+            } catch (error) {
+                console.error('Error updating size:', error);
+                showErrorToast(
+                    t('task.sizeUpdateError', 'Failed to update size')
+                );
+                throw error;
+            }
+        },
+        [task.uid, markModified, showSuccessToast, showErrorToast, t]
+    );
+
+    const handleCompletionToggle = useCallback(async () => {
+        if (!task.uid) {
+            return;
+        }
+
+        try {
+            markModified();
+            const updatedTaskResponse = await toggleTaskCompletion(
+                task.uid,
+                task
+            );
+            const mergedTask = {
+                ...task,
+                ...updatedTaskResponse,
+                subtasks: updatedTaskResponse.subtasks || task.subtasks || [],
+            };
+
+            const existingIndex = tasksStore.tasks.findIndex(
+                (t) => t.uid === task.uid
+            );
+            if (existingIndex >= 0) {
+                const updatedTasks = [...tasksStore.tasks];
+                updatedTasks[existingIndex] = mergedTask;
+                tasksStore.setTasks(updatedTasks);
+            }
+
+            await refreshRecurrence();
+            bumpTimeline();
+            showSuccessToast(
+                t('task.statusUpdated', 'Status updated successfully')
+            );
+        } catch (error) {
+            console.error('Error toggling task completion:', error);
+            showErrorToast(
+                t('task.statusUpdateError', 'Failed to update status')
+            );
+        }
+    }, [
+        task,
+        markModified,
+        tasksStore,
+        refreshRecurrence,
+        bumpTimeline,
+        showSuccessToast,
+        showErrorToast,
+        t,
+    ]);
+
+    const handleDeleteClick = () => {
+        setIsConfirmDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!task.uid) {
+            setIsConfirmDialogOpen(false);
+            return;
+        }
+
+        try {
+            markModified();
+            await deleteTask(task.uid);
+            showSuccessToast(
+                t('task.deleteSuccess', 'Task deleted successfully')
+            );
+            navigate(
+                (location.state as { from?: string } | null)?.from || '/today'
+            );
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            showErrorToast(t('task.deleteError', 'Failed to delete task'));
+        }
+        setIsConfirmDialogOpen(false);
+    };
+
     const [isEditingTitle, setIsEditingTitle] = useState(autoEditTitle);
     const [editedTitle, setEditedTitle] = useState(task.name);
     const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -168,7 +425,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
 
     const handleSaveTitle = async () => {
         if (editedTitle.trim() && editedTitle !== task.name) {
-            await onTitleUpdate(editedTitle.trim());
+            await handleTitleUpdate(editedTitle.trim());
         }
         setIsEditingTitle(false);
     };
@@ -191,7 +448,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
         const nextStatusValue = getStatusValue(updatedTask.status);
 
         if (currentStatusValue !== nextStatusValue) {
-            await onStatusUpdate(nextStatusValue);
+            await handleStatusUpdate(nextStatusValue);
         }
     };
 
@@ -233,7 +490,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
 
     const handlePriorityChange = async (newPriority: PriorityType) => {
         setPriorityDropdownOpen(false);
-        await onPriorityUpdate(newPriority);
+        await handlePriorityUpdate(newPriority);
     };
 
     // Same access rule as PATCH: rw/admin may edit. Absent flag → assume editable.
@@ -241,10 +498,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
 
     const handleSizeChange = async (newSize: TaskSize | null) => {
         try {
-            await onSizeUpdate(newSize);
+            await handleSizeUpdate(newSize);
         } catch {
-            // The parent already reported the failure; the displayed value
-            // comes from the store, which only changes on success.
+            // Failure is reported in handleSizeUpdate; store only changes on success.
         }
     };
 
@@ -325,7 +581,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         <TaskStatusControl
                                             task={task}
                                             onToggleCompletion={
-                                                onQuickStatusToggle
+                                                handleCompletionToggle
                                             }
                                             onTaskUpdate={
                                                 handleStatusControlUpdate
@@ -511,7 +767,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         />
 
                                         {/* Past Due Badge - Right of priority button */}
-                                        {showPastDueBadge && (
+                                        {isPastDue && (
                                             <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex-shrink-0">
                                                 <ExclamationTriangleIcon className="h-3 w-3 text-red-600 dark:text-red-400" />
                                                 <span className="text-xs font-medium text-red-700 dark:text-red-300 hidden sm:inline">
@@ -543,13 +799,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                     <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-2 px-2 -mx-2 gap-2 flex-wrap">
                                         {task.Project && (
                                             <Link
-                                                to={
-                                                    getProjectLink
-                                                        ? getProjectLink(
-                                                              task.Project
-                                                          )
-                                                        : '#'
-                                                }
+                                                to={getProjectLink(
+                                                    task.Project
+                                                )}
                                                 className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200 hover:underline transition-colors"
                                                 onClick={(e) =>
                                                     e.stopPropagation()
@@ -565,7 +817,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 <span>
                                                     {task.tags.map(
                                                         (
-                                                            tag: any,
+                                                            tag: Tag,
                                                             index: number
                                                         ) => (
                                                             <React.Fragment
@@ -576,13 +828,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                                 }
                                                             >
                                                                 <Link
-                                                                    to={
-                                                                        getTagLink
-                                                                            ? getTagLink(
-                                                                                  tag
-                                                                              )
-                                                                            : '#'
-                                                                    }
+                                                                    to={getTagLink(
+                                                                        tag
+                                                                    )}
                                                                     className="hover:text-gray-900 dark:hover:text-gray-200 hover:underline transition-colors"
                                                                     onClick={(
                                                                         e
@@ -673,9 +921,8 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                 />
                             </button>
                         )}
-                        {(showOverdueIcon || onQuickStatusToggle) && (
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            {showOverdueIcon && (
+                            {isOverdue && (
                                 <div
                                     className="relative flex items-center z-20"
                                     data-overdue-toggle
@@ -685,10 +932,10 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            onOverdueIconClick?.();
+                                            handleOverdueIconClick();
                                         }}
                                         className={`flex items-center justify-center w-8 h-8 rounded-full border text-xs transition-colors ${
-                                            isOverdueAlertVisible
+                                            isOverdueBubbleVisible
                                                 ? 'border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-400 dark:bg-amber-900/30 dark:text-amber-300'
                                                 : 'border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-900/40'
                                         }`}
@@ -703,7 +950,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                     >
                                         <ExclamationTriangleIcon className="h-4 w-4" />
                                     </button>
-                                    {isOverdueAlertVisible && (
+                                    {isOverdueBubbleVisible && (
                                         <div
                                             data-overdue-toggle
                                             className="absolute right-0 top-full translate-y-2 w-[30rem] max-w-lg z-30"
@@ -713,7 +960,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        onDismissOverdueAlert?.();
+                                                        handleDismissOverdueAlert();
                                                     }}
                                                     className="absolute top-2 right-2 text-amber-600 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-100 transition-colors"
                                                     aria-label={t(
@@ -784,7 +1031,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 e.preventDefault();
                                                 e.stopPropagation();
                                                 setActionsMenuOpen(false);
-                                                onDelete();
+                                                handleDeleteClick();
                                             }}
                                         >
                                             {t('common.delete', 'Delete')}
@@ -793,11 +1040,22 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                 )}
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
+
+            {isConfirmDialogOpen && (
+                <ConfirmDialog
+                    title={t('task.deleteConfirmTitle', 'Delete Task')}
+                    message={t(
+                        'task.deleteConfirmMessage',
+                        'Are you sure you want to delete this task? This action cannot be undone.'
+                    )}
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={() => setIsConfirmDialogOpen(false)}
+                />
+            )}
         </div>
-    </div>
     );
 };
 

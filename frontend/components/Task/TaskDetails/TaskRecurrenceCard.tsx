@@ -1,59 +1,307 @@
-import React, { useMemo } from 'react';
+import React, {
+    useMemo,
+    useState,
+    useEffect,
+    useCallback,
+    useRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import RecurrenceDisplay from '../RecurrenceDisplay';
 import TaskRecurrenceSection from '../TaskForm/TaskRecurrenceSection';
 import TaskRecurringInstanceInfo from './TaskRecurringInstanceInfo';
 import { Task, RecurrenceType } from '../../../entities/Task';
-import { TaskIteration } from '../../../utils/tasksService';
+import {
+    fetchTaskByUid,
+    fetchTaskNextIterations,
+    TaskIteration,
+    updateTask,
+} from '../../../utils/tasksService';
 import { getTodayDateString, parseDateString } from '../../../utils/dateUtils';
 import { resolveUserLocale } from '../../../utils/localeUtils';
+import { useToast } from '../../Shared/ToastContext';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndSetTask } from './taskDetailsStoreUpdates';
+import { useStore } from '../../../store/useStore';
 
 interface TaskRecurrenceCardProps {
     task: Task;
-    parentTask: Task | null;
-    loadingParent: boolean;
-    isEditing: boolean;
-    recurrenceForm: {
-        recurrence_type: RecurrenceType;
-        recurrence_interval: number;
-        recurrence_end_date: string | null;
-        recurrence_weekday: number | null;
-        recurrence_weekdays: number[] | null;
-        recurrence_month_day: number | null;
-        recurrence_week_of_month: number | null;
-        completion_based: boolean;
-    };
-    onStartEdit: () => void;
-    onChange: (field: string, value: any) => void;
-    onSave: () => void;
-    onCancel: () => void;
-    loadingIterations: boolean;
-    nextIterations: TaskIteration[];
-    canEdit: boolean;
 }
 
-const TaskRecurrenceCard: React.FC<TaskRecurrenceCardProps> = ({
-    task,
-    parentTask,
-    loadingParent,
-    isEditing,
-    recurrenceForm,
-    onStartEdit,
-    onChange,
-    onSave,
-    onCancel,
-    loadingIterations,
-    nextIterations,
-    canEdit,
-}) => {
+type RecurrenceFormState = {
+    recurrence_type: RecurrenceType;
+    recurrence_interval: number;
+    recurrence_end_date: string | null;
+    recurrence_weekday: number | null;
+    recurrence_weekdays: number[] | null;
+    recurrence_month_day: number | null;
+    recurrence_week_of_month: number | null;
+    completion_based: boolean;
+};
+
+const buildRecurrenceFormFromTask = (task: Task): RecurrenceFormState => ({
+    recurrence_type: task.recurrence_type || 'none',
+    recurrence_interval: task.recurrence_interval || 1,
+    recurrence_end_date: task.recurrence_end_date || '',
+    recurrence_weekday: task.recurrence_weekday ?? null,
+    recurrence_weekdays: task.recurrence_weekdays || [],
+    recurrence_month_day: task.recurrence_month_day ?? null,
+    recurrence_week_of_month: task.recurrence_week_of_month ?? null,
+    completion_based: task.completion_based || false,
+});
+
+const TaskRecurrenceCard: React.FC<TaskRecurrenceCardProps> = ({ task }) => {
     const { t, i18n } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline, registerRecurrenceRefresh } =
+        useTaskDetailsPageContext();
+
+    const canEdit = !task.recurring_parent_id;
+
+    const [parentTask, setParentTask] = useState<Task | null>(null);
+    const [loadingParent, setLoadingParent] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceFormState>(
+        () => buildRecurrenceFormFromTask(task)
+    );
+    const [loadingIterations, setLoadingIterations] = useState(false);
+    const [nextIterations, setNextIterations] = useState<TaskIteration[]>([]);
+
     const displayLocale = useMemo(
         () => resolveUserLocale(i18n.language),
         [i18n.language]
     );
 
+    useEffect(() => {
+        setRecurrenceForm(buildRecurrenceFormFromTask(task));
+    }, [
+        task.recurrence_type,
+        task.recurrence_interval,
+        task.recurrence_end_date,
+        task.recurrence_weekday,
+        task.recurrence_weekdays,
+        task.recurrence_month_day,
+        task.recurrence_week_of_month,
+        task.completion_based,
+    ]);
+
+    useEffect(() => {
+        const loadParentTask = async () => {
+            if (task.recurring_parent_uid) {
+                try {
+                    setLoadingParent(true);
+                    const parent = await fetchTaskByUid(
+                        task.recurring_parent_uid
+                    );
+                    setParentTask(parent);
+                } catch (error) {
+                    console.error('Error fetching parent task:', error);
+                    setParentTask(null);
+                } finally {
+                    setLoadingParent(false);
+                }
+            } else {
+                setParentTask(null);
+            }
+        };
+
+        loadParentTask();
+    }, [task.recurring_parent_uid]);
+
+    useEffect(() => {
+        const loadNextIterations = async () => {
+            if (
+                task.id &&
+                task.recurrence_type &&
+                task.recurrence_type !== 'none'
+            ) {
+                try {
+                    setLoadingIterations(true);
+                    const iterations = await fetchTaskNextIterations(task.uid!);
+                    setNextIterations(iterations);
+                } catch (error) {
+                    console.error('Error loading next iterations:', error);
+                    setNextIterations([]);
+                } finally {
+                    setLoadingIterations(false);
+                }
+            } else if (
+                task.recurring_parent_id &&
+                parentTask?.uid &&
+                parentTask.recurrence_type &&
+                parentTask.recurrence_type !== 'none'
+            ) {
+                try {
+                    setLoadingIterations(true);
+                    const iterations = await fetchTaskNextIterations(
+                        parentTask.uid
+                    );
+                    setNextIterations(iterations);
+                } catch (error) {
+                    console.error(
+                        'Error loading next iterations for child task:',
+                        error
+                    );
+                    setNextIterations([]);
+                } finally {
+                    setLoadingIterations(false);
+                }
+            } else {
+                setNextIterations([]);
+            }
+        };
+
+        loadNextIterations();
+    }, [
+        task.id,
+        task.uid,
+        task.recurrence_type,
+        task.due_date,
+        task.recurring_parent_id,
+        parentTask?.id,
+        parentTask?.uid,
+        parentTask?.recurrence_type,
+    ]);
+
+    const refreshRecurringSetup = useCallback(
+        async (latestTask?: Task | null) => {
+            if (!latestTask) {
+                setNextIterations([]);
+                return;
+            }
+
+            const isTemplateTask =
+                latestTask.recurrence_type &&
+                latestTask.recurrence_type !== 'none' &&
+                !latestTask.recurring_parent_id;
+            const canUseParentIterations =
+                !!latestTask.recurring_parent_id &&
+                !!parentTask?.id &&
+                parentTask?.recurrence_type &&
+                parentTask.recurrence_type !== 'none';
+
+            if (!isTemplateTask && !canUseParentIterations) {
+                setNextIterations([]);
+                return;
+            }
+
+            try {
+                setLoadingIterations(true);
+                if (isTemplateTask) {
+                    const iterations = await fetchTaskNextIterations(
+                        latestTask.uid!
+                    );
+                    setNextIterations(iterations);
+                } else if (canUseParentIterations && parentTask?.uid) {
+                    const iterations = await fetchTaskNextIterations(
+                        parentTask.uid
+                    );
+                    setNextIterations(iterations);
+                }
+            } catch (error) {
+                console.error('Error refreshing recurring setup:', error);
+                setNextIterations([]);
+            } finally {
+                setLoadingIterations(false);
+            }
+        },
+        [parentTask?.id, parentTask?.recurrence_type, parentTask?.uid]
+    );
+
+    const taskRef = useRef(task);
+    taskRef.current = task;
+
+    useEffect(() => {
+        registerRecurrenceRefresh(async () => {
+            const uid = taskRef.current.uid;
+            if (!uid) {
+                await refreshRecurringSetup(null);
+                return;
+            }
+            const latest =
+                useStore.getState().tasksStore.tasks.find((t) => t.uid === uid) ??
+                taskRef.current;
+            await refreshRecurringSetup(latest);
+        });
+        return () => registerRecurrenceRefresh(null);
+    }, [registerRecurrenceRefresh, refreshRecurringSetup]);
+
+    const handleStartEdit = () => {
+        setRecurrenceForm(buildRecurrenceFormFromTask(task));
+        setIsEditing(true);
+    };
+
+    const handleRecurrenceChange = (field: string, value: unknown) => {
+        setRecurrenceForm((prev) => {
+            const updated = { ...prev, [field]: value };
+
+            if (
+                field === 'recurrence_type' &&
+                value === 'monthly' &&
+                !prev.recurrence_month_day
+            ) {
+                updated.recurrence_month_day = new Date().getDate();
+            }
+
+            return updated;
+        });
+    };
+
+    const handleSave = async () => {
+        if (!task.uid) {
+            setIsEditing(false);
+            return;
+        }
+
+        try {
+            markModified();
+            const recurrencePayload: Partial<Task> = {
+                recurrence_type: recurrenceForm.recurrence_type,
+                recurrence_interval: recurrenceForm.recurrence_interval || 1,
+                recurrence_end_date: recurrenceForm.recurrence_end_date || null,
+                recurrence_weekday:
+                    recurrenceForm.recurrence_type === 'weekly' ||
+                    recurrenceForm.recurrence_type === 'monthly_weekday'
+                        ? recurrenceForm.recurrence_weekday ?? null
+                        : null,
+                recurrence_weekdays:
+                    recurrenceForm.recurrence_type === 'weekly'
+                        ? recurrenceForm.recurrence_weekdays || []
+                        : null,
+                recurrence_month_day:
+                    recurrenceForm.recurrence_type === 'monthly'
+                        ? recurrenceForm.recurrence_month_day ?? null
+                        : null,
+                recurrence_week_of_month:
+                    recurrenceForm.recurrence_type === 'monthly_weekday'
+                        ? recurrenceForm.recurrence_week_of_month ?? null
+                        : null,
+                completion_based: recurrenceForm.completion_based,
+            };
+
+            await updateTask(task.uid, recurrencePayload);
+            const updatedTask = await refetchAndSetTask(task.uid);
+            await refreshRecurringSetup(updatedTask);
+
+            showSuccessToast(
+                t('task.recurrenceUpdated', 'Recurrence updated successfully')
+            );
+            setIsEditing(false);
+            bumpTimeline();
+        } catch (error) {
+            console.error('Error updating recurrence:', error);
+            showErrorToast(
+                t('task.recurrenceUpdateError', 'Failed to update recurrence')
+            );
+            setIsEditing(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setRecurrenceForm(buildRecurrenceFormFromTask(task));
+    };
+
     const formatDateWithDayName = (dateString: string) => {
-        // Parse date string as local midnight to avoid timezone shifts
         const date = parseDateString(dateString);
         if (!date) {
             return {
@@ -133,13 +381,13 @@ const TaskRecurrenceCard: React.FC<TaskRecurrenceCardProps> = ({
                 className={`rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 p-6 space-y-4 ${
                     canEdit && !isEditing ? 'cursor-pointer' : ''
                 }`}
-                onClick={canEdit && !isEditing ? onStartEdit : undefined}
+                onClick={canEdit && !isEditing ? handleStartEdit : undefined}
                 role={canEdit && !isEditing ? 'button' : undefined}
                 tabIndex={canEdit && !isEditing ? 0 : -1}
                 onKeyDown={(e) => {
                     if (canEdit && !isEditing && e.key === 'Enter') {
                         e.preventDefault();
-                        onStartEdit();
+                        handleStartEdit();
                     }
                 }}
             >
@@ -173,17 +421,17 @@ const TaskRecurrenceCard: React.FC<TaskRecurrenceCardProps> = ({
                                 undefined
                             }
                             completionBased={recurrenceForm.completion_based}
-                            onChange={onChange}
+                            onChange={handleRecurrenceChange}
                         />
                         <div className="flex justify-end space-x-2">
                             <button
-                                onClick={onSave}
+                                onClick={handleSave}
                                 className="px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
                             >
                                 {t('common.save', 'Save')}
                             </button>
                             <button
-                                onClick={onCancel}
+                                onClick={handleCancel}
                                 className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                                 {t('common.cancel', 'Cancel')}

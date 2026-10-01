@@ -5,46 +5,93 @@ import { TagIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import TagInput from '../../Tag/TagInput';
 import { Task } from '../../../entities/Task';
 import { Tag } from '../../../entities/Tag';
+import { updateTask } from '../../../utils/tasksService';
+import { useToast } from '../../Shared/ToastContext';
+import { useStore, StoreState } from '../../../store/useStore';
+import { useTaskDetailsPageContext } from './TaskDetailsPageContext';
+import { refetchAndSetTaskPreservingSubtasks } from './taskDetailsStoreUpdates';
+import { getTagLink } from './taskDetailsLinks';
 
 interface TaskTagsCardProps {
     task: Task;
-    availableTags: Tag[];
-    hasLoadedTags: boolean;
-    isLoadingTags: boolean;
-    onUpdate: (tags: string[]) => Promise<void>;
-    onLoadTags: () => void;
-    getTagLink?: (tag: any) => string;
 }
 
-const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
-    task,
-    availableTags,
-    hasLoadedTags,
-    isLoadingTags,
-    onUpdate,
-    onLoadTags,
-    getTagLink,
-}) => {
+const TaskTagsCard: React.FC<TaskTagsCardProps> = ({ task }) => {
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const { markModified, bumpTimeline } = useTaskDetailsPageContext();
+    const availableTags = useStore((s: StoreState) => s.tagsStore.tags);
+    const hasLoadedTags = useStore((s: StoreState) => s.tagsStore.hasLoaded);
+    const isLoadingTags = useStore((s: StoreState) => s.tagsStore.isLoading);
+    const loadTags = useStore((s: StoreState) => s.tagsStore.loadTags);
+
     const [isEditing, setIsEditing] = useState(false);
     const [editedTags, setEditedTags] = useState<string[]>(
-        task?.tags?.map((tag: any) => tag.name) || []
+        task.tags?.map((tag) => tag.name) || []
     );
 
     useEffect(() => {
-        setEditedTags(task?.tags?.map((tag: any) => tag.name) || []);
-    }, [task?.tags]);
+        if (!hasLoadedTags && !isLoadingTags) {
+            loadTags();
+        }
+    }, [hasLoadedTags, isLoadingTags, loadTags]);
+
+    useEffect(() => {
+        setEditedTags(task.tags?.map((tag) => tag.name) || []);
+    }, [task.tags]);
 
     const handleStartEdit = () => {
-        setEditedTags(task?.tags?.map((tag: any) => tag.name) || []);
+        setEditedTags(task.tags?.map((tag) => tag.name) || []);
         if (!hasLoadedTags && !isLoadingTags) {
-            onLoadTags();
+            loadTags();
         }
         setIsEditing(true);
     };
 
+    const handleTagsUpdate = async (tags: string[]) => {
+        if (!task.uid) {
+            return;
+        }
+
+        const currentTags = task.tags?.map((tag) => tag.name) || [];
+        if (
+            tags.length === currentTags.length &&
+            tags.every((tag, idx) => tag === currentTags[idx])
+        ) {
+            return;
+        }
+
+        try {
+            markModified();
+            await updateTask(task.uid, {
+                tags: tags.map((name) => ({ name })),
+            });
+            await refetchAndSetTaskPreservingSubtasks(
+                task.uid,
+                task.subtasks
+            );
+            showSuccessToast(
+                t('task.tagsUpdated', 'Tags updated successfully')
+            );
+            bumpTimeline();
+        } catch (error: unknown) {
+            console.error('Error updating tags:', error);
+            const err = error as { details?: string[]; message?: string };
+            const details = err?.details;
+            if (details && Array.isArray(details) && details.length > 0) {
+                showErrorToast(details.join('. '));
+            } else {
+                showErrorToast(
+                    err?.message ||
+                        t('task.tagsUpdateError', 'Failed to update tags')
+                );
+            }
+            throw error;
+        }
+    };
+
     const handleSave = async () => {
-        const currentTags = task.tags?.map((tag: any) => tag.name) || [];
+        const currentTags = task.tags?.map((tag) => tag.name) || [];
         if (
             editedTags.length === currentTags.length &&
             editedTags.every((tag, idx) => tag === currentTags[idx])
@@ -53,12 +100,12 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
             return;
         }
 
-        await onUpdate(editedTags);
+        await handleTagsUpdate(editedTags);
         setIsEditing(false);
     };
 
     const handleCancel = () => {
-        setEditedTags(task.tags?.map((tag: any) => tag.name) || []);
+        setEditedTags(task.tags?.map((tag) => tag.name) || []);
         setIsEditing(false);
     };
 
@@ -73,7 +120,7 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
                             availableTags={availableTags}
                             onFocus={() => {
                                 if (!hasLoadedTags && !isLoadingTags) {
-                                    onLoadTags();
+                                    loadTags();
                                 }
                             }}
                         />
@@ -94,12 +141,12 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
                     </div>
                 ) : task.tags && task.tags.length > 0 ? (
                     <div>
-                        {task.tags.map((tag: any, index: number) => (
+                        {task.tags.map((tag: Tag, index: number) => (
                             <div
                                 key={tag.uid || tag.id || tag.name}
                                 className={`group flex w-full items-center justify-between px-3 py-2.5 bg-white dark:bg-gray-900 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
                                     index === 0 ? 'rounded-t-lg' : ''
-                                } ${index === task.tags.length - 1 ? 'rounded-b-lg' : ''}`}
+                                } ${index === task.tags!.length - 1 ? 'rounded-b-lg' : ''}`}
                             >
                                 <button
                                     type="button"
@@ -115,7 +162,7 @@ const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
                                     </span>
                                 </button>
                                 <Link
-                                    to={getTagLink ? getTagLink(tag) : '#'}
+                                    to={getTagLink(tag)}
                                     onClick={(e) => e.stopPropagation()}
                                     className="p-1.5 rounded-full text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex-shrink-0"
                                     title={t('tag.viewTag', 'Go to tag')}

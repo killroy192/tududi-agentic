@@ -17,7 +17,9 @@ interface ToastContextProps {
     showUndoToast: (message: string | React.ReactNode, onUndo: () => void) => void;
 }
 
-const ToastContext = createContext<ToastContextProps | undefined>(undefined);
+export const ToastContext = createContext<ToastContextProps | undefined>(
+    undefined
+);
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
