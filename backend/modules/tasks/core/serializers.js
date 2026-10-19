@@ -82,6 +82,7 @@ async function serializeTask(
         name: displayName,
         original_name: taskJson.name,
         uid: task.uid,
+        user_uid: taskJson.User?.uid || null,
         project_uid: taskJson.Project?.uid || null,
         area_uid: taskJson.Area?.uid || null,
         recurring_parent_uid: recurringParentUid,

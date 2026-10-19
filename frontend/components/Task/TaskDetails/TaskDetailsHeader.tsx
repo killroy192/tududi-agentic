@@ -25,6 +25,9 @@ interface TaskDetailsHeaderProps {
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
     onDelete: () => void;
+    onDuplicate?: () => void;
+    isDuplicating?: boolean;
+    canDuplicate?: boolean;
     getProjectLink?: (project: any) => string;
     getTagLink?: (tag: any) => string;
     activePill: string;
@@ -47,6 +50,9 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onStatusUpdate,
     onPriorityUpdate,
     onDelete,
+    onDuplicate,
+    isDuplicating = false,
+    canDuplicate = false,
     getProjectLink,
     getTagLink,
     activePill,
@@ -754,6 +760,20 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         }}
                                         className="z-30 w-40 rounded-lg shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
                                     >
+                                        {canDuplicate && onDuplicate && (
+                                            <button
+                                                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                                disabled={isDuplicating}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setActionsMenuOpen(false);
+                                                    onDuplicate();
+                                                }}
+                                            >
+                                                {t('tasks.duplicate', 'Duplicate')}
+                                            </button>
+                                        )}
                                         <button
                                             className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                                             onClick={(e) => {

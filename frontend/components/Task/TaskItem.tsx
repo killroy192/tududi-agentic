@@ -149,11 +149,17 @@ const SubtasksDisplay: React.FC<SubtasksDisplayProps> = ({
         </div>
     );
 };
-import { toggleTaskCompletion, updateTask, fetchSubtasks } from '../../utils/tasksService';
+import {
+    toggleTaskCompletion,
+    updateTask,
+    fetchSubtasks,
+    duplicateTask,
+} from '../../utils/tasksService';
 import { isTaskOverdueInTodayPlan } from '../../utils/dateUtils';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import { getApiPath } from '../../config/paths';
+import { getCurrentUser } from '../../utils/userUtils';
 
 interface TaskItemProps {
     task: Task;
@@ -169,6 +175,7 @@ interface TaskItemProps {
     hideStatusControl?: boolean;
     isKanbanView?: boolean;
     showSuggestionChips?: boolean;
+    showDuplicate?: boolean;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
@@ -185,14 +192,22 @@ const TaskItem: React.FC<TaskItemProps> = ({
     hideStatusControl = false,
     isKanbanView = false,
     showSuggestionChips = false,
+    showDuplicate = false,
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
     const [projectList, setProjectList] = useState<Project[]>(projects);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const { showErrorToast, showUndoToast } = useToast();
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+    const currentUser = getCurrentUser();
+    const canDuplicate =
+        showDuplicate &&
+        !!task.user_uid &&
+        !!currentUser?.uid &&
+        task.user_uid === currentUser.uid;
 
     // Status menu state
     const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
@@ -285,6 +300,27 @@ const TaskItem: React.FC<TaskItemProps> = ({
         e.stopPropagation();
         if (task.uid) {
             navigate(`/task/${task.uid}`, fromState);
+        }
+    };
+
+    const handleDuplicate = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!task.uid || isDuplicating) return;
+
+        setIsDuplicating(true);
+        try {
+            const newTask = await duplicateTask(task.uid);
+            if (newTask.uid) {
+                navigate(`/task/${newTask.uid}`, fromState);
+            }
+        } catch (error) {
+            console.error('Error duplicating task:', error);
+            showErrorToast(
+                t('tasks.duplicateError', 'Failed to duplicate task')
+            );
+        } finally {
+            setIsDuplicating(false);
         }
     };
 
@@ -448,6 +484,9 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     }
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
+                    onDuplicate={handleDuplicate}
+                    showDuplicate={canDuplicate}
+                    isDuplicating={isDuplicating}
                     isUpcomingView={isUpcomingView}
                     onMenuOpenChange={setIsStatusMenuOpen}
                     hideStatusControl={hideStatusControl}

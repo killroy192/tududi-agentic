@@ -9,12 +9,14 @@ import { Area } from '../../entities/Area';
 import {
     updateTask,
     deleteTask,
+    duplicateTask,
     fetchTaskByUid,
     fetchTaskNextIterations,
     fetchSubtasks,
     TaskIteration,
     toggleTaskCompletion,
 } from '../../utils/tasksService';
+import { getCurrentUser } from '../../utils/userUtils';
 import { createProject } from '../../utils/projectsService';
 import { fetchAttachments } from '../../utils/attachmentsService';
 import { useStore } from '../../store/useStore';
@@ -87,6 +89,7 @@ const TaskDetails: React.FC = () => {
     const [loading, setLoading] = useState(!task);
     const [error, setError] = useState<string | null>(null);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
     const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] = useState(false);
@@ -904,6 +907,26 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleDuplicate = async () => {
+        if (!task?.uid || isDuplicating) return;
+        setIsDuplicating(true);
+        try {
+            const newTask = await duplicateTask(task.uid);
+            if (newTask.uid) {
+                navigate(`/task/${newTask.uid}`, {
+                    state: { from: location.state?.from || '/today' },
+                });
+            }
+        } catch (error) {
+            console.error('Error duplicating task:', error);
+            showErrorToast(
+                t('tasks.duplicateError', 'Failed to duplicate task')
+            );
+        } finally {
+            setIsDuplicating(false);
+        }
+    };
+
     const handleDeleteConfirm = async () => {
         if (taskToDelete?.uid) {
             try {
@@ -1248,6 +1271,12 @@ const TaskDetails: React.FC = () => {
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
                     onDelete={handleDeleteClick}
+                    onDuplicate={handleDuplicate}
+                    isDuplicating={isDuplicating}
+                    canDuplicate={
+                        !!task.user_uid &&
+                        task.user_uid === getCurrentUser()?.uid
+                    }
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
                     activePill={activePill}

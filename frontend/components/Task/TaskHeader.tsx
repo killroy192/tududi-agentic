@@ -7,6 +7,7 @@ import {
     ListBulletIcon,
     ChevronDownIcon,
     CheckIcon,
+    DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { TagIcon, FolderIcon, FireIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,9 @@ interface TaskHeaderProps {
     // Props for edit and delete functionality
     onEdit?: (e: React.MouseEvent) => void;
     onDelete?: (e: React.MouseEvent) => void;
+    onDuplicate?: (e: React.MouseEvent) => void;
+    showDuplicate?: boolean;
+    isDuplicating?: boolean;
     isUpcomingView?: boolean;
     onMenuOpenChange?: (isOpen: boolean) => void;
     hideStatusControl?: boolean;
@@ -61,6 +65,9 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     // Props for edit and delete functionality
     onEdit: _onEdit,
     onDelete: _onDelete,
+    onDuplicate,
+    showDuplicate = false,
+    isDuplicating = false,
     isUpcomingView = false,
     onMenuOpenChange,
     hideStatusControl = false,
@@ -70,6 +77,29 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     void _onToggleToday;
     void _onEdit;
     void _onDelete;
+    void isKanbanView;
+
+    const DuplicateButton = ({ className = '' }: { className?: string }) => {
+        if (!showDuplicate || !onDuplicate) return null;
+
+        return (
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDuplicate(e);
+                }}
+                disabled={isDuplicating}
+                aria-label={t('tasks.duplicate', 'Duplicate')}
+                title={t('tasks.duplicate', 'Duplicate')}
+                data-testid="task-duplicate-button"
+                className={`p-1.5 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            >
+                <DocumentDuplicateIcon className="h-4 w-4" />
+            </button>
+        );
+    };
     const SubtasksToggleButton = () => {
         if (!hasSubtasks || !onSubtasksToggle) return null;
 
@@ -414,18 +444,22 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         )}
                     </div>
                 </div>
-                {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
-                        <TaskStatusControl
-                            task={task}
-                            onToggleCompletion={onToggleCompletion}
-                            onTaskUpdate={onTaskUpdate}
-                            showMobileVariant={false}
-                            className=""
-                            onMenuOpenChange={onMenuOpenChange}
-                        />
-                    </div>
-                )}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 z-[1]">
+                    <DuplicateButton />
+                    {!isUpcomingView &&
+                        !task.habit_mode &&
+                        !hideStatusControl &&
+                        onToggleCompletion && (
+                            <TaskStatusControl
+                                task={task}
+                                onToggleCompletion={onToggleCompletion}
+                                onTaskUpdate={onTaskUpdate}
+                                showMobileVariant={false}
+                                className=""
+                                onMenuOpenChange={onMenuOpenChange}
+                            />
+                        )}
+                </div>
             </div>
 
             {/* Mobile view (below md breakpoint) */}
@@ -569,16 +603,19 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                             )}
                         </div>
 
-                        {onToggleCompletion && (
-                            <div className="mt-2">
-                                <TaskStatusControl
-                                    task={task}
-                                    onToggleCompletion={onToggleCompletion}
-                                    onTaskUpdate={onTaskUpdate}
-                                    hoverRevealQuickActions={false}
-                                    showMobileVariant={false}
-                                    onMenuOpenChange={onMenuOpenChange}
-                                />
+                        {(showDuplicate || onToggleCompletion) && (
+                            <div className="mt-2 flex items-center gap-2">
+                                <DuplicateButton className="!opacity-100" />
+                                {onToggleCompletion && (
+                                    <TaskStatusControl
+                                        task={task}
+                                        onToggleCompletion={onToggleCompletion}
+                                        onTaskUpdate={onTaskUpdate}
+                                        hoverRevealQuickActions={false}
+                                        showMobileVariant={false}
+                                        onMenuOpenChange={onMenuOpenChange}
+                                    />
+                                )}
                             </div>
                         )}
                     </div>

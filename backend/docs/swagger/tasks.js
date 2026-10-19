@@ -363,6 +363,42 @@
 
 /**
  * @swagger
+ * /api/task/{id}/duplicate:
+ *   post:
+ *     summary: Duplicate a task
+ *     description: |
+ *       Creates a new task owned by the current user by copying the source task.
+ *       Copies title, description, project, area, tags, and priority.
+ *       Status is always not_started. Due date, reminder, and defer-until are cleared.
+ *       Direct subtasks are copied for top-level tasks. Only the task owner may duplicate.
+ *     tags: [Tasks]
+ *     security:
+ *       - cookieAuth: []
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Source task UID
+ *     responses:
+ *       201:
+ *         description: Task duplicated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - only the task owner can duplicate
+ *       404:
+ *         description: Task not found
+ */
+
+/**
+ * @swagger
  * /api/task/{id}/subtasks:
  *   get:
  *     summary: Get all subtasks for a parent task

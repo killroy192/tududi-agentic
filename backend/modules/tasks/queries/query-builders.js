@@ -1,4 +1,4 @@
-const { Task, Tag, Project, Area, sequelize } = require('../../../models');
+const { Task, Tag, Project, Area, User, sequelize } = require('../../../models');
 const { Op, QueryTypes } = require('sequelize');
 const permissionsService = require('../../../services/permissionsService');
 const {
@@ -6,6 +6,12 @@ const {
     getUpcomingRangeInUTC,
     getTodayBoundsInUTC,
 } = require('../../../utils/timezone-utils');
+
+const USER_INCLUDE = {
+    model: User,
+    attributes: ['uid'],
+    required: false,
+};
 
 async function filterTasksByParams(
     params,
@@ -93,6 +99,7 @@ async function filterTasksByParams(
             attributes: ['id', 'name', 'uid', 'color'],
             required: false,
         },
+        USER_INCLUDE,
         {
             model: Task,
             as: 'Subtasks',
@@ -464,6 +471,7 @@ function getTaskIncludeConfig() {
             attributes: ['id', 'name', 'uid', 'color'],
             required: false,
         },
+        USER_INCLUDE,
         {
             model: Task,
             as: 'Subtasks',
@@ -504,6 +512,7 @@ function getTaskIncludeConfigLight() {
             attributes: ['id', 'name', 'uid', 'color'],
             required: false,
         },
+        USER_INCLUDE,
     ];
 }
 

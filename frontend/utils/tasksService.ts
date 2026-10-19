@@ -167,6 +167,20 @@ export const deleteTask = async (taskUid: string): Promise<void> => {
     await handleAuthResponse(response, 'Failed to delete task.');
 };
 
+export const duplicateTask = async (taskUid: string): Promise<Task> => {
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(taskUid)}/duplicate`),
+        {
+            method: 'POST',
+            credentials: 'include',
+            headers: await getPostHeadersWithCsrf(),
+        }
+    );
+
+    await handleAuthResponse(response, 'Failed to duplicate task.');
+    return await response.json();
+};
+
 export const fetchTaskById = async (taskId: number): Promise<Task> => {
     const response = await fetch(getApiPath(`task/${taskId}`), {
         credentials: 'include',

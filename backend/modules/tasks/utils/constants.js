@@ -1,4 +1,10 @@
-const { Tag, Project, Area, Task } = require('../../../models');
+const { Tag, Project, Area, Task, User } = require('../../../models');
+
+const USER_INCLUDE = {
+    model: User,
+    attributes: ['uid'],
+    required: false,
+};
 
 const TASK_INCLUDES = [
     {
@@ -16,6 +22,7 @@ const TASK_INCLUDES = [
         attributes: ['id', 'name', 'uid', 'color'],
         required: false,
     },
+    USER_INCLUDE,
 ];
 
 const TASK_INCLUDES_WITH_SUBTASKS = [
@@ -42,4 +49,5 @@ const TASK_INCLUDES_WITH_SUBTASKS = [
 module.exports = {
     TASK_INCLUDES,
     TASK_INCLUDES_WITH_SUBTASKS,
+    USER_INCLUDE,
 };

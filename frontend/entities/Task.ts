@@ -6,6 +6,7 @@ import { Attachment } from './Attachment';
 export interface Task {
     id?: number;
     uid?: string;
+    user_uid?: string;
     name: string;
     original_name?: string;
     status: StatusType | number;

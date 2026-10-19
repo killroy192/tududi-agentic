@@ -72,6 +72,7 @@ const {
 const { getTaskMetrics } = require('./queries/metrics-computation');
 
 const { getSubtasks } = require('./operations/subtasks');
+const { duplicateTask } = require('./operations/duplicate');
 
 const {
     requireTaskReadAccess,
@@ -552,6 +553,41 @@ router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
         res.json(serializedTask);
     } catch (error) {
         logError('Error fetching task:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/task/:uid/duplicate', requireTaskReadAccess, async (req, res) => {
+    try {
+        const sourceTask = await taskRepository.findByUid(req.params.uid, {
+            include: TASK_INCLUDES_WITH_SUBTASKS,
+        });
+
+        if (!sourceTask) {
+            return res.status(404).json({ error: 'Task not found.' });
+        }
+
+        const result = await duplicateTask(
+            sourceTask,
+            req.currentUser.id,
+            req.currentUser.timezone
+        );
+
+        if (result.error) {
+            return res
+                .status(result.status || 400)
+                .json({ error: result.error });
+        }
+
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+        });
+
+        res.status(201).json(result.task);
+    } catch (error) {
+        logError('Error duplicating task:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

@@ -145,6 +145,8 @@
     "showSubtasks": "Show subtasks",
     "hideSubtasks": "Hide subtasks",
     "edit": "Edit task",
+    "duplicate": "Duplicate",
+    "duplicateError": "Failed to duplicate task",
     "delete": "Delete task",
     "sortTasks": "Sort tasks",
     "sortBy": "Sort by",
