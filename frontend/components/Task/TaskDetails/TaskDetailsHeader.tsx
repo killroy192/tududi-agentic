@@ -13,7 +13,8 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
-import { Task, PriorityType } from '../../../entities/Task';
+import { Task, PriorityType, TaskSize } from '../../../entities/Task';
+import SizeDropdown from '../../Shared/SizeDropdown';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
@@ -24,6 +25,8 @@ interface TaskDetailsHeaderProps {
     onTitleUpdate: (newTitle: string) => Promise<void>;
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
+    onSizeUpdate?: (size: TaskSize) => Promise<void>;
+    canEditSize?: boolean;
     onDelete: () => void;
     getProjectLink?: (project: any) => string;
     getTagLink?: (tag: any) => string;
@@ -46,6 +49,8 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onTitleUpdate,
     onStatusUpdate,
     onPriorityUpdate,
+    onSizeUpdate,
+    canEditSize = false,
     onDelete,
     getProjectLink,
     getTagLink,
@@ -485,6 +490,14 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        <SizeDropdown
+                                            value={task.size ?? null}
+                                            canEdit={canEditSize}
+                                            onChange={(size) => {
+                                                void onSizeUpdate?.(size);
+                                            }}
+                                        />
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

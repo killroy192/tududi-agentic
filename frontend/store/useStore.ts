@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { Project } from '../entities/Project';
 import { Area } from '../entities/Area';
 import { Note } from '../entities/Note';
-import { Task } from '../entities/Task';
+import { Task, TaskSize } from '../entities/Task';
 import { Tag } from '../entities/Tag';
 import { InboxItem } from '../entities/InboxItem';
+import { mergeSavedTaskSize } from '../utils/taskSize';
 
 interface NotesStore {
     notes: Note[];
@@ -73,6 +74,7 @@ interface TasksStore {
     addTask: (task: Task) => void;
     removeTask: (taskId: number) => void;
     updateTaskInStore: (updatedTask: Task) => void;
+    applyTaskSize: (uid: string, size: TaskSize) => void;
 }
 
 interface InboxStore {
@@ -623,6 +625,17 @@ export const useStore = create<StoreState>((set: any) => ({
                                       [],
                               }
                             : task
+                    ),
+                },
+            })),
+        applyTaskSize: (uid, size) =>
+            set((state) => ({
+                tasksStore: {
+                    ...state.tasksStore,
+                    tasks: mergeSavedTaskSize(
+                        state.tasksStore.tasks,
+                        uid,
+                        size
                     ),
                 },
             })),

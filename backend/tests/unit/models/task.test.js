@@ -43,6 +43,42 @@ describe('Task Model', () => {
             await expect(Task.create(taskData)).rejects.toThrow();
         });
 
+        it('should store null, S, M, L, and XL as size', async () => {
+            const unset = await Task.create({
+                name: 'Unset size',
+                user_id: user.id,
+                size: null,
+            });
+            expect(unset.size).toBeNull();
+
+            for (const size of ['S', 'M', 'L', 'XL']) {
+                const task = await Task.create({
+                    name: `Size ${size}`,
+                    user_id: user.id,
+                    size,
+                });
+                expect(task.size).toBe(size);
+            }
+        });
+
+        it('should reject a size outside the allowed set', async () => {
+            await expect(
+                Task.create({
+                    name: 'Bad size',
+                    user_id: user.id,
+                    size: 'XX',
+                })
+            ).rejects.toThrow();
+
+            await expect(
+                Task.create({
+                    name: 'Lower size',
+                    user_id: user.id,
+                    size: 'm',
+                })
+            ).rejects.toThrow();
+        });
+
         it('should validate priority range', async () => {
             const taskData = {
                 name: 'Test Task',

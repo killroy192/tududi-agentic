@@ -1,11 +1,12 @@
 import React from 'react';
 import TaskItem from './TaskItem';
 import { Project } from '../../entities/Project';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 
 interface TaskListProps {
     tasks: Task[];
     onTaskUpdate: (task: Task) => Promise<void>;
+    onSizeSaved?: (uid: string, size: TaskSize) => void;
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskCreate?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
@@ -21,6 +22,7 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({
     tasks,
     onTaskUpdate,
+    onSizeSaved,
     onTaskCompletionToggle,
     onTaskDelete,
     projects,
@@ -57,6 +59,7 @@ const TaskList: React.FC<TaskListProps> = ({
                         <TaskItem
                             task={task}
                             onTaskUpdate={onTaskUpdate}
+                            onSizeSaved={onSizeSaved}
                             onTaskCompletionToggle={onTaskCompletionToggle}
                             onTaskDelete={onTaskDelete}
                             projects={projects}

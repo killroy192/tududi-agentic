@@ -41,6 +41,21 @@ module.exports = (sequelize) => {
                     max: 2,
                 },
             },
+            size: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                defaultValue: null,
+                validate: {
+                    isAllowedSize(value) {
+                        if (value == null) {
+                            return;
+                        }
+                        if (!['S', 'M', 'L', 'XL'].includes(value)) {
+                            throw new Error('The size is invalid');
+                        }
+                    },
+                },
+            },
             status: {
                 type: DataTypes.INTEGER,
                 allowNull: false,

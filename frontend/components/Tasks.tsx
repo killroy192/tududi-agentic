@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import TaskList from './Task/TaskList';
 import GroupedTaskList from './Task/GroupedTaskList';
 import NewTask from './Task/NewTask';
-import { Task } from '../entities/Task';
+import { Task, TaskSize } from '../entities/Task';
 import { getTitleAndIcon } from './Task/getTitleAndIcon';
 import { getDescription } from './Task/getDescription';
 import { createTask, GroupedTasks } from '../utils/tasksService';
@@ -22,6 +22,11 @@ import {
 import { getApiPath } from '../config/paths';
 import { getCsrfToken } from '../utils/csrfService';
 import { isTaskActive } from '../constants/taskStatus';
+import {
+    mergeSavedTaskSize,
+    mergeSavedTaskSizeInGroups,
+    omitTaskSize,
+} from '../utils/taskSize';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -387,7 +392,7 @@ const Tasks: React.FC = () => {
                         'Content-Type': 'application/json',
                         'x-csrf-token': await getCsrfToken(),
                     },
-                    body: JSON.stringify(updatedTask),
+                    body: JSON.stringify(omitTaskSize(updatedTask)),
                 }
             );
 
@@ -416,6 +421,13 @@ const Tasks: React.FC = () => {
             console.error('Error updating task:', error);
             setError('Error updating task.');
         }
+    };
+
+    const handleSizeSaved = (uid: string, size: TaskSize) => {
+        setTasks((prevTasks) => mergeSavedTaskSize(prevTasks, uid, size));
+        setGroupedTasks((prevGroupedTasks) =>
+            mergeSavedTaskSizeInGroups(prevGroupedTasks, uid, size)
+        );
     };
 
     const handleTaskCompletionToggle = (updatedTask: Task) => {
@@ -900,6 +912,7 @@ const Tasks: React.FC = () => {
                                             groupBy="none"
                                             onTaskCreate={handleTaskCreate}
                                             onTaskUpdate={handleTaskUpdate}
+                                            onSizeSaved={handleSizeSaved}
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
                                             }
@@ -948,6 +961,7 @@ const Tasks: React.FC = () => {
                                         groupBy={groupBy}
                                         onTaskCreate={handleTaskCreate}
                                         onTaskUpdate={handleTaskUpdate}
+                                            onSizeSaved={handleSizeSaved}
                                         onTaskCompletionToggle={
                                             handleTaskCompletionToggle
                                         }
@@ -963,6 +977,7 @@ const Tasks: React.FC = () => {
                                         tasks={displayTasks}
                                         onTaskCreate={handleTaskCreate}
                                         onTaskUpdate={handleTaskUpdate}
+                                            onSizeSaved={handleSizeSaved}
                                         onTaskCompletionToggle={
                                             handleTaskCompletionToggle
                                         }

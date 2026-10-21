@@ -34,7 +34,8 @@ import {
     isTaskWaiting,
 } from '../../constants/taskStatus';
 import { fetchProjects } from '../../utils/projectsService';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
+import { mergeSavedTaskSize } from '../../utils/taskSize';
 import { useStore } from '../../store/useStore';
 import TaskList from './TaskList';
 import TodayPlan from './TodayPlan';
@@ -724,6 +725,42 @@ const TasksToday: React.FC = () => {
             isMounted.current = false;
         };
     }, []); // Empty dependency array - only run once on mount
+
+    const handleSizeSaved = useCallback((uid: string, size: TaskSize) => {
+        setMetrics((prevMetrics) => ({
+            ...prevMetrics,
+            tasks_in_progress: mergeSavedTaskSize(
+                prevMetrics.tasks_in_progress || [],
+                uid,
+                size
+            ),
+            tasks_due_today: mergeSavedTaskSize(
+                prevMetrics.tasks_due_today || [],
+                uid,
+                size
+            ),
+            tasks_overdue: mergeSavedTaskSize(
+                prevMetrics.tasks_overdue || [],
+                uid,
+                size
+            ),
+            today_plan_tasks: mergeSavedTaskSize(
+                prevMetrics.today_plan_tasks || [],
+                uid,
+                size
+            ),
+            suggested_tasks: mergeSavedTaskSize(
+                prevMetrics.suggested_tasks || [],
+                uid,
+                size
+            ),
+            tasks_completed_today: mergeSavedTaskSize(
+                prevMetrics.tasks_completed_today || [],
+                uid,
+                size
+            ),
+        }));
+    }, []);
 
     // Memoize task handlers to prevent recreating functions on each render
     const handleTaskUpdate = useCallback(
@@ -1595,6 +1632,7 @@ const TasksToday: React.FC = () => {
                                             overdueDisplayLimit
                                         )}
                                         onTaskUpdate={handleTaskUpdate}
+                                        onSizeSaved={handleSizeSaved}
                                         onTaskDelete={handleTaskDelete}
                                         projects={localProjects}
                                         onToggleToday={undefined}
@@ -1690,6 +1728,7 @@ const TasksToday: React.FC = () => {
                                             )}
                                             projects={localProjects}
                                             onTaskUpdate={handleTaskUpdate}
+                                            onSizeSaved={handleSizeSaved}
                                             onTaskDelete={handleTaskDelete}
                                             onToggleToday={undefined}
                                             onTaskCompletionToggle={
@@ -1784,6 +1823,7 @@ const TasksToday: React.FC = () => {
                                             dueTodayDisplayLimit
                                         )}
                                         onTaskUpdate={handleTaskUpdate}
+                                        onSizeSaved={handleSizeSaved}
                                         onTaskDelete={handleTaskDelete}
                                         projects={localProjects}
                                         onToggleToday={undefined}
@@ -1888,6 +1928,7 @@ const TasksToday: React.FC = () => {
                                         suggestedDisplayLimit
                                     )}
                                     onTaskUpdate={handleTaskUpdate}
+                                    onSizeSaved={handleSizeSaved}
                                     onTaskCompletionToggle={
                                         handleTaskCompletionToggle
                                     }
@@ -1952,6 +1993,7 @@ const TasksToday: React.FC = () => {
                                                 completedTodayDisplayLimit
                                             )}
                                             onTaskUpdate={handleTaskUpdate}
+                                            onSizeSaved={handleSizeSaved}
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
                                             }

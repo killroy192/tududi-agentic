@@ -23,7 +23,8 @@ import ConfirmDialog from '../Shared/ConfirmDialog';
 import NoteModal from '../Note/NoteModal';
 import { useStore } from '../../store/useStore';
 import { Project } from '../../entities/Project';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
+import { mergeSavedTaskSize, omitTaskSize } from '../../utils/taskSize';
 import { Note } from '../../entities/Note';
 import {
     fetchProjectBySlug,
@@ -335,7 +336,7 @@ const ProjectDetails: React.FC = () => {
                 'x-csrf-token': await getCsrfToken(),
             },
             credentials: 'include',
-            body: JSON.stringify(updatedTask),
+            body: JSON.stringify(omitTaskSize(updatedTask)),
         });
         if (!response.ok) {
             await response.json();
@@ -363,6 +364,10 @@ const ProjectDetails: React.FC = () => {
                 )
             );
         }
+    };
+
+    const handleSizeSaved = (uid: string, size: TaskSize) => {
+        setTasks((prev) => mergeSavedTaskSize(prev, uid, size));
     };
 
     const handleTaskDelete = async (taskUid: string | undefined) => {
@@ -1067,6 +1072,7 @@ const ProjectDetails: React.FC = () => {
                                             }
                                             onTaskCreate={handleTaskCreate}
                                             onTaskUpdate={handleTaskUpdate}
+                                            onSizeSaved={handleSizeSaved}
                                             onTaskCompletionToggle={
                                                 handleTaskCompletionToggle
                                             }

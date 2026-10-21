@@ -90,13 +90,17 @@ export const createTask = async (taskData: Task): Promise<Task> => {
 
 export const updateTask = async (
     taskUid: string,
-    taskData: Partial<Task>
+    taskData: Partial<Task>,
+    options?: { includeSize?: boolean }
 ): Promise<Task> => {
     // Use original_name to prevent display name (e.g. "Monthly", "Daily")
     // from overwriting the real task name in the database
     const payload = { ...taskData };
     if (payload.original_name && payload.name !== undefined) {
         payload.name = payload.original_name;
+    }
+    if (!options?.includeSize) {
+        delete payload.size;
     }
 
     const response = await fetch(

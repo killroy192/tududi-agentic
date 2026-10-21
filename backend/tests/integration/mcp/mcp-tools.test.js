@@ -121,6 +121,49 @@ describe('MCP Tools Integration', () => {
                 expect(content.tasks).toEqual([]);
             });
 
+            it('should omit size from task tool payloads and inputs', async () => {
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Sized MCP Task',
+                    status: 0,
+                    size: 'M',
+                });
+
+                const listed = await callMcpTool(apiTokenValue, 'list_tasks', {});
+                expect(listed.status).toBe(200);
+                const listedContent = getToolContent(listed).content;
+                expect(listedContent.tasks.length).toBeGreaterThan(0);
+                listedContent.tasks.forEach((task) => {
+                    expect(task).not.toHaveProperty('size');
+                    expect(task).not.toHaveProperty('user_uid');
+                });
+
+                const created = await callMcpTool(apiTokenValue, 'create_task', {
+                    name: 'Created without size',
+                });
+                const createdTask = getToolContent(created).content.task;
+                expect(createdTask).not.toHaveProperty('size');
+                expect(createdTask).not.toHaveProperty('user_uid');
+
+                const toolsResponse = await request(app)
+                    .post('/api/mcp')
+                    .set('Authorization', `Bearer ${apiTokenValue}`)
+                    .set('Content-Type', 'application/json')
+                    .set('Accept', 'application/json, text/event-stream')
+                    .send({
+                        jsonrpc: '2.0',
+                        method: 'tools/list',
+                        id: 1,
+                    });
+                const tools = parseSseResponse(toolsResponse.text).result.tools;
+                for (const name of ['create_task', 'update_task']) {
+                    const tool = tools.find((entry) => entry.name === name);
+                    expect(tool.inputSchema.properties).not.toHaveProperty(
+                        'size'
+                    );
+                }
+            });
+
             it('should return tasks when they exist', async () => {
                 await Task.create({
                     user_id: user.id,

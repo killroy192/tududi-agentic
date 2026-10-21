@@ -1,3 +1,4 @@
+const { User } = require('../../../models');
 const {
     getSafeTimezone,
     processDueDateForResponse,
@@ -17,11 +18,36 @@ function sortTags(tags) {
     );
 }
 
+function collectOwnerIds(taskJson, subtasks) {
+    const ids = new Set();
+    if (taskJson.user_id) {
+        ids.add(taskJson.user_id);
+    }
+    for (const subtask of subtasks || []) {
+        if (subtask.user_id) {
+            ids.add(subtask.user_id);
+        }
+    }
+    return ids;
+}
+
+async function loadOwnerUids(ids) {
+    if (!ids || ids.size === 0) {
+        return new Map();
+    }
+    const users = await User.findAll({
+        where: { id: [...ids] },
+        attributes: ['id', 'uid'],
+    });
+    return new Map(users.map((user) => [user.id, user.uid]));
+}
+
 async function serializeTask(
     task,
     userTimezone = 'UTC',
     options = {},
-    moveCountMap = null
+    moveCountMap = null,
+    ownerUids = null
 ) {
     if (!task) {
         throw new Error('Task is null or undefined');
@@ -36,7 +62,9 @@ async function serializeTask(
 
     const safeTimezone = getSafeTimezone(userTimezone);
 
-    const { Subtasks, ...taskWithoutSubtasks } = taskJson;
+    const { Subtasks, User: taskOwner, ...taskWithoutSubtasks } = taskJson;
+    const resolvedOwnerUids =
+        ownerUids || (await loadOwnerUids(collectOwnerIds(taskJson, Subtasks)));
 
     let displayName = taskJson.name;
     if (
@@ -82,6 +110,11 @@ async function serializeTask(
         name: displayName,
         original_name: taskJson.name,
         uid: task.uid,
+        user_uid:
+            taskOwner?.uid ||
+            resolvedOwnerUids.get(taskJson.user_id) ||
+            taskJson.user_uid ||
+            null,
         project_uid: taskJson.Project?.uid || null,
         area_uid: taskJson.Area?.uid || null,
         recurring_parent_uid: recurringParentUid,
@@ -104,24 +137,32 @@ async function serializeTask(
               }
             : null,
         subtasks: Subtasks
-            ? Subtasks.map((subtask) => ({
-                  ...subtask,
-                  uid: subtask.uid,
-                  tags: sortTags(subtask.Tags),
-                  due_date: processDueDateForResponse(
-                      subtask.due_date,
-                      safeTimezone
-                  ),
-                  defer_until: processDeferUntilForResponse(
-                      subtask.defer_until,
-                      safeTimezone
-                  ),
-                  completed_at: subtask.completed_at
-                      ? subtask.completed_at instanceof Date
-                          ? subtask.completed_at.toISOString()
-                          : new Date(subtask.completed_at).toISOString()
-                      : null,
-              }))
+            ? Subtasks.map((subtask) => {
+                  const { User: subtaskOwner, ...subtaskRest } = subtask;
+                  return {
+                      ...subtaskRest,
+                      uid: subtask.uid,
+                      user_uid:
+                      subtaskOwner?.uid ||
+                      resolvedOwnerUids.get(subtask.user_id) ||
+                      subtask.user_uid ||
+                      null,
+                      tags: sortTags(subtask.Tags),
+                      due_date: processDueDateForResponse(
+                          subtask.due_date,
+                          safeTimezone
+                      ),
+                      defer_until: processDeferUntilForResponse(
+                          subtask.defer_until,
+                          safeTimezone
+                      ),
+                      completed_at: subtask.completed_at
+                          ? subtask.completed_at instanceof Date
+                              ? subtask.completed_at.toISOString()
+                              : new Date(subtask.completed_at).toISOString()
+                          : null,
+                  };
+              })
             : [],
         completed_at: task.completed_at
             ? task.completed_at instanceof Date
@@ -139,10 +180,18 @@ async function serializeTasks(tasks, userTimezone = 'UTC', options = {}) {
 
     const taskIds = tasks.map((task) => task.id);
     const moveCountMap = await getTaskTodayMoveCounts(taskIds);
+    const ownerIds = new Set();
+    tasks.forEach((task) => {
+        const taskJson = task.toJSON ? task.toJSON() : task;
+        collectOwnerIds(taskJson, taskJson.Subtasks).forEach((id) =>
+            ownerIds.add(id)
+        );
+    });
+    const ownerUids = await loadOwnerUids(ownerIds);
 
     return await Promise.all(
         tasks.map((task) =>
-            serializeTask(task, userTimezone, options, moveCountMap)
+            serializeTask(task, userTimezone, options, moveCountMap, ownerUids)
         )
     );
 }

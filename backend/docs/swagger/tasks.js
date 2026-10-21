@@ -271,6 +271,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [null, S, M, L, XL]
+ *                 description: Task size. Null means unset. Only the task owner can change it. Omitting the field leaves the stored size unchanged.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]

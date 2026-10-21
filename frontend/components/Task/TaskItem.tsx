@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import TaskHeader from './TaskHeader';
+import SizeDropdown from '../Shared/SizeDropdown';
+import { getCurrentUser } from '../../utils/userUtils';
+import {
+    isTaskSizeOwner,
+    persistTaskSize,
+} from '../../utils/taskSize';
+import { useStore } from '../../store/useStore';
 import { useToast } from '../Shared/ToastContext';
 import TaskPriorityIcon from '../Shared/Icons/TaskPriorityIcon';
 import { isTaskCompleted } from '../../constants/taskStatus';
@@ -23,6 +30,7 @@ interface SubtasksDisplayProps {
     onTaskClick: (e: React.MouseEvent, task: Task) => void;
     loadSubtasks: () => Promise<void>;
     onSubtaskUpdate: (updatedSubtask: Task) => void;
+    onSizeChange: (subtask: Task, size: TaskSize) => void;
 }
 
 const getPriorityBorderClassName = (
@@ -56,6 +64,7 @@ const SubtasksDisplay: React.FC<SubtasksDisplayProps> = ({
     onTaskClick,
     loadSubtasks,
     onSubtaskUpdate,
+    onSizeChange,
 }) => {
     const { t } = useTranslation();
 
@@ -136,6 +145,16 @@ const SubtasksDisplay: React.FC<SubtasksDisplayProps> = ({
                                         {subtask.original_name || subtask.name}
                                     </span>
                                 </div>
+                                <SizeDropdown
+                                    value={subtask.size ?? null}
+                                    canEdit={isTaskSizeOwner(
+                                        subtask,
+                                        getCurrentUser()?.uid
+                                    )}
+                                    onChange={(size) =>
+                                        onSizeChange(subtask, size)
+                                    }
+                                />
                                 {isTaskCompleted(subtask.status) && (
                                     <span className="text-xs text-green-600 dark:text-green-400">
                                         ✓
@@ -158,6 +177,7 @@ import { getApiPath } from '../../config/paths';
 interface TaskItemProps {
     task: Task;
     onTaskUpdate: (task: Task) => Promise<void>;
+    onSizeSaved?: (uid: string, size: TaskSize) => void;
     onTaskCompletionToggle?: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
     projects: Project[];
@@ -174,6 +194,7 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({
     task,
     onTaskUpdate,
+    onSizeSaved,
     onTaskCompletionToggle,
     onTaskDelete,
     projects,
@@ -191,7 +212,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     const { t } = useTranslation();
     const [projectList, setProjectList] = useState<Project[]>(projects);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-    const { showErrorToast, showUndoToast } = useToast();
+    const { showSuccessToast, showErrorToast, showUndoToast } = useToast();
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
     // Status menu state
@@ -206,6 +227,30 @@ const TaskItem: React.FC<TaskItemProps> = ({
     useEffect(() => {
         setProjectList(projects);
     }, [projects]);
+
+    const handleSizeChange = async (target: Task, size: TaskSize) => {
+        if (!target.uid) {
+            return;
+        }
+        try {
+            const savedSize = await persistTaskSize(target.uid, size);
+            useStore.getState().tasksStore.applyTaskSize(target.uid, savedSize);
+            setSubtasks((current) =>
+                current.map((subtask) =>
+                    subtask.uid === target.uid
+                        ? { ...subtask, size: savedSize }
+                        : subtask
+                )
+            );
+            onSizeSaved?.(target.uid, savedSize);
+            showSuccessToast(
+                t('task.sizeUpdated', 'Size updated successfully')
+            );
+        } catch (error) {
+            console.error('Error updating size:', error);
+            showErrorToast(t('task.sizeUpdateError', 'Failed to update size'));
+        }
+    };
 
     const loadSubtasks = useCallback(async () => {
         if (!task.uid) return;
@@ -438,6 +483,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     hideProjectName={hideProjectName}
                     onToggleToday={onToggleToday}
                     onTaskUpdate={onTaskUpdate}
+                    canEditSize={isTaskSizeOwner(task, getCurrentUser()?.uid)}
+                    onSizeChange={(size) => handleSizeChange(task, size)}
                     isOverdue={isOverdue}
                     showSubtasks={showSubtasks}
                     hasSubtasks={shouldShowSubtasksIcon}
@@ -515,6 +562,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
                                 )
                             );
                         }}
+                        onSizeChange={handleSizeChange}
                     />
                 )}
             {/* Confirm Delete Dialog */}

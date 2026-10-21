@@ -10,7 +10,8 @@ import {
     MagnifyingGlassIcon,
 } from '@heroicons/react/24/solid';
 import { FolderIcon as FolderOutlineIcon } from '@heroicons/react/24/outline';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
+import { mergeSavedTaskSize, omitTaskSize } from '../../utils/taskSize';
 import { Note } from '../../entities/Note';
 import { Project } from '../../entities/Project';
 import TaskList from '../Task/TaskList';
@@ -299,7 +300,7 @@ const TagDetails: React.FC = () => {
                         'Content-Type': 'application/json',
                         'x-csrf-token': await getCsrfToken(),
                     },
-                    body: JSON.stringify(updatedTask),
+                    body: JSON.stringify(omitTaskSize(updatedTask)),
                 }
             );
 
@@ -313,6 +314,10 @@ const TagDetails: React.FC = () => {
         } catch (error) {
             console.error('Error updating task:', error);
         }
+    };
+
+    const handleSizeSaved = (uid: string, size: TaskSize) => {
+        setTasks((prevTasks) => mergeSavedTaskSize(prevTasks, uid, size));
     };
 
     const handleTaskDelete = async (taskUid: string) => {
@@ -730,6 +735,7 @@ const TagDetails: React.FC = () => {
                                 tasks={displayTasks}
                                 groupBy="project"
                                 onTaskUpdate={handleTaskUpdate}
+                                onSizeSaved={handleSizeSaved}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle
                                 }
@@ -744,6 +750,7 @@ const TagDetails: React.FC = () => {
                             <TaskList
                                 tasks={displayTasks}
                                 onTaskUpdate={handleTaskUpdate}
+                                onSizeSaved={handleSizeSaved}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle
                                 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import TaskList from './TaskList';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { sortTasksByPriorityDueDateProject } from '../../utils/taskSortUtils';
 
@@ -10,6 +10,7 @@ interface TodayPlanProps {
     todayPlanTasks: Task[] | undefined;
     projects: Project[];
     onTaskUpdate: (task: Task) => Promise<void>;
+    onSizeSaved?: (uid: string, size: TaskSize) => void;
     onTaskDelete: (taskUid: string) => Promise<void>;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     onTaskCompletionToggle?: (task: Task) => void; // New prop
@@ -19,6 +20,7 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
     todayPlanTasks,
     projects,
     onTaskUpdate,
+    onSizeSaved,
     onTaskDelete,
     onToggleToday,
     onTaskCompletionToggle, // Destructure new prop
@@ -78,6 +80,7 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
             <TaskList
                 tasks={sortedTasks}
                 onTaskUpdate={onTaskUpdate}
+                onSizeSaved={onSizeSaved}
                 onTaskDelete={onTaskDelete}
                 projects={projects}
                 onToggleToday={onToggleToday}

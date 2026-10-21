@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project } from '../../entities/Project';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import AutoSuggestNextActionBox from './AutoSuggestNextActionBox';
 import NewTask from '../Task/NewTask';
 import TaskList from '../Task/TaskList';
@@ -14,6 +14,7 @@ interface ProjectTasksSectionProps {
     onDismissNextAction: () => void;
     onTaskCreate: (taskName: string) => Promise<void>;
     onTaskUpdate: (task: Task) => Promise<void>;
+    onSizeSaved?: (uid: string, size: TaskSize) => void;
     onTaskCompletionToggle: (task: Task) => void;
     onTaskDelete: (taskUid: string) => void;
     onToggleToday: (taskId: number, task?: Task) => Promise<void>;
@@ -31,6 +32,7 @@ const ProjectTasksSection: React.FC<ProjectTasksSectionProps> = ({
     onDismissNextAction,
     onTaskCreate,
     onTaskUpdate,
+    onSizeSaved,
     onTaskCompletionToggle,
     onTaskDelete,
     onToggleToday,
@@ -64,6 +66,7 @@ const ProjectTasksSection: React.FC<ProjectTasksSectionProps> = ({
                         <TaskList
                             tasks={displayTasks}
                             onTaskUpdate={onTaskUpdate}
+                            onSizeSaved={onSizeSaved}
                             onTaskCompletionToggle={onTaskCompletionToggle}
                             onTaskDelete={onTaskDelete}
                             projects={allProjects}

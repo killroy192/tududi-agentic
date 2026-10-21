@@ -124,6 +124,12 @@ function calculateInitialDueDate(body) {
     return `${year}-${month}-${day}`;
 }
 
+const TASK_SIZE_VALUES = ['S', 'M', 'L', 'XL'];
+
+function isValidTaskSize(value) {
+    return value === null || TASK_SIZE_VALUES.includes(value);
+}
+
 function buildTaskAttributes(body, userId, timezone, isUpdate = false) {
     const recurrenceType = body.recurrence_type || 'none';
     const isRecurring = recurrenceType && recurrenceType !== 'none';
@@ -272,6 +278,10 @@ function buildUpdateAttributes(body, task, timezone) {
         attrs.involves = Array.isArray(body.involves) ? body.involves : [];
     }
 
+    if (Object.prototype.hasOwnProperty.call(body, 'size')) {
+        attrs.size = body.size;
+    }
+
     return attrs;
 }
 
@@ -279,4 +289,5 @@ module.exports = {
     buildTaskAttributes,
     buildUpdateAttributes,
     calculateInitialDueDate,
+    isValidTaskSize,
 };

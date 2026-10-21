@@ -181,6 +181,15 @@ describe('VTODO Serializer', () => {
         expect(vtodoString).toContain('LAST-MODIFIED:20260414T150000Z');
     });
 
+    it('should not include a size property', async () => {
+        const vtodoString = await serializeTaskToVTODO({
+            ...basicTask,
+            size: 'M',
+        });
+        expect(vtodoString).not.toMatch(/^SIZE[:;]/m);
+        expect(vtodoString).not.toContain('X-TUDUDI-SIZE');
+    });
+
     it('should handle tasks without optional fields', async () => {
         const minimalTask = {
             uid: 'minimal-task',

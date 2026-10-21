@@ -12,7 +12,8 @@ import { TagIcon, FolderIcon, FireIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 import TaskPriorityIcon from '../Shared/Icons/TaskPriorityIcon';
 import { Project } from '../../entities/Project';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
+import SizeDropdown from '../Shared/SizeDropdown';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
@@ -34,6 +35,8 @@ interface TaskHeaderProps {
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     onTaskUpdate?: (task: Task) => Promise<void>;
+    canEditSize?: boolean;
+    onSizeChange?: (size: TaskSize) => void;
     isOverdue?: boolean;
     showSubtasks?: boolean;
     hasSubtasks?: boolean;
@@ -55,6 +58,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     hideProjectName = false,
     onToggleToday: _onToggleToday,
     onTaskUpdate,
+    canEditSize = false,
+    onSizeChange,
     showSubtasks,
     hasSubtasks,
     onSubtasksToggle,
@@ -70,6 +75,16 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     void _onToggleToday;
     void _onEdit;
     void _onDelete;
+    const sizeControl = (
+        <SizeDropdown
+            value={task.size ?? null}
+            canEdit={canEditSize}
+            onChange={(size) => {
+                void onSizeChange?.(size);
+            }}
+        />
+    );
+
     const SubtasksToggleButton = () => {
         if (!hasSubtasks || !onSubtasksToggle) return null;
 
@@ -220,6 +235,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                         <span className="text-sm font-medium text-gray-900 dark:text-gray-300 tracking-tight truncate">
                                             {task.original_name || task.name}
                                         </span>
+                                        {sizeControl}
                                     </div>
                                     <SubtasksToggleButton />
                                 </div>
@@ -291,6 +307,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                 <span className="text-md font-medium text-gray-900 dark:text-gray-300 truncate">
                                     {task.original_name || task.name}
                                 </span>
+                                {sizeControl}
                                 <div className="flex-shrink-0">
                                     <SubtasksToggleButton />
                                 </div>
@@ -455,6 +472,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                 <span className="truncate flex-1">
                                     {task.original_name || task.name}
                                 </span>
+                                {sizeControl}
                                 <SubtasksToggleButton />
                             </span>
                         </div>

@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { useStore } from '../../store/useStore';
 import { getApiPath } from '../../config/paths';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Tag } from '../../entities/Tag';
 import TaskItem from '../Task/TaskItem';
 import { getCsrfToken } from '../../utils/csrfService';
+import { mergeSavedTaskSize, omitTaskSize } from '../../utils/taskSize';
 
 const COLUMN_STATUS: Record<string, number> = {
     not_started: 0,
@@ -206,7 +207,7 @@ const KanbanBoard: React.FC = () => {
                     'Content-Type': 'application/json',
                     'x-csrf-token': await getCsrfToken(),
                 },
-                body: JSON.stringify(updatedTask),
+                body: JSON.stringify(omitTaskSize(updatedTask)),
             });
             if (res.ok) {
                 const saved = await res.json();
@@ -217,6 +218,10 @@ const KanbanBoard: React.FC = () => {
         } catch (e) {
             console.error('Error updating task:', e);
         }
+    };
+
+    const handleSizeSaved = (uid: string, size: TaskSize) => {
+        setTasks((prev) => mergeSavedTaskSize(prev, uid, size));
     };
 
     const handleTaskCompletionToggle = (updatedTask: Task) => {
@@ -396,6 +401,7 @@ const KanbanBoard: React.FC = () => {
                                                 <TaskItem
                                                     task={task}
                                                     onTaskUpdate={handleTaskUpdate}
+                                                    onSizeSaved={handleSizeSaved}
                                                     onTaskCompletionToggle={handleTaskCompletionToggle}
                                                     onTaskDelete={handleTaskDelete}
                                                     projects={projects}

@@ -1,9 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
-import { Task } from '../../../entities/Task';
+import { Task, TaskSize } from '../../../entities/Task';
 import TaskPriorityIcon from '../../Shared/Icons/TaskPriorityIcon';
+import SizeDropdown from '../../Shared/SizeDropdown';
+import { useToast } from '../../Shared/ToastContext';
 import { toggleTaskCompletion } from '../../../utils/tasksService';
+import { getCurrentUser } from '../../../utils/userUtils';
+import {
+    isTaskSizeOwner,
+    mergeSavedTaskSize,
+    persistTaskSize,
+} from '../../../utils/taskSize';
+import { useStore } from '../../../store/useStore';
 
 interface TaskSubtasksSectionProps {
     parentTaskId: number;
@@ -25,6 +34,7 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
     const { t } = useTranslation();
+    const { showSuccessToast, showErrorToast } = useToast();
     const subtasksSectionRef = useRef<HTMLDivElement>(null);
     const addInputRef = useRef<HTMLInputElement>(null);
 
@@ -138,6 +148,27 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
         onSubtasksChange(updatedSubtasks);
     };
 
+    const handleSizeChange = async (subtask: Task, size: TaskSize) => {
+        if (!subtask.uid) {
+            return;
+        }
+        try {
+            const savedSize = await persistTaskSize(subtask.uid, size);
+            useStore
+                .getState()
+                .tasksStore.applyTaskSize(subtask.uid, savedSize);
+            onSubtasksChange(
+                mergeSavedTaskSize(subtasks, subtask.uid, savedSize)
+            );
+            showSuccessToast(
+                t('task.sizeUpdated', 'Size updated successfully')
+            );
+        } catch (error) {
+            console.error('Error updating subtask size:', error);
+            showErrorToast(t('task.sizeUpdateError', 'Failed to update size'));
+        }
+    };
+
     const handleToggleSubtaskCompletion = async (subtask: Task, index: number) => {
         const isPersisted = subtask.id && subtask.uid &&
             !((subtask as any)._isNew || (subtask as any).isNew);
@@ -247,6 +278,18 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                             {subtask.name}
                                         </span>
                                     </div>
+                                    {subtask.uid && (
+                                        <SizeDropdown
+                                            value={subtask.size ?? null}
+                                            canEdit={isTaskSizeOwner(
+                                                subtask,
+                                                getCurrentUser()?.uid
+                                            )}
+                                            onChange={(size) =>
+                                                handleSizeChange(subtask, size)
+                                            }
+                                        />
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() =>

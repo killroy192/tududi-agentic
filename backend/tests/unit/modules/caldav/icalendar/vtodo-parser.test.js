@@ -20,6 +20,11 @@ LAST-MODIFIED:20260414T150000Z
 END:VTODO
 END:VCALENDAR`;
 
+    it('should not map a size field', async () => {
+        const task = await parseVTODOToTask(basicVTODO);
+        expect(task).not.toHaveProperty('size');
+    });
+
     it('should parse basic VTODO to task', async () => {
         const task = await parseVTODOToTask(basicVTODO);
         expect(task).toBeDefined();

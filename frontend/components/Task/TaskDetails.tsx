@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Area } from '../../entities/Area';
 import {
@@ -19,6 +19,8 @@ import { createProject } from '../../utils/projectsService';
 import { fetchAttachments } from '../../utils/attachmentsService';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../Shared/ToastContext';
+import { getCurrentUser } from '../../utils/userUtils';
+import { isTaskSizeOwner, persistTaskSize } from '../../utils/taskSize';
 import LoadingScreen from '../Shared/LoadingScreen';
 import TaskTimeline from './TaskTimeline';
 import {
@@ -1185,6 +1187,19 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleSizeUpdate = async (size: TaskSize) => {
+        if (!task?.uid) return;
+
+        try {
+            const savedSize = await persistTaskSize(task.uid, size);
+            tasksStore.applyTaskSize(task.uid, savedSize);
+            showSuccessToast(t('task.sizeUpdated', 'Size updated successfully'));
+        } catch (error) {
+            console.error('Error updating size:', error);
+            showErrorToast(t('task.sizeUpdateError', 'Failed to update size'));
+        }
+    };
+
     const handlePriorityUpdate = async (priority: any) => {
         if (!task?.uid) return;
 
@@ -1247,6 +1262,8 @@ const TaskDetails: React.FC = () => {
                     onTitleUpdate={handleTitleUpdate}
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
+                    onSizeUpdate={handleSizeUpdate}
+                    canEditSize={isTaskSizeOwner(task, getCurrentUser()?.uid)}
                     onDelete={handleDeleteClick}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}

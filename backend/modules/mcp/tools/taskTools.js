@@ -2,9 +2,31 @@
 
 const taskRepository = require('../../tasks/repository');
 const {
-    serializeTask,
-    serializeTasks,
+    serializeTask: serializeWebTask,
+    serializeTasks: serializeWebTasks,
 } = require('../../tasks/core/serializers');
+
+function omitMcpTaskFields(task) {
+    if (!task || typeof task !== 'object') {
+        return task;
+    }
+    const copy = { ...task };
+    delete copy.size;
+    delete copy.user_uid;
+    if (Array.isArray(copy.subtasks)) {
+        copy.subtasks = copy.subtasks.map(omitMcpTaskFields);
+    }
+    return copy;
+}
+
+async function serializeTask(task, timezone, options) {
+    return omitMcpTaskFields(await serializeWebTask(task, timezone, options));
+}
+
+async function serializeTasks(tasks, timezone, options) {
+    const serialized = await serializeWebTasks(tasks, timezone, options);
+    return serialized.map(omitMcpTaskFields);
+}
 const { buildTaskAttributes } = require('../../tasks/core/builders');
 const { Op } = require('sequelize');
 const { Task, Project, Tag } = require('../../../models');
