@@ -22,13 +22,15 @@ describe('Recurring Task Display Fixes', () => {
             email: userEmail,
             password: 'password123',
         });
-        expect(loginResponse.status).toBe(200);
+        if (loginResponse.status !== 200) {
+            throw new Error(
+                `Expected login status 200, got ${loginResponse.status}`
+            );
+        }
     });
 
     async function fetchProjectTasks() {
-        const response = await agent.get(
-            `/api/tasks?project_id=${project.id}`
-        );
+        const response = await agent.get(`/api/tasks?project_id=${project.id}`);
         expect(response.status).toBe(200);
         expect(Array.isArray(response.body.tasks)).toBe(true);
         return response.body.tasks;

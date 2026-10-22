@@ -40,7 +40,10 @@ module.exports = {
         );
 
         if (indexExists) {
-            await queryInterface.removeIndex('projects', 'projects_goal_id_idx');
+            await queryInterface.removeIndex(
+                'projects',
+                'projects_goal_id_idx'
+            );
         }
 
         const tableInfo = await queryInterface.describeTable('projects');

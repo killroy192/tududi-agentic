@@ -413,8 +413,11 @@ describe('Project Sharing Integration Tests', () => {
                 status: 0,
             });
 
-            expect(taskResponse.status).toBe(201);
-            expect(taskResponse.body.uid).toBeTruthy();
+            if (taskResponse.status !== 201 || !taskResponse.body.uid) {
+                throw new Error(
+                    `Expected task create 201 with uid, got ${taskResponse.status}`
+                );
+            }
             taskInSharedProject = taskResponse.body;
         });
 

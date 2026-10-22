@@ -108,6 +108,7 @@ describe('CalDAV Protocol - Phase 3', () => {
             expect(response.text).toContain('C:calendar');
         });
 
+        // eslint-disable-next-line jest/expect-expect
         test('MKCOL inside tasks calendar should return 409 Conflict', async () => {
             await request(app)
                 .mkcol(`/caldav/${testUser.email}/tasks/new-collection/`)
@@ -115,6 +116,7 @@ describe('CalDAV Protocol - Phase 3', () => {
                 .expect(409);
         });
 
+        // eslint-disable-next-line jest/expect-expect
         test('MKCOL on tasks calendar itself should return 405', async () => {
             await request(app)
                 .mkcol(`/caldav/${testUser.email}/tasks/`)
