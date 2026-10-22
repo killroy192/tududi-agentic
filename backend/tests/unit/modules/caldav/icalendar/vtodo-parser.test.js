@@ -1,6 +1,8 @@
 const {
     parseVTODOToTask,
 } = require('../../../../../modules/caldav/icalendar/vtodo-parser');
+const { Task } = require('../../../../../models');
+const { createTestUser } = require('../../../../helpers/testUtils');
 
 describe('VTODO Parser', () => {
     const basicVTODO = `BEGIN:VCALENDAR
@@ -237,5 +239,29 @@ END:VCALENDAR`;
         expect(task.name).toBe('Minimal Task');
         expect(task.status).toBe(0);
         expect(task.recurrence_type).toBe('none');
+    });
+
+    it('should not include a size key', async () => {
+        const parsed = await parseVTODOToTask(basicVTODO);
+        expect(parsed).not.toHaveProperty('size');
+    });
+
+    it('should leave a stored size in place when a task is updated from parser output', async () => {
+        const user = await createTestUser({
+            email: `caldav-size-${Date.now()}@example.com`,
+        });
+        const parsed = await parseVTODOToTask(basicVTODO);
+        expect(parsed).not.toHaveProperty('size');
+
+        const task = await Task.create({
+            name: 'Stored size',
+            user_id: user.id,
+            size: 'M',
+        });
+
+        await task.update(parsed);
+        await task.reload();
+
+        expect(task.size).toBe('M');
     });
 });

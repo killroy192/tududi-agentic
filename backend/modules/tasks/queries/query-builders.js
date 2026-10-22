@@ -1,4 +1,11 @@
-const { Task, Tag, Project, Area, sequelize } = require('../../../models');
+const {
+    Task,
+    Tag,
+    Project,
+    Area,
+    User,
+    sequelize,
+} = require('../../../models');
 const { Op, QueryTypes } = require('sequelize');
 const permissionsService = require('../../../services/permissionsService');
 const {
@@ -6,6 +13,14 @@ const {
     getUpcomingRangeInUTC,
     getTodayBoundsInUTC,
 } = require('../../../utils/timezone-utils');
+
+function taskOwnerInclude() {
+    return {
+        model: User,
+        attributes: ['uid'],
+        required: false,
+    };
+}
 
 async function filterTasksByParams(
     params,
@@ -93,6 +108,7 @@ async function filterTasksByParams(
             attributes: ['id', 'name', 'uid', 'color'],
             required: false,
         },
+        taskOwnerInclude(),
         {
             model: Task,
             as: 'Subtasks',
@@ -103,6 +119,7 @@ async function filterTasksByParams(
                     through: { attributes: [] },
                     required: false,
                 },
+                taskOwnerInclude(),
             ],
             required: false,
             separate: true, // Required for order to work with associations
@@ -464,6 +481,7 @@ function getTaskIncludeConfig() {
             attributes: ['id', 'name', 'uid', 'color'],
             required: false,
         },
+        taskOwnerInclude(),
         {
             model: Task,
             as: 'Subtasks',
@@ -474,6 +492,7 @@ function getTaskIncludeConfig() {
                     through: { attributes: [] },
                     required: false,
                 },
+                taskOwnerInclude(),
             ],
             required: false,
             separate: true, // Required for order to work with associations
@@ -504,6 +523,7 @@ function getTaskIncludeConfigLight() {
             attributes: ['id', 'name', 'uid', 'color'],
             required: false,
         },
+        taskOwnerInclude(),
     ];
 }
 

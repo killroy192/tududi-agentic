@@ -62,6 +62,32 @@ describe('Task Model', () => {
 
             await expect(Task.create(taskData)).rejects.toThrow();
         });
+
+        it.each([null, 'S', 'M', 'L', 'XL'])(
+            'should store size %s',
+            async (size) => {
+                const task = await Task.create({
+                    name: 'Sized task',
+                    user_id: user.id,
+                    size,
+                });
+
+                expect(task.size).toBe(size);
+            }
+        );
+
+        it.each(['XX', 's', ' M', 'null', 'Unset'])(
+            'should reject size %s',
+            async (size) => {
+                await expect(
+                    Task.create({
+                        name: 'Invalid size',
+                        user_id: user.id,
+                        size,
+                    })
+                ).rejects.toThrow('The size is invalid');
+            }
+        );
     });
 
     describe('constants', () => {

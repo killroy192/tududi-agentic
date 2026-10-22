@@ -1,4 +1,4 @@
-const { Task, Tag, Project } = require('../../../models');
+const { Task, Tag, Project, User } = require('../../../models');
 const taskRepository = require('../repository');
 const permissionsService = require('../../../services/permissionsService');
 const { logError } = require('../../../services/logService');
@@ -32,6 +32,11 @@ async function getSubtasks(parentTaskId, userId, timezone) {
                 {
                     model: Project,
                     attributes: ['id', 'name', 'uid', 'color'],
+                    required: false,
+                },
+                {
+                    model: User,
+                    attributes: ['uid'],
                     required: false,
                 },
             ],

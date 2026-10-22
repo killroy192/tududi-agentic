@@ -36,7 +36,7 @@ async function serializeTask(
 
     const safeTimezone = getSafeTimezone(userTimezone);
 
-    const { Subtasks, ...taskWithoutSubtasks } = taskJson;
+    const { Subtasks, User: owner, ...taskWithoutSubtasks } = taskJson;
 
     let displayName = taskJson.name;
     if (
@@ -82,6 +82,7 @@ async function serializeTask(
         name: displayName,
         original_name: taskJson.name,
         uid: task.uid,
+        user_uid: owner?.uid ?? null,
         project_uid: taskJson.Project?.uid || null,
         area_uid: taskJson.Area?.uid || null,
         recurring_parent_uid: recurringParentUid,
@@ -104,24 +105,28 @@ async function serializeTask(
               }
             : null,
         subtasks: Subtasks
-            ? Subtasks.map((subtask) => ({
-                  ...subtask,
-                  uid: subtask.uid,
-                  tags: sortTags(subtask.Tags),
-                  due_date: processDueDateForResponse(
-                      subtask.due_date,
-                      safeTimezone
-                  ),
-                  defer_until: processDeferUntilForResponse(
-                      subtask.defer_until,
-                      safeTimezone
-                  ),
-                  completed_at: subtask.completed_at
-                      ? subtask.completed_at instanceof Date
-                          ? subtask.completed_at.toISOString()
-                          : new Date(subtask.completed_at).toISOString()
-                      : null,
-              }))
+            ? Subtasks.map((subtask) => {
+                  const { User: subtaskOwner, ...subtaskFields } = subtask;
+                  return {
+                      ...subtaskFields,
+                      uid: subtask.uid,
+                      user_uid: subtaskOwner?.uid ?? null,
+                      tags: sortTags(subtask.Tags),
+                      due_date: processDueDateForResponse(
+                          subtask.due_date,
+                          safeTimezone
+                      ),
+                      defer_until: processDeferUntilForResponse(
+                          subtask.defer_until,
+                          safeTimezone
+                      ),
+                      completed_at: subtask.completed_at
+                          ? subtask.completed_at instanceof Date
+                              ? subtask.completed_at.toISOString()
+                              : new Date(subtask.completed_at).toISOString()
+                          : null,
+                  };
+              })
             : [],
         completed_at: task.completed_at
             ? task.completed_at instanceof Date

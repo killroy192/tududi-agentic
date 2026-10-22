@@ -10,9 +10,29 @@ const { Op } = require('sequelize');
 const { Task, Project, Tag } = require('../../../models');
 const { validateProjectAccess } = require('../../tasks/utils/validation');
 
-/**
- * Helper to find task by ID or UID
- */
+function omitSize(task) {
+    if (!task || typeof task !== 'object') {
+        return task;
+    }
+
+    if (Array.isArray(task)) {
+        task.forEach(omitSize);
+        return task;
+    }
+
+    delete task.size;
+
+    if (Array.isArray(task.subtasks)) {
+        task.subtasks.forEach(omitSize);
+    }
+
+    if (Array.isArray(task.tasks)) {
+        task.tasks.forEach(omitSize);
+    }
+
+    return task;
+}
+
 async function findTaskByIdentifier(identifier, userId) {
     const isNumeric = !isNaN(identifier);
 
@@ -125,6 +145,7 @@ function registerTaskTools(server, context, tools) {
                 tasks,
                 context.user.timezone
             );
+            omitSize(serializedTasks);
 
             return {
                 content: [
@@ -171,6 +192,7 @@ function registerTaskTools(server, context, tools) {
             }
 
             const serialized = await serializeTask(task, context.user.timezone);
+            omitSize(serialized);
 
             return {
                 content: [
@@ -263,6 +285,7 @@ function registerTaskTools(server, context, tools) {
                 reloadedTask,
                 context.user.timezone
             );
+            omitSize(serialized);
 
             return {
                 content: [
@@ -373,6 +396,7 @@ function registerTaskTools(server, context, tools) {
                 reloadedTask,
                 context.user.timezone
             );
+            omitSize(serialized);
 
             return {
                 content: [
@@ -441,6 +465,7 @@ function registerTaskTools(server, context, tools) {
                 reloadedTask,
                 context.user.timezone
             );
+            omitSize(serialized);
 
             return {
                 content: [
@@ -577,6 +602,7 @@ function registerTaskTools(server, context, tools) {
                 reloadedSubtask,
                 context.user.timezone
             );
+            omitSize(serialized);
 
             return {
                 content: [

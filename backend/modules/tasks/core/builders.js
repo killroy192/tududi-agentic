@@ -272,6 +272,10 @@ function buildUpdateAttributes(body, task, timezone) {
         attrs.involves = Array.isArray(body.involves) ? body.involves : [];
     }
 
+    if (body.size !== undefined) {
+        attrs.size = body.size;
+    }
+
     return attrs;
 }
 

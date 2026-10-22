@@ -36,6 +36,7 @@ import {
 import { fetchProjects } from '../../utils/projectsService';
 import { Task } from '../../entities/Task';
 import { useStore } from '../../store/useStore';
+import { useTasksWithSavedSizes } from '../../hooks/useTasksWithSavedSizes';
 import TaskList from './TaskList';
 import TodayPlan from './TodayPlan';
 import { Metrics } from '../../entities/Metrics';
@@ -236,6 +237,11 @@ const TasksToday: React.FC = () => {
         const tasks = getTasksFromStore(metrics.tasks_overdue || []);
         return sortTasksByPriorityDueDateProject(tasks);
     }, [metrics.tasks_overdue, getTasksFromStore]);
+
+    const overdueTasksForList = useTasksWithSavedSizes(sortedOverdueTasks);
+    const dueTodayTasksForList = useTasksWithSavedSizes(sortedDueTodayTasks);
+    const suggestedTasksForList = useTasksWithSavedSizes(sortedSuggestedTasks);
+    const completedTasksForList = useTasksWithSavedSizes(completedTasksList);
 
     const getCompletionTrend = () => {
         const todayCount = metrics.tasks_completed_today.length;
@@ -1590,7 +1596,7 @@ const TasksToday: React.FC = () => {
                             {!isOverdueCollapsed && (
                                 <>
                                     <TaskList
-                                        tasks={sortedOverdueTasks.slice(
+                                        tasks={overdueTasksForList.slice(
                                             0,
                                             overdueDisplayLimit
                                         )}
@@ -1779,7 +1785,7 @@ const TasksToday: React.FC = () => {
                             {!isDueTodayCollapsed && (
                                 <>
                                     <TaskList
-                                        tasks={sortedDueTodayTasks.slice(
+                                        tasks={dueTodayTasksForList.slice(
                                             0,
                                             dueTodayDisplayLimit
                                         )}
@@ -1883,7 +1889,7 @@ const TasksToday: React.FC = () => {
                         {!isSuggestedCollapsed && (
                             <>
                                 <TaskList
-                                    tasks={sortedSuggestedTasks.slice(
+                                    tasks={suggestedTasksForList.slice(
                                         0,
                                         suggestedDisplayLimit
                                     )}
@@ -1947,7 +1953,7 @@ const TasksToday: React.FC = () => {
                                 {completedTasksList.length > 0 && (
                                     <>
                                         <TaskList
-                                            tasks={completedTasksList.slice(
+                                            tasks={completedTasksForList.slice(
                                                 0,
                                                 completedTodayDisplayLimit
                                             )}

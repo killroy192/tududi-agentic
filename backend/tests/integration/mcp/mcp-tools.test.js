@@ -107,6 +107,52 @@ describe('MCP Tools Integration', () => {
     });
 
     describe('Task Tools', () => {
+        describe('size', () => {
+            it('omits size from get_task and list_tasks payloads', async () => {
+                const parent = await Task.create({
+                    user_id: user.id,
+                    name: 'Sized parent',
+                    status: 0,
+                    size: 'M',
+                });
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Sized subtask',
+                    status: 0,
+                    size: 'L',
+                    parent_task_id: parent.id,
+                });
+
+                const getResponse = await callMcpTool(
+                    apiTokenValue,
+                    'get_task',
+                    { id: parent.uid }
+                );
+                expect(getResponse.status).toBe(200);
+                const { content } = getToolContent(getResponse);
+                expect(content).not.toHaveProperty('size');
+                expect(content.subtasks.length).toBeGreaterThan(0);
+                content.subtasks.forEach((subtask) => {
+                    expect(subtask).not.toHaveProperty('size');
+                });
+
+                const listResponse = await callMcpTool(
+                    apiTokenValue,
+                    'list_tasks',
+                    {}
+                );
+                expect(listResponse.status).toBe(200);
+                const { content: listContent } = getToolContent(listResponse);
+                expect(listContent.tasks.length).toBeGreaterThan(0);
+                listContent.tasks.forEach((task) => {
+                    expect(task).not.toHaveProperty('size');
+                    (task.subtasks || []).forEach((subtask) => {
+                        expect(subtask).not.toHaveProperty('size');
+                    });
+                });
+            });
+        });
+
         describe('list_tasks', () => {
             it('should return empty list when no tasks exist', async () => {
                 const response = await callMcpTool(
@@ -1261,6 +1307,35 @@ describe('MCP Tools Integration', () => {
             expect(toolNames).toContain('list_areas');
             expect(toolNames).toContain('list_tags');
             expect(toolNames).toContain('search');
+        });
+
+        it('does not accept size on create_task or update_task', async () => {
+            const response = await request(app)
+                .post('/api/mcp')
+                .set('Authorization', `Bearer ${apiTokenValue}`)
+                .set('Content-Type', 'application/json')
+                .set('Accept', 'application/json, text/event-stream')
+                .send({
+                    jsonrpc: '2.0',
+                    method: 'tools/list',
+                    id: 1,
+                });
+
+            expect(response.status).toBe(200);
+            const jsonRpc = parseSseResponse(response.text);
+            const createTask = jsonRpc.result.tools.find(
+                (tool) => tool.name === 'create_task'
+            );
+            const updateTask = jsonRpc.result.tools.find(
+                (tool) => tool.name === 'update_task'
+            );
+            const createSchema =
+                createTask.inputSchema || createTask.input_schema;
+            const updateSchema =
+                updateTask.inputSchema || updateTask.input_schema;
+
+            expect(createSchema.properties).not.toHaveProperty('size');
+            expect(updateSchema.properties).not.toHaveProperty('size');
         });
     });
 });

@@ -17,6 +17,7 @@ import { Task, PriorityType } from '../../../entities/Task';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
+import TaskSizeControl from '../TaskSizeControl';
 import { getStatusValue } from '../../../constants/taskStatus';
 
 interface TaskDetailsHeaderProps {
@@ -485,6 +486,8 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        <TaskSizeControl task={task} />
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

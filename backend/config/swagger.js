@@ -90,6 +90,18 @@ const options = {
                             enum: ['low', 'medium', 'high'],
                             description: 'Task priority',
                         },
+                        size: {
+                            type: 'string',
+                            nullable: true,
+                            enum: ['S', 'M', 'L', 'XL'],
+                            description:
+                                'Task size. Null clears it. Omitting it leaves the stored size unchanged.',
+                        },
+                        user_uid: {
+                            type: 'string',
+                            nullable: true,
+                            description: 'Uid of the user who owns the task',
+                        },
                         due_date: {
                             type: 'string',
                             format: 'date-time',

@@ -23,6 +23,7 @@ import { fetchGoals, createGoal, updateGoal, deleteGoal } from '../../utils/goal
 import { updateProject } from '../../utils/projectsService';
 import AreaModal from './AreaModal';
 import TaskList from '../Task/TaskList';
+import { useTasksWithSavedSizes } from '../../hooks/useTasksWithSavedSizes';
 
 const HORIZON_LABELS: Record<GoalHorizon, string> = {
     season: 'season',
@@ -65,6 +66,7 @@ const AreaDetails: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [areaTasks, setAreaTasks] = useState<Task[]>([]);
+    const sizedAreaTasks = useTasksWithSavedSizes(areaTasks);
     const [loadingTasks, setLoadingTasks] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -319,10 +321,10 @@ const AreaDetails: React.FC = () => {
         );
     }
 
-    const activeTasks = areaTasks.filter(
+    const activeTasks = sizedAreaTasks.filter(
         (t) => t.status !== 'done' && t.status !== 2 && t.status !== 'archived' && t.status !== 3
     );
-    const completedTasks = areaTasks.filter((t) => t.status === 'done' || t.status === 2);
+    const completedTasks = sizedAreaTasks.filter((t) => t.status === 'done' || t.status === 2);
 
     // Bucket projects into: under a goal / maintenance / unlinked
     const projectsByGoal = new Map<number, Project[]>();

@@ -29,6 +29,7 @@ import { getApiPath } from '../config/paths';
 import { SortOption } from './Shared/SortFilterButton';
 import IconSortDropdown from './Shared/IconSortDropdown';
 import { useStore } from '../store/useStore';
+import { useTasksWithSavedSizes } from '../hooks/useTasksWithSavedSizes';
 import { getCsrfToken } from '../utils/csrfService';
 
 interface View {
@@ -285,6 +286,8 @@ const ViewDetail: React.FC = () => {
         t,
         projectLookupMap,
     ]);
+
+    const tasksForList = useTasksWithSavedSizes(displayTasks);
 
     const handleSortChange = useCallback(
         (newOrderBy: string, options?: { skipUrlUpdate?: boolean }) => {
@@ -989,7 +992,7 @@ const ViewDetail: React.FC = () => {
                         </h3>
                         {groupBy === 'project' ? (
                             <GroupedTaskList
-                                tasks={displayTasks}
+                                tasks={tasksForList}
                                 groupBy="project"
                                 onTaskUpdate={handleTaskUpdate}
                                 onTaskCompletionToggle={
@@ -1004,7 +1007,7 @@ const ViewDetail: React.FC = () => {
                             />
                         ) : (
                             <TaskList
-                                tasks={displayTasks}
+                                tasks={tasksForList}
                                 onTaskUpdate={handleTaskUpdate}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle

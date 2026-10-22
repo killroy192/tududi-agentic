@@ -3,6 +3,7 @@ import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { Task } from '../../../entities/Task';
 import TaskPriorityIcon from '../../Shared/Icons/TaskPriorityIcon';
+import TaskSizeControl from '../TaskSizeControl';
 import { toggleTaskCompletion } from '../../../utils/tasksService';
 
 interface TaskSubtasksSectionProps {
@@ -69,6 +70,13 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
         onSubtasksChange(updatedSubtasks);
         onSave?.(updatedSubtasks);
     };
+
+    const showsSizeControl = (subtask: Task) =>
+        Boolean(
+            subtask.uid &&
+                !(subtask as Task & { isNew?: boolean }).isNew &&
+                !(subtask as Task & { _isNew?: boolean })._isNew
+        );
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
@@ -203,6 +211,9 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                         className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white overflow-hidden"
                                         autoFocus
                                     />
+                                    {showsSizeControl(subtask) && (
+                                        <TaskSizeControl task={subtask} />
+                                    )}
                                     <button
                                         type="button"
                                         onClick={handleCancelEdit}
@@ -247,16 +258,21 @@ const TaskSubtasksSection: React.FC<TaskSubtasksSectionProps> = ({
                                             {subtask.name}
                                         </span>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleDeleteSubtask(index)
-                                        }
-                                        className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-400"
-                                        title={t('actions.delete', 'Delete')}
-                                    >
-                                        <TrashIcon className="h-4 w-4" />
-                                    </button>
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                        {showsSizeControl(subtask) && (
+                                            <TaskSizeControl task={subtask} />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                handleDeleteSubtask(index)
+                                            }
+                                            className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                                            title={t('actions.delete', 'Delete')}
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>

@@ -6,6 +6,7 @@ import { getApiPath } from '../../config/paths';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import TaskItem from '../Task/TaskItem';
+import { useTasksWithSavedSizes } from '../../hooks/useTasksWithSavedSizes';
 import { getCsrfToken } from '../../utils/csrfService';
 
 const URGENT_TAG = 'urgent';
@@ -62,8 +63,10 @@ const EisenhowerMatrix: React.FC = () => {
         fetchTasks();
     }, []);
 
+    const sizedTasks = useTasksWithSavedSizes(tasks);
+
     const quadrants: Quadrant[] = useMemo(() => {
-        const active = tasks.filter((t) => {
+        const active = sizedTasks.filter((t) => {
             const done =
                 t.status === 'done' || t.status === 'archived' ||
                 t.status === 2 || t.status === 3;
@@ -75,7 +78,7 @@ const EisenhowerMatrix: React.FC = () => {
             { key: 'delegate',  tasks: active.filter((t) => !isImportant(t) && isUrgent(t)) },
             { key: 'eliminate', tasks: active.filter((t) => !isImportant(t) && !isUrgent(t)) },
         ];
-    }, [tasks]);
+    }, [sizedTasks]);
 
     const toggleCollapsed = (key: string) => {
         setCollapsed((prev) => {

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import TaskHeader from './TaskHeader';
+import TaskSizeControl from './TaskSizeControl';
 import { useToast } from '../Shared/ToastContext';
 import TaskPriorityIcon from '../Shared/Icons/TaskPriorityIcon';
 import { isTaskCompleted } from '../../constants/taskStatus';
@@ -136,11 +137,18 @@ const SubtasksDisplay: React.FC<SubtasksDisplayProps> = ({
                                         {subtask.original_name || subtask.name}
                                     </span>
                                 </div>
-                                {isTaskCompleted(subtask.status) && (
-                                    <span className="text-xs text-green-600 dark:text-green-400">
-                                        ✓
-                                    </span>
-                                )}
+                                <div
+                                    className="flex items-center gap-2 flex-shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                >
+                                    <TaskSizeControl task={subtask} />
+                                    {isTaskCompleted(subtask.status) && (
+                                        <span className="text-xs text-green-600 dark:text-green-400">
+                                            ✓
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -148,6 +148,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [S, M, L, XL]
+ *                 description: Task size. Null clears the stored size. Omitting size leaves the stored size unchanged.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]
@@ -271,6 +276,11 @@
  *                 type: string
  *                 enum: [low, medium, high]
  *                 description: Task priority
+ *               size:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [S, M, L, XL]
+ *                 description: Task size. Null clears the stored size. Omitting size leaves the stored size unchanged.
  *               status:
  *                 type: string
  *                 enum: [pending, completed, archived]

@@ -192,4 +192,13 @@ describe('VTODO Serializer', () => {
         expect(vtodoString).toContain('UID:minimal-task');
         expect(vtodoString).toContain('SUMMARY:Minimal Task');
     });
+
+    it('should not serialize a size property', async () => {
+        const vtodoString = await serializeTaskToVTODO({
+            ...basicTask,
+            size: 'M',
+        });
+
+        expect(vtodoString).not.toContain('SIZE');
+    });
 });

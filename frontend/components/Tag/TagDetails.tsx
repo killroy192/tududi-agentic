@@ -24,6 +24,7 @@ import { Tag } from '../../entities/Tag';
 import { deleteNote as apiDeleteNote } from '../../utils/notesService';
 import { useToast } from '../Shared/ToastContext';
 import { useStore } from '../../store/useStore';
+import { useTasksWithSavedSizes } from '../../hooks/useTasksWithSavedSizes';
 import { updateTag, deleteTag } from '../../utils/tagsService';
 import { getApiPath } from '../../config/paths';
 import { getCsrfToken } from '../../utils/csrfService';
@@ -216,6 +217,8 @@ const TagDetails: React.FC = () => {
 
         return sortedTasks;
     }, [tasks, taskStatusFilter, taskSearchQuery, orderBy, t]);
+
+    const tasksForList = useTasksWithSavedSizes(displayTasks);
 
     useEffect(() => {
         const fetchTagData = async () => {
@@ -727,7 +730,7 @@ const TagDetails: React.FC = () => {
                     {displayTasks.length > 0 ? (
                         groupBy === 'project' ? (
                             <GroupedTaskList
-                                tasks={displayTasks}
+                                tasks={tasksForList}
                                 groupBy="project"
                                 onTaskUpdate={handleTaskUpdate}
                                 onTaskCompletionToggle={
@@ -742,7 +745,7 @@ const TagDetails: React.FC = () => {
                             />
                         ) : (
                             <TaskList
-                                tasks={displayTasks}
+                                tasks={tasksForList}
                                 onTaskUpdate={handleTaskUpdate}
                                 onTaskCompletionToggle={
                                     handleTaskCompletionToggle

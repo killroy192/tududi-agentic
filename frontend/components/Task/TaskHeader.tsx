@@ -16,6 +16,7 @@ import { Task } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
+import TaskSizeControl from './TaskSizeControl';
 import { parseDateString, getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
 
 const tagColorStyle = (color?: string): React.CSSProperties | undefined => {
@@ -195,7 +196,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {/* Full view (md and larger) */}
             <div className="hidden md:flex flex-col md:flex-row md:items-center md:relative">
                 <div
-                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? 'pr-56' : ''}`}
+                    className={`flex items-center space-x-3 mb-2 md:mb-0 flex-1 min-w-0 ${!isUpcomingView && !hideStatusControl ? 'pr-64' : 'pr-14'}`}
                 >
                     <div className="hidden">
                         <TaskPriorityIcon
@@ -414,8 +415,14 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         )}
                     </div>
                 </div>
-                {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center z-[1]">
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 z-[1]">
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <TaskSizeControl task={task} />
+                    </div>
+                    {!isUpcomingView && !task.habit_mode && !hideStatusControl && onToggleCompletion && (
                         <TaskStatusControl
                             task={task}
                             onToggleCompletion={onToggleCompletion}
@@ -424,8 +431,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                             className=""
                             onMenuOpenChange={onMenuOpenChange}
                         />
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Mobile view (below md breakpoint) */}
@@ -569,8 +576,13 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                             )}
                         </div>
 
-                        {onToggleCompletion && (
-                            <div className="mt-2">
+                        <div
+                            className="mt-2 flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                        >
+                            <TaskSizeControl task={task} />
+                            {onToggleCompletion && (
                                 <TaskStatusControl
                                     task={task}
                                     onToggleCompletion={onToggleCompletion}
@@ -579,8 +591,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                     showMobileVariant={false}
                                     onMenuOpenChange={onMenuOpenChange}
                                 />
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

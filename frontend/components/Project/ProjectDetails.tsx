@@ -22,6 +22,7 @@ import ProjectModal from './ProjectModal';
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import NoteModal from '../Note/NoteModal';
 import { useStore } from '../../store/useStore';
+import { useTasksWithSavedSizes } from '../../hooks/useTasksWithSavedSizes';
 import { Project } from '../../entities/Project';
 import { Task } from '../../entities/Task';
 import { Note } from '../../entities/Note';
@@ -695,6 +696,8 @@ const ProjectDetails: React.FC = () => {
         });
     }, [tasks, taskStatusFilter, orderBy, taskSearchQuery]);
 
+    const tasksForList = useTasksWithSavedSizes(displayTasks);
+
     const {
         taskStats,
         completionGradient,
@@ -1055,7 +1058,7 @@ const ProjectDetails: React.FC = () => {
                                     >
                                         <ProjectTasksSection
                                             project={project}
-                                            displayTasks={displayTasks}
+                                            displayTasks={tasksForList}
                                             showAutoSuggestForm={
                                                 showAutoSuggestForm
                                             }

@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { Project } from '../entities/Project';
 import { Area } from '../entities/Area';
 import { Note } from '../entities/Note';
-import { Task } from '../entities/Task';
+import { Task, TaskSize } from '../entities/Task';
+import { applySizeByUid } from '../utils/taskSize';
 import { Tag } from '../entities/Tag';
 import { InboxItem } from '../entities/InboxItem';
 
@@ -57,9 +58,11 @@ interface TagsStore {
 
 interface TasksStore {
     tasks: Task[];
+    sizesByUid: Record<string, TaskSize | null>;
     isLoading: boolean;
     isError: boolean;
     setTasks: (tasks: Task[]) => void;
+    applyTaskSize: (uid: string, size: TaskSize | null) => void;
     setLoading: (isLoading: boolean) => void;
     setError: (isError: boolean) => void;
     loadTasks: (query?: string) => Promise<void>;
@@ -393,10 +396,22 @@ export const useStore = create<StoreState>((set: any) => ({
     },
     tasksStore: {
         tasks: [],
+        sizesByUid: {},
         isLoading: false,
         isError: false,
         setTasks: (tasks) =>
             set((state) => ({ tasksStore: { ...state.tasksStore, tasks } })),
+        applyTaskSize: (uid, size) =>
+            set((state) => ({
+                tasksStore: {
+                    ...state.tasksStore,
+                    sizesByUid: {
+                        ...state.tasksStore.sizesByUid,
+                        [uid]: size,
+                    },
+                    tasks: applySizeByUid(state.tasksStore.tasks, uid, size),
+                },
+            })),
         setLoading: (isLoading) =>
             set((state) => ({
                 tasksStore: { ...state.tasksStore, isLoading },
@@ -419,6 +434,7 @@ export const useStore = create<StoreState>((set: any) => ({
                         ...state.tasksStore,
                         tasks,
                         isLoading: false,
+                        sizesByUid: {},
                     },
                 }));
             } catch (error) {

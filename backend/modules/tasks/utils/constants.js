@@ -1,4 +1,12 @@
-const { Tag, Project, Area, Task } = require('../../../models');
+const { Tag, Project, Area, Task, User } = require('../../../models');
+
+function taskOwnerInclude() {
+    return {
+        model: User,
+        attributes: ['uid'],
+        required: false,
+    };
+}
 
 const TASK_INCLUDES = [
     {
@@ -16,6 +24,7 @@ const TASK_INCLUDES = [
         attributes: ['id', 'name', 'uid', 'color'],
         required: false,
     },
+    taskOwnerInclude(),
 ];
 
 const TASK_INCLUDES_WITH_SUBTASKS = [
@@ -30,6 +39,7 @@ const TASK_INCLUDES_WITH_SUBTASKS = [
                 attributes: ['id', 'name', 'uid', 'color'],
                 through: { attributes: [] },
             },
+            taskOwnerInclude(),
         ],
         separate: true, // Required for order to work with associations
         order: [

@@ -22,6 +22,7 @@ import {
 import { getApiPath } from '../config/paths';
 import { getCsrfToken } from '../utils/csrfService';
 import { isTaskActive } from '../constants/taskStatus';
+import { useTasksWithSavedSizes } from '../hooks/useTasksWithSavedSizes';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -114,6 +115,8 @@ const Tasks: React.FC = () => {
 
         return filteredTasks;
     }, [tasks, showCompleted, status, taskSearchQuery, isUpcomingView]);
+
+    const tasksForList = useTasksWithSavedSizes(displayTasks);
 
     if (location.pathname === '/upcoming' && !query.get('type')) {
         query.set('type', 'upcoming');
@@ -895,7 +898,7 @@ const Tasks: React.FC = () => {
                                 {query.get('type') === 'upcoming' ? (
                                     <>
                                         <GroupedTaskList
-                                            tasks={displayTasks}
+                                            tasks={tasksForList}
                                             groupedTasks={groupedTasks}
                                             groupBy="none"
                                             onTaskCreate={handleTaskCreate}
@@ -943,7 +946,7 @@ const Tasks: React.FC = () => {
                                     </>
                                 ) : groupBy === 'project' ? (
                                     <GroupedTaskList
-                                        tasks={displayTasks}
+                                        tasks={tasksForList}
                                         groupedTasks={null}
                                         groupBy={groupBy}
                                         onTaskCreate={handleTaskCreate}
@@ -960,7 +963,7 @@ const Tasks: React.FC = () => {
                                     />
                                 ) : (
                                     <TaskList
-                                        tasks={displayTasks}
+                                        tasks={tasksForList}
                                         onTaskCreate={handleTaskCreate}
                                         onTaskUpdate={handleTaskUpdate}
                                         onTaskCompletionToggle={

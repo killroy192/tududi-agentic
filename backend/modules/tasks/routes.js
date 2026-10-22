@@ -589,6 +589,17 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
             return res.status(404).json({ error: 'Task not found.' });
         }
 
+        if (Object.prototype.hasOwnProperty.call(req.body, 'size')) {
+            if (task.user_id !== req.currentUser.id) {
+                return res.status(403).json({ error: 'Forbidden' });
+            }
+
+            const size = req.body.size;
+            if (size !== null && !['S', 'M', 'L', 'XL'].includes(size)) {
+                return res.status(400).json({ error: 'The size is invalid' });
+            }
+        }
+
         const oldValues = captureOldValues(task);
         const oldStatus = task.status;
 

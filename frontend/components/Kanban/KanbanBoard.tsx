@@ -7,6 +7,7 @@ import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Tag } from '../../entities/Tag';
 import TaskItem from '../Task/TaskItem';
+import { useTasksWithSavedSizes } from '../../hooks/useTasksWithSavedSizes';
 import { getCsrfToken } from '../../utils/csrfService';
 
 const COLUMN_STATUS: Record<string, number> = {
@@ -185,18 +186,20 @@ const KanbanBoard: React.FC = () => {
     const hasSomedayTag = (tags?: Tag[]) =>
         tags?.some((t) => t.name.toLowerCase() === 'someday') ?? false;
 
+    const sizedTasks = useTasksWithSavedSizes(tasks);
+
     const columns = useMemo(() => {
         const result = {} as Record<ColKey, Task[]>;
         for (const col of ALL_COLS) result[col] = [];
 
-        for (const task of tasks) {
+        for (const task of sizedTasks) {
             if (hasSomedayTag(task.tags)) continue;
             if (hasSomedayTag(task.Project?.tags)) continue;
             const col = getTaskColumn(task);
             if (col) result[col].push(task);
         }
         return result;
-    }, [tasks]);
+    }, [sizedTasks]);
 
     const handleTaskUpdate = async (updatedTask: Task) => {
         try {
