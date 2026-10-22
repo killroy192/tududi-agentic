@@ -15,12 +15,40 @@ import ConfirmDialog from '../../Shared/ConfirmDialog';
 import AttachmentCard from '../../Shared/AttachmentCard';
 import AttachmentPreview from '../../Shared/AttachmentPreview';
 
-interface TaskAttachmentsCardProps {
+/* ------------------------------------------------------------------ */
+/*  useTaskDetailsAttachmentCount — always-on hook                    */
+/* ------------------------------------------------------------------ */
+
+export const useTaskDetailsAttachmentCount = (taskUid: string | undefined) => {
+    const [attachmentCount, setAttachmentCount] = useState(0);
+
+    useEffect(() => {
+        const loadAttachmentCount = async () => {
+            if (taskUid) {
+                try {
+                    const attachments = await fetchAttachments(taskUid);
+                    setAttachmentCount(attachments.length);
+                } catch (error) {
+                    console.error('Error loading attachment count:', error);
+                }
+            }
+        };
+        loadAttachmentCount();
+    }, [taskUid]);
+
+    return { attachmentCount, setAttachmentCount };
+};
+
+/* ------------------------------------------------------------------ */
+/*  TaskDetailsAttachments component (mounts only on attachments pill)*/
+/* ------------------------------------------------------------------ */
+
+interface TaskDetailsAttachmentsProps {
     taskUid: string;
     onAttachmentsCountChange?: (count: number) => void;
 }
 
-const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
+const TaskDetailsAttachments: React.FC<TaskDetailsAttachmentsProps> = ({
     taskUid,
     onAttachmentsCountChange,
 }) => {
@@ -36,12 +64,10 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
         useState<Attachment | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Load attachments on mount
     useEffect(() => {
         loadAttachments();
     }, [taskUid]);
 
-    // Handle Escape key to close preview modal
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && previewAttachment) {
@@ -72,7 +98,6 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file
         const validation = await validateFile(file);
         if (!validation.valid) {
             showErrorToast(validation.error || 'Invalid file');
@@ -82,7 +107,6 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
             return;
         }
 
-        // Check attachment limit
         if (attachments.length >= 20) {
             showErrorToast(
                 t(
@@ -96,7 +120,6 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
             return;
         }
 
-        // Upload file
         setUploading(true);
         try {
             const newAttachment = await uploadAttachment(taskUid, file);
@@ -109,9 +132,10 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
                     'File uploaded successfully'
                 )
             );
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { message?: string };
             showErrorToast(
-                error.message ||
+                err?.message ||
                     t('task.attachments.uploadError', 'Failed to upload file')
             );
         } finally {
@@ -146,9 +170,10 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
             if (previewAttachment?.uid === attachmentToDelete.uid) {
                 setPreviewAttachment(null);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { message?: string };
             showErrorToast(
-                error.message ||
+                err?.message ||
                     t(
                         'task.attachments.deleteError',
                         'Failed to delete attachment'
@@ -320,4 +345,4 @@ const TaskAttachmentsCard: React.FC<TaskAttachmentsCardProps> = ({
     );
 };
 
-export default TaskAttachmentsCard;
+export default TaskDetailsAttachments;

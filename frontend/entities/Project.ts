@@ -26,6 +26,8 @@ export interface Project {
     description?: string;
     pin_to_sidebar?: boolean;
     area?: Area;
+    /** Sequelize association naming (capitalized) when nested on a task's Project */
+    Area?: Area;
     area_id?: number | null;
     area_uid?: string | null;
     goal_id?: number | null;

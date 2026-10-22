@@ -1,12 +1,35 @@
-export { default as TaskDetailsHeader } from './TaskDetailsHeader';
-export { default as TaskContentCard } from './TaskContentCard';
-export { default as TaskProjectCard } from './TaskProjectCard';
-export { default as TaskTagsCard } from './TaskTagsCard';
-export { default as TaskRecurringInstanceInfo } from './TaskRecurringInstanceInfo';
-export { default as TaskSubtasksCard } from './TaskSubtasksCard';
-export { default as TaskRecurrenceCard } from './TaskRecurrenceCard';
-export { default as TaskDueDateCard } from './TaskDueDateCard';
-export { default as TaskDeferUntilCard } from './TaskDeferUntilCard';
-export { default as TaskAttachmentsCard } from './TaskAttachmentsCard';
-export { default as TaskAreaCard } from './TaskAreaCard';
-export { default as TaskAssignedToCard } from './TaskAssignedToCard';
+export {
+    default as TaskDetailsHeader,
+    useTaskDetailsLifecycle,
+    getProjectLink,
+    getTagLink,
+    selectAiEnabled,
+} from './TaskDetailsHeader';
+export {
+    default as TaskDetailsSubtasksSection,
+    TaskDetailsNote,
+    useTaskDetailsSubtasks,
+} from './TaskDetailsSubtasks';
+export {
+    default as TaskDetailsTags,
+    useTaskDetailsTags,
+} from './TaskDetailsTags';
+export {
+    default as TaskDetailsPeople,
+    useTaskDetailsPeople,
+    getAreaLink,
+} from './TaskDetailsPeople';
+export {
+    default as TaskDetailsRecurrenceSection,
+    TaskDetailsRecurrenceSection as TaskDetailsRecurrenceSectionComponent,
+    TaskDetailsScheduleSection,
+    useTaskDetailsRecurrence,
+} from './TaskDetailsRecurrence';
+export {
+    default as TaskDetailsAttachments,
+    useTaskDetailsAttachmentCount,
+} from './TaskDetailsAttachments';
+export {
+    default as TaskDetailsAI,
+    useTaskDetailsAI,
+} from './TaskDetailsAI';
