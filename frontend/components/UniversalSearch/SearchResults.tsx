@@ -135,7 +135,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             case 'Task':
                 // Tasks use uid directly
                 if (result.uid) {
-                    navigate(`/task/${result.uid}`, { state: { from: location.pathname + location.search } });
+                    navigate(`/task/${result.uid}`, {
+                        state: { from: location.pathname + location.search },
+                    });
                 }
                 break;
             case 'Project': {
@@ -185,12 +187,17 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         );
     }
 
+    const showsAbsenceResults =
+        selectedExtras.includes('no_tags') ||
+        selectedExtras.includes('no_due_date');
+
     if (
         !searchQuery.trim() &&
         selectedFilters.length === 0 &&
         !selectedPriority &&
         !selectedDue &&
-        selectedTags.length === 0
+        selectedTags.length === 0 &&
+        !showsAbsenceResults
     ) {
         return (
             <div

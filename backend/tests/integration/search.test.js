@@ -1225,6 +1225,446 @@ describe('Universal Search Routes', () => {
                 );
             });
         });
+
+        describe('Missing tags and due dates', () => {
+            const namesOf = (response, type) =>
+                response.body.results
+                    .filter((result) => result.type === type)
+                    .map(
+                        (result) =>
+                            result.original_name || result.name || result.title
+                    );
+
+            beforeEach(async () => {
+                const tag = await Tag.create({
+                    user_id: user.id,
+                    name: 'alpha',
+                });
+
+                const bareProject = await Project.create({
+                    user_id: user.id,
+                    name: 'Bare Project',
+                    state: 'active',
+                });
+
+                const taggedProject = await Project.create({
+                    user_id: user.id,
+                    name: 'Tagged Project',
+                    state: 'active',
+                });
+                await taggedProject.addTag(tag);
+
+                await Project.create({
+                    user_id: user.id,
+                    name: 'Dated Project',
+                    state: 'active',
+                    due_date_at: moment.utc().subtract(3, 'days').toDate(),
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Bare Task',
+                    status: 0,
+                });
+
+                const taggedTask = await Task.create({
+                    user_id: user.id,
+                    name: 'Tagged Task',
+                    status: 0,
+                });
+                await taggedTask.addTag(tag);
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Past Due Task',
+                    status: 0,
+                    due_date: moment.utc().subtract(2, 'days').toDate(),
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Future Due Task',
+                    status: 0,
+                    due_date: moment.utc().add(4, 'days').toDate(),
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Due Today Task',
+                    status: 0,
+                    due_date: moment
+                        .utc()
+                        .startOf('day')
+                        .add(12, 'hours')
+                        .toDate(),
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Deferred Undated Task',
+                    status: 0,
+                    defer_until: moment
+                        .utc()
+                        .add(1, 'day')
+                        .startOf('day')
+                        .add(12, 'hours')
+                        .toDate(),
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Deferred Dated Task',
+                    status: 0,
+                    due_date: moment.utc().add(4, 'days').toDate(),
+                    defer_until: moment
+                        .utc()
+                        .add(1, 'day')
+                        .startOf('day')
+                        .add(12, 'hours')
+                        .toDate(),
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Completed Bare Task',
+                    status: 2,
+                    completed_at: new Date(),
+                });
+
+                const parent = await Task.create({
+                    user_id: user.id,
+                    name: 'Parent Bare',
+                    status: 0,
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Bare Subtask',
+                    status: 0,
+                    parent_task_id: parent.id,
+                });
+
+                const taggedSubtask = await Task.create({
+                    user_id: user.id,
+                    name: 'Tagged Subtask',
+                    status: 0,
+                    parent_task_id: parent.id,
+                });
+                await taggedSubtask.addTag(tag);
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'Assigned Bare Task',
+                    status: 0,
+                    project_id: bareProject.id,
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'High Bare Task',
+                    status: 0,
+                    priority: 2,
+                });
+
+                await Task.create({
+                    user_id: user.id,
+                    name: 'VisibleKind Bare',
+                    status: 0,
+                });
+
+                const visibleTagged = await Task.create({
+                    user_id: user.id,
+                    name: 'VisibleKind Tagged',
+                    status: 0,
+                });
+                await visibleTagged.addTag(tag);
+
+                await Note.create({
+                    user_id: user.id,
+                    title: 'VisibleKind Note',
+                    content: 'Still listed',
+                });
+
+                await Area.create({
+                    user_id: user.id,
+                    name: 'VisibleKind Area',
+                });
+
+                await Tag.create({
+                    user_id: user.id,
+                    name: 'VisibleKind',
+                });
+            });
+
+            it('returns untagged tasks and projects for no_tags', async () => {
+                const response = await agent.get('/api/search').query({
+                    extras: 'no_tags',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                const projects = namesOf(response, 'Project');
+
+                expect(tasks).toHaveLength(12);
+                expect(tasks).toEqual(
+                    expect.arrayContaining([
+                        'Bare Task',
+                        'Past Due Task',
+                        'Completed Bare Task',
+                        'Bare Subtask',
+                        'Parent Bare',
+                    ])
+                );
+                expect(tasks).not.toContain('Tagged Task');
+                expect(tasks).not.toContain('Tagged Subtask');
+                expect(tasks).not.toContain('VisibleKind Tagged');
+
+                expect(projects).toEqual(
+                    expect.arrayContaining(['Bare Project', 'Dated Project'])
+                );
+                expect(projects).not.toContain('Tagged Project');
+                expect(projects).toHaveLength(2);
+            });
+
+            it('returns tasks and projects with an empty due date for no_due_date', async () => {
+                const response = await agent.get('/api/search').query({
+                    extras: 'no_due_date',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                const projects = namesOf(response, 'Project');
+
+                expect(tasks).toContain('Bare Task');
+                expect(tasks).toContain('Deferred Undated Task');
+                expect(tasks).toContain('Tagged Task');
+                expect(tasks).not.toContain('Past Due Task');
+                expect(tasks).not.toContain('Future Due Task');
+                expect(tasks).not.toContain('Due Today Task');
+                expect(tasks).not.toContain('Deferred Dated Task');
+
+                expect(projects).toEqual(
+                    expect.arrayContaining(['Bare Project', 'Tagged Project'])
+                );
+                expect(projects).not.toContain('Dated Project');
+                expect(projects).toHaveLength(2);
+            });
+
+            it('requires both an empty tag list and an empty due date when both extras are set', async () => {
+                const response = await agent.get('/api/search').query({
+                    extras: 'no_tags,no_due_date',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                const projects = namesOf(response, 'Project');
+
+                expect(tasks).toEqual(
+                    expect.arrayContaining([
+                        'Bare Task',
+                        'Deferred Undated Task',
+                        'Completed Bare Task',
+                        'Bare Subtask',
+                    ])
+                );
+                expect(tasks).not.toContain('Tagged Task');
+                expect(tasks).not.toContain('Past Due Task');
+                expect(tasks).not.toContain('Deferred Dated Task');
+                expect(tasks).toHaveLength(8);
+
+                expect(projects).toEqual(['Bare Project']);
+            });
+
+            it('keeps notes, areas, and tags when the new extras are set', async () => {
+                const response = await agent.get('/api/search').query({
+                    q: 'VisibleKind',
+                    extras: 'no_tags,no_due_date',
+                });
+
+                expect(response.status).toBe(200);
+                expect(namesOf(response, 'Note')).toEqual(['VisibleKind Note']);
+                expect(namesOf(response, 'Area')).toEqual(['VisibleKind Area']);
+                expect(namesOf(response, 'Tag')).toEqual(['VisibleKind']);
+                expect(namesOf(response, 'Task')).toEqual(['VisibleKind Bare']);
+            });
+
+            it('includes a completed task and an untagged subtask, and omits a tagged subtask', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    extras: 'no_tags',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                expect(tasks).toContain('Completed Bare Task');
+                expect(tasks).toContain('Bare Subtask');
+                expect(tasks).toContain('Parent Bare');
+                expect(tasks).not.toContain('Tagged Subtask');
+            });
+
+            it('includes a completed task with an empty due date', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    extras: 'no_due_date',
+                });
+
+                expect(response.status).toBe(200);
+                expect(namesOf(response, 'Task')).toContain(
+                    'Completed Bare Task'
+                );
+            });
+
+            it('omits subtasks when excludeSubtasks is set', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    extras: 'no_tags',
+                    excludeSubtasks: 'true',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                expect(tasks).toContain('Parent Bare');
+                expect(tasks).toContain('Completed Bare Task');
+                expect(tasks).not.toContain('Bare Subtask');
+                expect(tasks).not.toContain('Tagged Subtask');
+            });
+
+            it('still narrows by text, priority, defer-until, and assigned to project', async () => {
+                const byText = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    q: 'Assigned Bare',
+                    extras: 'no_tags',
+                });
+                expect(namesOf(byText, 'Task')).toEqual(['Assigned Bare Task']);
+
+                const byPriority = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    priority: 'high',
+                    extras: 'no_due_date',
+                });
+                expect(namesOf(byPriority, 'Task')).toEqual(['High Bare Task']);
+
+                const byDefer = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    defer: 'tomorrow',
+                    extras: 'no_due_date',
+                });
+                expect(namesOf(byDefer, 'Task')).toEqual([
+                    'Deferred Undated Task',
+                ]);
+
+                const byProject = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    extras: 'no_tags,assigned_to_project',
+                });
+                expect(namesOf(byProject, 'Task')).toEqual([
+                    'Assigned Bare Task',
+                ]);
+            });
+
+            it('returns no tasks or projects when no_tags contradicts a tag filter', async () => {
+                const withNames = await agent.get('/api/search').query({
+                    filters: 'Task,Project',
+                    tags: 'alpha',
+                    extras: 'no_tags',
+                });
+                expect(withNames.status).toBe(200);
+                expect(namesOf(withNames, 'Task')).toEqual([]);
+                expect(namesOf(withNames, 'Project')).toEqual([]);
+
+                const withHasTags = await agent.get('/api/search').query({
+                    filters: 'Task,Project',
+                    extras: 'no_tags,has_tags',
+                });
+                expect(withHasTags.status).toBe(200);
+                expect(namesOf(withHasTags, 'Task')).toEqual([]);
+                expect(namesOf(withHasTags, 'Project')).toEqual([]);
+            });
+
+            it('returns no tasks or projects when no_due_date contradicts a due window', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task,Project',
+                    due: 'today',
+                    extras: 'no_due_date',
+                });
+
+                expect(response.status).toBe(200);
+                expect(namesOf(response, 'Task')).toEqual([]);
+                expect(namesOf(response, 'Project')).toEqual([]);
+            });
+
+            it('returns no tasks for no_due_date plus overdue, and still returns undated projects', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task,Project',
+                    extras: 'no_due_date,overdue',
+                });
+
+                expect(response.status).toBe(200);
+                expect(namesOf(response, 'Task')).toEqual([]);
+                expect(namesOf(response, 'Project')).toEqual(
+                    expect.arrayContaining(['Bare Project', 'Tagged Project'])
+                );
+                expect(namesOf(response, 'Project')).not.toContain(
+                    'Dated Project'
+                );
+            });
+
+            it('returns an empty list without an error when nothing matches', async () => {
+                const response = await agent.get('/api/search').query({
+                    q: 'zzzz-no-match',
+                    extras: 'no_tags,no_due_date',
+                });
+
+                expect(response.status).toBe(200);
+                expect(response.body.results).toEqual([]);
+                expect(response.body.error).toBeUndefined();
+            });
+
+            it('ignores an unknown extra', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    extras: 'not_a_real_extra',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                expect(tasks).toContain('Bare Task');
+                expect(tasks).toContain('Tagged Task');
+                expect(tasks).toContain('Past Due Task');
+                expect(tasks).toHaveLength(15);
+            });
+
+            it("does not return another user's untagged tasks", async () => {
+                const otherUser = await createTestUser({
+                    email: 'absence-other@example.com',
+                });
+                await Task.create({
+                    user_id: otherUser.id,
+                    name: 'Other Bare Task',
+                    status: 0,
+                });
+
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    extras: 'no_tags',
+                });
+
+                expect(response.status).toBe(200);
+                const tasks = namesOf(response, 'Task');
+                expect(tasks).toContain('Bare Task');
+                expect(tasks).not.toContain('Other Bare Task');
+            });
+
+            it('still applies a due window when no_due_date is absent', async () => {
+                const response = await agent.get('/api/search').query({
+                    filters: 'Task',
+                    due: 'today',
+                });
+
+                expect(response.status).toBe(200);
+                expect(namesOf(response, 'Task')).toContain('Due Today Task');
+            });
+        });
     });
 
     describe('Pagination', () => {
