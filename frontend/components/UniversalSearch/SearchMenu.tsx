@@ -73,6 +73,8 @@ const extrasOptions = [
         value: 'assigned_to_project',
         labelKey: 'search.extrasFilter.isAssignedToProject',
     },
+    { value: 'no_tags', labelKey: 'search.extrasFilter.hasNoTags' },
+    { value: 'no_due_date', labelKey: 'search.extrasFilter.hasNoDueDate' },
 ];
 
 const SearchMenu: React.FC<SearchMenuProps> = ({
@@ -122,7 +124,13 @@ const SearchMenu: React.FC<SearchMenuProps> = ({
     };
 
     const handleDueToggle = (due: string) => {
-        setSelectedDue(selectedDue === due ? null : due);
+        const turningOn = selectedDue !== due;
+        setSelectedDue(turningOn ? due : null);
+        if (turningOn) {
+            setSelectedExtras((prev) =>
+                prev.filter((extra) => extra !== 'no_due_date')
+            );
+        }
     };
 
     const handleDeferToggle = (defer: string) => {
@@ -130,19 +138,63 @@ const SearchMenu: React.FC<SearchMenuProps> = ({
     };
 
     const handleTagToggle = (tagName: string) => {
+        const turningOn = !selectedTags.includes(tagName);
         setSelectedTags((prev) =>
-            prev.includes(tagName)
-                ? prev.filter((t) => t !== tagName)
-                : [...prev, tagName]
+            turningOn
+                ? [...prev, tagName]
+                : prev.filter((tag) => tag !== tagName)
         );
+        if (turningOn) {
+            setSelectedExtras((prev) =>
+                prev.filter((extra) => extra !== 'no_tags')
+            );
+        }
     };
 
     const handleExtrasToggle = (extra: string) => {
-        setSelectedExtras((prev) =>
-            prev.includes(extra)
-                ? prev.filter((e) => e !== extra)
-                : [...prev, extra]
-        );
+        const turningOn = !selectedExtras.includes(extra);
+        if (!turningOn) {
+            setSelectedExtras((prev) =>
+                prev.filter((selected) => selected !== extra)
+            );
+            return;
+        }
+
+        if (extra === 'no_tags') {
+            setSelectedTags([]);
+            setSelectedExtras((prev) => [
+                ...prev.filter((selected) => selected !== 'has_tags'),
+                'no_tags',
+            ]);
+            return;
+        }
+
+        if (extra === 'has_tags') {
+            setSelectedExtras((prev) => [
+                ...prev.filter((selected) => selected !== 'no_tags'),
+                'has_tags',
+            ]);
+            return;
+        }
+
+        if (extra === 'no_due_date') {
+            setSelectedDue(null);
+            setSelectedExtras((prev) => [
+                ...prev.filter((selected) => selected !== 'overdue'),
+                'no_due_date',
+            ]);
+            return;
+        }
+
+        if (extra === 'overdue') {
+            setSelectedExtras((prev) => [
+                ...prev.filter((selected) => selected !== 'no_due_date'),
+                'overdue',
+            ]);
+            return;
+        }
+
+        setSelectedExtras((prev) => [...prev, extra]);
     };
 
     const handleSaveView = async () => {

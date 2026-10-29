@@ -152,6 +152,18 @@ class SearchService {
             extraConditions.push({ project_id: { [Op.ne]: null } });
         }
 
+        if (extras.has('no_tags')) {
+            extraConditions.push(
+                sequelize.literal(
+                    'NOT EXISTS (SELECT 1 FROM tasks_tags WHERE tasks_tags.task_id = Task.id)'
+                )
+            );
+        }
+
+        if (extras.has('no_due_date')) {
+            extraConditions.push({ due_date: { [Op.is]: null } });
+        }
+
         if (extraConditions.length > 0) {
             conditions[Op.and] = extraConditions;
         }
@@ -278,8 +290,28 @@ class SearchService {
             conditions.priority = priority;
         }
 
+        const extraConditions = [];
+
         if (dueDateCondition) {
-            conditions.due_date_at = dueDateCondition.due_date;
+            extraConditions.push({
+                due_date_at: dueDateCondition.due_date,
+            });
+        }
+
+        if (extras.has('no_due_date')) {
+            extraConditions.push({ due_date_at: { [Op.is]: null } });
+        }
+
+        if (extras.has('no_tags')) {
+            extraConditions.push(
+                sequelize.literal(
+                    'NOT EXISTS (SELECT 1 FROM projects_tags WHERE projects_tags.project_id = Project.id)'
+                )
+            );
+        }
+
+        if (extraConditions.length > 0) {
+            conditions[Op.and] = extraConditions;
         }
 
         const requireTags = tagIds.length > 0 || extras.has('has_tags');

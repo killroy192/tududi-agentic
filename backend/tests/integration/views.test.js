@@ -104,6 +104,22 @@ describe('Views Routes', () => {
             expect(response.body.tags).toEqual([]);
         });
 
+        it('should return saved no_tags and no_due_date extras unchanged', async () => {
+            const created = await agent.post('/api/views').send({
+                name: 'Untagged Undated',
+                filters: ['Task', 'Project'],
+                extras: ['no_tags', 'no_due_date'],
+            });
+
+            expect(created.status).toBe(201);
+            expect(created.body.extras).toEqual(['no_tags', 'no_due_date']);
+
+            const fetched = await agent.get(`/api/views/${created.body.uid}`);
+
+            expect(fetched.status).toBe(200);
+            expect(fetched.body.extras).toEqual(['no_tags', 'no_due_date']);
+        });
+
         it('should require view name', async () => {
             const response = await agent.post('/api/views').send({
                 name: '',
