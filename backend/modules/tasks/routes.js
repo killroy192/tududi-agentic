@@ -29,6 +29,7 @@ const { logEvent } = require('./taskEventService');
 
 const { serializeTask, serializeTasks } = require('./core/serializers');
 const { updateTaskTags } = require('./operations/tags');
+const { duplicateTask } = require('./operations/duplicate');
 const { filterTasksByParams } = require('./queries/query-builders');
 const {
     getSafeTimezone,
@@ -532,6 +533,88 @@ router.post('/task', async (req, res) => {
         });
     }
 });
+
+router.post(
+    '/task/:uid/duplicate',
+    async (req, res, next) => {
+        const task = await Task.findOne({
+            where: { uid: req.params.uid },
+            attributes: ['id'],
+        });
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found.' });
+        }
+        return requireTaskWriteAccess(req, res, next);
+    },
+    async (req, res) => {
+        try {
+            const source = await taskRepository.findByUid(req.params.uid);
+            if (!source) {
+                return res.status(404).json({ error: 'Task not found.' });
+            }
+
+            try {
+                await validateProjectAccess(
+                    source.project_id,
+                    req.currentUser.id
+                );
+            } catch (error) {
+                return res
+                    .status(error.message === 'Forbidden' ? 403 : 400)
+                    .json({ error: error.message });
+            }
+
+            try {
+                await validateAreaAccess(source.area_id, req.currentUser.id);
+            } catch (error) {
+                return res.status(400).json({ error: error.message });
+            }
+
+            const copy = await duplicateTask(
+                req.params.uid,
+                req.currentUser.id
+            );
+
+            const taskWithAssociations = await taskRepository.findById(
+                copy.id,
+                {
+                    include: TASK_INCLUDES_WITH_SUBTASKS,
+                }
+            );
+
+            if (!taskWithAssociations) {
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            const serializedTask = await serializeTask(
+                taskWithAssociations,
+                req.currentUser.timezone,
+                { skipDisplayNameTransform: true }
+            );
+
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                Pragma: 'no-cache',
+                Expires: '0',
+            });
+
+            res.status(201).json(serializedTask);
+        } catch (error) {
+            if (error.statusCode) {
+                return res
+                    .status(error.statusCode)
+                    .json({ error: error.message });
+            }
+            logError('Error duplicating task:', error);
+            res.status(400).json({
+                error: 'There was a problem duplicating the task.',
+                details: error.errors
+                    ? error.errors.map((e) => e.message)
+                    : [error.message],
+            });
+        }
+    }
+);
 
 router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
     try {

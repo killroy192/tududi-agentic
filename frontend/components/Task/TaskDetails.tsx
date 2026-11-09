@@ -9,6 +9,7 @@ import { Area } from '../../entities/Area';
 import {
     updateTask,
     deleteTask,
+    duplicateTask,
     fetchTaskByUid,
     fetchTaskNextIterations,
     fetchSubtasks,
@@ -47,16 +48,24 @@ const TaskDetails: React.FC = () => {
     const location = useLocation();
     const { t } = useTranslation();
     const isNewTask = location.state?.isNew === true;
+    const focusTitleRequested = location.state?.focusTitle === true;
     const isNewTaskRef = useRef(isNewTask);
     const taskModifiedRef = useRef(false);
+    const [holdFocusTitle, setHoldFocusTitle] = useState(focusTitleRequested);
+    const [isDuplicating, setIsDuplicating] = useState(false);
+    const shouldFocusTitle = isNewTask || focusTitleRequested || holdFocusTitle;
     const { showSuccessToast, showErrorToast } = useToast();
 
-    // Clear navigation state so refresh/back doesn't re-trigger edit mode
+    // Clear navigation state so refresh/back doesn't re-trigger edit mode.
+    // focusTitle opens the title editor without the isNew cleanup that deletes the task.
     useEffect(() => {
-        if (isNewTask) {
+        if (isNewTask || focusTitleRequested) {
+            if (focusTitleRequested) {
+                setHoldFocusTitle(true);
+            }
             navigate(location.pathname, { replace: true, state: {} });
         }
-    }, [isNewTask, navigate, location.pathname]);
+    }, [isNewTask, focusTitleRequested, navigate, location.pathname]);
 
     // Clean up abandoned new tasks: if user navigates away without modifying anything, delete the task
     useEffect(() => {
@@ -68,7 +77,9 @@ const TaskDetails: React.FC = () => {
                 );
                 const store = useStore.getState();
                 store.tasksStore.setTasks(
-                    store.tasksStore.tasks.filter((t: Task) => t.uid !== taskUid)
+                    store.tasksStore.tasks.filter(
+                        (t: Task) => t.uid !== taskUid
+                    )
                 );
             }
         };
@@ -81,6 +92,11 @@ const TaskDetails: React.FC = () => {
     const task = useStore((state: any) =>
         state.tasksStore.tasks.find((t: Task) => t.uid === uid)
     );
+
+    useEffect(() => {
+        if (!holdFocusTitle || task?.uid !== uid) return;
+        setHoldFocusTitle(false);
+    }, [holdFocusTitle, task?.uid, uid]);
 
     const subtasks = task?.subtasks || [];
 
@@ -267,7 +283,7 @@ const TaskDetails: React.FC = () => {
                 recurrence_weekday:
                     recurrenceForm.recurrence_type === 'weekly' ||
                     recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_weekday ?? null
+                        ? (recurrenceForm.recurrence_weekday ?? null)
                         : null,
                 recurrence_weekdays:
                     recurrenceForm.recurrence_type === 'weekly'
@@ -275,11 +291,11 @@ const TaskDetails: React.FC = () => {
                         : null,
                 recurrence_month_day:
                     recurrenceForm.recurrence_type === 'monthly'
-                        ? recurrenceForm.recurrence_month_day ?? null
+                        ? (recurrenceForm.recurrence_month_day ?? null)
                         : null,
                 recurrence_week_of_month:
                     recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_week_of_month ?? null
+                        ? (recurrenceForm.recurrence_week_of_month ?? null)
                         : null,
                 completion_based: recurrenceForm.completion_based,
             };
@@ -897,6 +913,79 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleDuplicate = async () => {
+        if (!task?.uid || isDuplicating) return;
+
+        setIsDuplicating(true);
+        try {
+            const copy = await duplicateTask(task.uid);
+            const sourceOrder = task.order;
+            const shouldShiftSiblings =
+                task.parent_task_id != null &&
+                sourceOrder != null &&
+                Number.isFinite(Number(sourceOrder));
+
+            const nextTasks = tasksStore.tasks.map((item: Task) => {
+                if (item.id !== copy.parent_task_id || !item.subtasks) {
+                    return item;
+                }
+
+                const shifted = shouldShiftSiblings
+                    ? item.subtasks.map((subtask) => {
+                          if (
+                              copy.order != null &&
+                              subtask.order != null &&
+                              Number(subtask.order) >= Number(copy.order)
+                          ) {
+                              return {
+                                  ...subtask,
+                                  order: Number(subtask.order) + 1,
+                              };
+                          }
+                          return subtask;
+                      })
+                    : item.subtasks;
+                const sourceIndex = shifted.findIndex(
+                    (subtask) => subtask.uid === task.uid
+                );
+                const insertAt =
+                    sourceIndex >= 0 ? sourceIndex + 1 : shifted.length;
+                const subtasks = [...shifted];
+                subtasks.splice(insertAt, 0, copy);
+                return { ...item, subtasks };
+            });
+
+            if (!nextTasks.some((item: Task) => item.uid === copy.uid)) {
+                nextTasks.push(copy);
+            }
+            tasksStore.setTasks(nextTasks);
+
+            showSuccessToast(
+                <span className="inline-flex items-center gap-2">
+                    <span>{t('task.duplicateSuccess', 'Task duplicated')}</span>
+                    <button
+                        type="button"
+                        className="font-semibold underline underline-offset-2 hover:opacity-80"
+                        onClick={() =>
+                            navigate(`/task/${copy.uid}`, {
+                                state: { focusTitle: true },
+                            })
+                        }
+                    >
+                        {t('task.editCopy', 'Edit copy')}
+                    </button>
+                </span>
+            );
+        } catch (error) {
+            console.error('Error duplicating task:', error);
+            showErrorToast(
+                t('task.duplicateError', 'Failed to duplicate task')
+            );
+        } finally {
+            setIsDuplicating(false);
+        }
+    };
+
     const handleDeleteClick = () => {
         if (task) {
             setTaskToDelete(task);
@@ -1248,6 +1337,8 @@ const TaskDetails: React.FC = () => {
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
                     onDelete={handleDeleteClick}
+                    onDuplicate={handleDuplicate}
+                    isDuplicating={isDuplicating}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
                     activePill={activePill}
@@ -1258,10 +1349,12 @@ const TaskDetails: React.FC = () => {
                     isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
                     onDismissOverdueAlert={handleDismissOverdueAlert}
                     onQuickStatusToggle={handleCompletionToggle}
-                    onAiInsightsClick={aiAssistantEnabled ? handleAiInsightsClick : undefined}
+                    onAiInsightsClick={
+                        aiAssistantEnabled ? handleAiInsightsClick : undefined
+                    }
                     aiInsightsActive={aiInsightsActive}
                     attachmentCount={attachmentCount}
-                    autoEditTitle={isNewTask}
+                    autoEditTitle={shouldFocusTitle}
                 />
 
                 {aiAssistantEnabled && (
@@ -1269,9 +1362,11 @@ const TaskDetails: React.FC = () => {
                         <TaskAIInsights
                             ref={aiInsightsRef}
                             task={task}
-                            project={projectsStore.projects.find(
-                                (p: any) => p.id === task.project_id
-                            ) || null}
+                            project={
+                                projectsStore.projects.find(
+                                    (p: any) => p.id === task.project_id
+                                ) || null
+                            }
                             onActiveChange={setAiInsightsActive}
                         />
                     </div>
@@ -1382,7 +1477,6 @@ const TaskDetails: React.FC = () => {
                             />
                         </div>
                     )}
-
                 </div>
 
                 {isConfirmDialogOpen && taskToDelete && (

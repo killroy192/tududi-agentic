@@ -35,6 +35,7 @@ export interface Task {
     recurring_parent_uid?: string;
     completed_at: string | null;
     parent_task_id?: number;
+    order?: number | null;
     subtasks?: Task[];
     parent_child_logic_executed?: boolean;
     attachments?: Attachment[];
@@ -52,7 +53,15 @@ export interface Task {
     // Transient UI field set by suggestion scoring - never persisted or sent to server
     _suggestionMeta?: {
         score: number;
-        reason: 'area_balance' | 'due' | 'goal' | 'fits_now' | 'revive' | 'high' | 'aging_review' | 'next_step';
+        reason:
+            | 'area_balance'
+            | 'due'
+            | 'goal'
+            | 'fits_now'
+            | 'revive'
+            | 'high'
+            | 'aging_review'
+            | 'next_step';
         reasonLabel: string;
         reasonColor: string;
     };

@@ -5,7 +5,7 @@ import React, {
     useCallback,
     useMemo,
 } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Task } from '../../entities/Task';
 import {
     fetchHabits,
@@ -22,8 +22,11 @@ import {
     ArrowLeftIcon,
     CheckCircleIcon,
     TrashIcon,
+    DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../Shared/ToastContext';
+import { duplicateTask } from '../../utils/tasksService';
 
 const mapHabitToEditableValues = (task: Task) => ({
     name: task.name || '',
@@ -41,6 +44,9 @@ const HabitDetails: React.FC = () => {
     const { t } = useTranslation();
     const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const focusTitleRequested = location.state?.focusTitle === true;
     type EditableField = 'name' | 'targetFrequency' | 'flexibility' | 'streak';
 
     const [habit, setHabit] = useState<Task | null>(null);
@@ -56,6 +62,8 @@ const HabitDetails: React.FC = () => {
     const [editingField, setEditingField] = useState<EditableField | null>(
         null
     );
+    const [focusTitle, setFocusTitle] = useState(focusTitleRequested);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [savingField, setSavingField] = useState<EditableField | null>(null);
     const HISTORY_DAYS = 90;
     const DAYS_PER_CALENDAR = 30;
@@ -167,6 +175,20 @@ const HabitDetails: React.FC = () => {
     }, [uid]);
 
     useEffect(() => {
+        if (!focusTitleRequested) return;
+        setFocusTitle(true);
+        navigate(location.pathname, { replace: true, state: {} });
+    }, [focusTitleRequested, navigate, location.pathname]);
+
+    useEffect(() => {
+        if (!focusTitle || uid === 'new' || !habit || habit.uid !== uid) {
+            return;
+        }
+        setEditingField('name');
+        setFocusTitle(false);
+    }, [focusTitle, habit, uid]);
+
+    useEffect(() => {
         editingFieldRef.current = editingField;
     }, [editingField]);
 
@@ -188,7 +210,7 @@ const HabitDetails: React.FC = () => {
         } else if (editingField === 'streak' && streakSelectRef.current) {
             streakSelectRef.current.focus();
         }
-    }, [editingField]);
+    }, [editingField, habit?.uid]);
 
     const isNewHabit = uid === 'new';
 
@@ -275,6 +297,40 @@ const HabitDetails: React.FC = () => {
         } catch (error) {
             console.error('Failed to create habit:', error);
             alert(t('habits.createError', 'Failed to create habit'));
+        }
+    };
+
+    const handleDuplicateHabit = async () => {
+        if (!habit?.uid || isNewHabit || isDuplicating) return;
+
+        setIsDuplicating(true);
+        try {
+            const copy = await duplicateTask(habit.uid);
+            showSuccessToast(
+                <span className="inline-flex items-center gap-2">
+                    <span>
+                        {t('habits.duplicateSuccess', 'Habit duplicated')}
+                    </span>
+                    <button
+                        type="button"
+                        className="font-semibold underline underline-offset-2 hover:opacity-80"
+                        onClick={() =>
+                            navigate(`/habit/${copy.uid}`, {
+                                state: { focusTitle: true },
+                            })
+                        }
+                    >
+                        {t('task.editCopy', 'Edit copy')}
+                    </button>
+                </span>
+            );
+        } catch (error) {
+            console.error('Failed to duplicate habit:', error);
+            showErrorToast(
+                t('habits.duplicateError', 'Failed to duplicate habit')
+            );
+        } finally {
+            setIsDuplicating(false);
         }
     };
 
@@ -742,6 +798,16 @@ const HabitDetails: React.FC = () => {
                             ) : (
                                 <>
                                     <button
+                                        type="button"
+                                        onClick={handleDuplicateHabit}
+                                        disabled={isDuplicating}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition disabled:opacity-60 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                                    >
+                                        <DocumentDuplicateIcon className="h-5 w-5" />
+                                        {t('common.duplicate', 'Duplicate')}
+                                    </button>
+                                    <button
+                                        type="button"
                                         onClick={handleDeleteHabit}
                                         className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                                     >

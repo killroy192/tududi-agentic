@@ -76,6 +76,21 @@ export const fetchTasks = async (
     };
 };
 
+export const duplicateTask = async (taskUid: string): Promise<Task> => {
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(taskUid)}/duplicate`),
+        {
+            method: 'POST',
+            credentials: 'include',
+            headers: await getPostHeadersWithCsrf(),
+            body: JSON.stringify({}),
+        }
+    );
+
+    await handleAuthResponse(response, 'Failed to duplicate task.');
+    return await response.json();
+};
+
 export const createTask = async (taskData: Task): Promise<Task> => {
     const response = await fetch(getApiPath('task'), {
         method: 'POST',

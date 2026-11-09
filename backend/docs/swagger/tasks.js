@@ -363,6 +363,40 @@
 
 /**
  * @swagger
+ * /api/task/{id}/duplicate:
+ *   post:
+ *     summary: Duplicate a task
+ *     description: Creates a separate not-started copy of the task and its direct subtasks. The original is left unchanged. Due date, reminder, defer-until, recurrence, people, attachments, activity, and AI insights are not copied.
+ *     tags: [Tasks]
+ *     security:
+ *       - cookieAuth: []
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task UID
+ *     responses:
+ *       201:
+ *         description: Duplicated task
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Invalid project or area
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
+ *       404:
+ *         description: Task not found
+ */
+
+/**
+ * @swagger
  * /api/task/{id}/subtasks:
  *   get:
  *     summary: Get all subtasks for a parent task
