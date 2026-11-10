@@ -78,10 +78,10 @@ const AreaDetails: React.FC = () => {
     const areaUid = uidSlug?.split('-')[0] || '';
 
     useEffect(() => {
-        if (!areasStore.isLoading && areasStore.areas.length === 0) {
+        if (!areasStore.hasLoaded && !areasStore.isLoading) {
             areasStore.loadAreas();
         }
-    }, [areasStore]);
+    }, [areasStore.hasLoaded, areasStore.isLoading, areasStore.loadAreas]);
 
     useEffect(() => {
         if (!projectsStore.hasLoaded && !projectsStore.isLoading) {
@@ -91,19 +91,30 @@ const AreaDetails: React.FC = () => {
 
     useEffect(() => {
         if (!areaUid) {
+            setArea(null);
             setIsError(true);
             setIsLoading(false);
             return;
         }
+
+        if (!areasStore.hasLoaded || areasStore.isLoading) {
+            setIsLoading(true);
+            setIsError(false);
+            return;
+        }
+
         const found = areasStore.areas.find((a: Area) => a.uid === areaUid);
         if (found) {
             setArea(found);
             setIsError(false);
-        } else if (!areasStore.isLoading && areasStore.areas.length > 0) {
-            setIsError(true);
+            setIsLoading(false);
+            return;
         }
-        setIsLoading(areasStore.isLoading && !found);
-    }, [areaUid, areasStore.areas, areasStore.isLoading]);
+
+        setArea(null);
+        setIsError(true);
+        setIsLoading(false);
+    }, [areaUid, areasStore.areas, areasStore.isLoading, areasStore.hasLoaded]);
 
     const loadAreaTasks = useCallback(async () => {
         if (!area?.uid) return;
