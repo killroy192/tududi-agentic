@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
@@ -13,7 +13,6 @@ import {
     toggleTaskCompletion,
 } from '../../utils/tasksService';
 import { createProject } from '../../utils/projectsService';
-import { fetchAttachments } from '../../utils/attachmentsService';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../Shared/ToastContext';
 import LoadingScreen from '../Shared/LoadingScreen';
@@ -23,13 +22,9 @@ import {
     TaskContentCard,
     TaskProjectCard,
     TaskAreaCard,
-    TaskTagsCard,
     TaskDueDateCard,
     TaskDeferUntilCard,
-    TaskAttachmentsCard,
-    TaskAssignedToCard,
 } from './TaskDetails/';
-import TaskAIInsights, { TaskAIInsightsHandle } from '../AI/TaskAIInsights';
 import {
     isTaskOverdueInTodayPlan,
     isTaskPastDue,
@@ -46,6 +41,14 @@ import { useTaskDetailsSubtasks } from './TaskDetails/hooks/useTaskDetailsSubtas
 import { useTaskDetailsRecurrence } from './TaskDetails/hooks/useTaskDetailsRecurrence';
 import TaskDetailsSubtasks from './TaskDetails/TaskDetailsSubtasks';
 import TaskDetailsRecurrence from './TaskDetails/TaskDetailsRecurrence';
+import { useTaskDetailsTags } from './TaskDetails/hooks/useTaskDetailsTags';
+import { useTaskDetailsPeople } from './TaskDetails/hooks/useTaskDetailsPeople';
+import { useTaskDetailsAttachments } from './TaskDetails/hooks/useTaskDetailsAttachments';
+import { useTaskDetailsAI } from './TaskDetails/hooks/useTaskDetailsAI';
+import TaskDetailsTags from './TaskDetails/TaskDetailsTags';
+import TaskDetailsPeople from './TaskDetails/TaskDetailsPeople';
+import TaskDetailsAttachments from './TaskDetails/TaskDetailsAttachments';
+import TaskDetailsAI from './TaskDetails/TaskDetailsAI';
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -59,7 +62,6 @@ const TaskDetails: React.FC = () => {
     const taskModifiedRef = useAbandonedTaskCleanup(uid, isNewTask);
 
     const projectsStore = useStore((state: any) => state.projectsStore);
-    const tagsStore = useStore((state: any) => state.tagsStore);
     const tasksStore = useStore((state: any) => state.tasksStore);
     const areasStore = useStore((state: any) => state.areasStore);
     const { task, loading, error } = useTaskData(uid);
@@ -72,15 +74,7 @@ const TaskDetails: React.FC = () => {
         uid,
         taskModifiedRef,
     });
-    const aiAssistantEnabled = useStore(
-        (state: any) => state.userSettingsStore.aiAssistantEnabled
-    );
-    const aiInsightsRef = useRef<TaskAIInsightsHandle>(null);
-    const [aiInsightsActive, setAiInsightsActive] = useState(false);
-
-    const handleAiInsightsClick = useCallback(() => {
-        aiInsightsRef.current?.activate();
-    }, []);
+    const ai = useTaskDetailsAI();
     const {
         isEditing: isEditingDueDate,
         setIsEditing: setIsEditingDueDate,
@@ -94,7 +88,6 @@ const TaskDetails: React.FC = () => {
         setDraft: setEditedDeferUntil,
     } = useDateDraft(task?.defer_until, { syncWithSource: false });
     const [activePill, setActivePill] = useState('overview');
-    const [attachmentCount, setAttachmentCount] = useState(0);
 
     useLazyTaskMetadata();
 
@@ -279,21 +272,9 @@ const TaskDetails: React.FC = () => {
         setEditedDeferUntil(task?.defer_until || '');
     };
 
-    useEffect(() => {
-        const loadAttachmentCount = async () => {
-            if (task?.uid) {
-                try {
-                    const attachments = await fetchAttachments(task.uid);
-                    setAttachmentCount(attachments.length);
-                } catch (error) {
-                    console.error('Error loading attachment count:', error);
-                }
-            }
-        };
-
-        loadAttachmentCount();
-    }, [task?.uid]);
-
+    const { attachmentCount, setAttachmentCount } = useTaskDetailsAttachments(
+        task?.uid
+    );
     const subtasksSection = useTaskDetailsSubtasks({
         uid,
         task,
@@ -305,6 +286,15 @@ const TaskDetails: React.FC = () => {
         task,
         updateAndRefresh,
         onMutated: bumpTimeline,
+    });
+    const { handleTagsUpdate } = useTaskDetailsTags({
+        task,
+        updateAndRefresh,
+        onMutated: bumpTimeline,
+    });
+    const { handleAssignPerson } = useTaskDetailsPeople({
+        task,
+        updateAndRefresh,
     });
 
     const handleProjectSelection = async (project: Project) => {
@@ -654,21 +644,6 @@ const TaskDetails: React.FC = () => {
         }
     };
 
-    const handleAssignPerson = async (personUid: string | null) => {
-        if (!task?.uid) return;
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { assigned_to: personUid });
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                tasksStore.updateTaskInStore(updatedTask);
-            }
-        } catch (error) {
-            console.error('Error assigning person:', error);
-            showErrorToast('Failed to update assignment');
-        }
-    };
-
     const getAreaLink = (area: Area) => {
         if (area.uid) {
             const slug = area.name
@@ -678,60 +653,6 @@ const TaskDetails: React.FC = () => {
             return `/area/${area.uid}-${slug}`;
         }
         return `/area/${area.id}`;
-    };
-
-    const handleTagsUpdate = async (tags: string[]) => {
-        if (!task?.uid) {
-            return;
-        }
-
-        const currentTags = task.tags?.map((tag: any) => tag.name) || [];
-        if (
-            tags.length === currentTags.length &&
-            tags.every((tag, idx) => tag === currentTags[idx])
-        ) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                tags: tags.map((name) => ({ name })),
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = {
-                        ...updatedTask,
-                        subtasks: updatedTask.subtasks || task.subtasks || [],
-                    };
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.tagsUpdated', 'Tags updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error: any) {
-            console.error('Error updating tags:', error);
-            const details = error?.details;
-            if (details && Array.isArray(details) && details.length > 0) {
-                showErrorToast(details.join('. '));
-            } else {
-                showErrorToast(
-                    error?.message ||
-                        t('task.tagsUpdateError', 'Failed to update tags')
-                );
-            }
-            throw error;
-        }
     };
 
     const handlePriorityUpdate = async (priority: any) => {
@@ -822,24 +743,17 @@ const TaskDetails: React.FC = () => {
                     isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
                     onDismissOverdueAlert={handleDismissOverdueAlert}
                     onQuickStatusToggle={handleCompletionToggle}
-                    onAiInsightsClick={aiAssistantEnabled ? handleAiInsightsClick : undefined}
-                    aiInsightsActive={aiInsightsActive}
+                    onAiInsightsClick={
+                        ai.aiAssistantEnabled
+                            ? ai.handleAiInsightsClick
+                            : undefined
+                    }
+                    aiInsightsActive={ai.aiInsightsActive}
                     attachmentCount={attachmentCount}
                     autoEditTitle={isNewTask}
                 />
 
-                {aiAssistantEnabled && (
-                    <div className="mb-4 mt-6">
-                        <TaskAIInsights
-                            ref={aiInsightsRef}
-                            task={task}
-                            project={projectsStore.projects.find(
-                                (p: any) => p.id === task.project_id
-                            ) || null}
-                            onActiveChange={setAiInsightsActive}
-                        />
-                    </div>
-                )}
+                <TaskDetailsAI task={task} ai={ai} />
 
                 <div className="mb-6 mt-6">
                     {activePill === 'overview' && (
@@ -879,19 +793,14 @@ const TaskDetails: React.FC = () => {
                                     getAreaLink={getAreaLink}
                                 />
 
-                                <TaskAssignedToCard
+                                <TaskDetailsPeople
                                     task={task}
                                     onAssign={handleAssignPerson}
                                 />
 
-                                <TaskTagsCard
+                                <TaskDetailsTags
                                     task={task}
-                                    availableTags={tagsStore.tags}
-                                    hasLoadedTags={tagsStore.hasLoaded}
-                                    isLoadingTags={tagsStore.isLoading}
                                     onUpdate={handleTagsUpdate}
-                                    onLoadTags={() => tagsStore.loadTags()}
-                                    getTagLink={getTagLink}
                                 />
 
                                 <TaskDueDateCard
@@ -918,12 +827,10 @@ const TaskDetails: React.FC = () => {
                     )}
 
                     {activePill === 'attachments' && (
-                        <div className="grid grid-cols-1">
-                            <TaskAttachmentsCard
-                                taskUid={task.uid}
-                                onAttachmentsCountChange={setAttachmentCount}
-                            />
-                        </div>
+                        <TaskDetailsAttachments
+                            taskUid={task.uid}
+                            onCountChange={setAttachmentCount}
+                        />
                     )}
 
                     {activePill === 'activity' && (

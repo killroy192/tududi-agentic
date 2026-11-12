@@ -13,7 +13,7 @@ interface TaskTagsCardProps {
     isLoadingTags: boolean;
     onUpdate: (tags: string[]) => Promise<void>;
     onLoadTags: () => void;
-    getTagLink?: (tag: any) => string;
+    getTagLink?: (tag: Tag) => string;
 }
 
 const TaskTagsCard: React.FC<TaskTagsCardProps> = ({
