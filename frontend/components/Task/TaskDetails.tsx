@@ -3,15 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Area } from '../../entities/Area';
-import {
-    updateTask,
-    deleteTask,
-    fetchTaskByUid,
-    toggleTaskCompletion,
-} from '../../utils/tasksService';
 import { createProject } from '../../utils/projectsService';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../Shared/ToastContext';
@@ -24,31 +17,35 @@ import {
     TaskAreaCard,
     TaskDueDateCard,
     TaskDeferUntilCard,
+    TaskDetailsSubtasks,
+    TaskDetailsRecurrence,
+    TaskDetailsTags,
+    TaskDetailsPeople,
+    TaskDetailsAttachments,
+    TaskDetailsAI,
 } from './TaskDetails/';
+import { getTodayDateString } from '../../utils/dateUtils';
 import {
-    isTaskOverdueInTodayPlan,
-    isTaskPastDue,
-    getTodayDateString,
-} from '../../utils/dateUtils';
+    getAreaLink,
+    getProjectLink,
+    getTagLink,
+} from './TaskDetails/taskDetailsLinks';
 import { useClearNewTaskState } from './TaskDetails/hooks/useClearNewTaskState';
 import { useAbandonedTaskCleanup } from './TaskDetails/hooks/useAbandonedTaskCleanup';
 import { useTaskData } from './TaskDetails/hooks/useTaskData';
 import { useLazyTaskMetadata } from './TaskDetails/hooks/useLazyTaskMetadata';
-import { useOverdueBubble } from './TaskDetails/hooks/useOverdueBubble';
 import { useDateDraft } from './TaskDetails/hooks/useDateDraft';
 import { useTaskUpdate } from './TaskDetails/hooks/useTaskUpdate';
 import { useTaskDetailsSubtasks } from './TaskDetails/hooks/useTaskDetailsSubtasks';
 import { useTaskDetailsRecurrence } from './TaskDetails/hooks/useTaskDetailsRecurrence';
-import TaskDetailsSubtasks from './TaskDetails/TaskDetailsSubtasks';
-import TaskDetailsRecurrence from './TaskDetails/TaskDetailsRecurrence';
 import { useTaskDetailsTags } from './TaskDetails/hooks/useTaskDetailsTags';
 import { useTaskDetailsPeople } from './TaskDetails/hooks/useTaskDetailsPeople';
 import { useTaskDetailsAttachments } from './TaskDetails/hooks/useTaskDetailsAttachments';
 import { useTaskDetailsAI } from './TaskDetails/hooks/useTaskDetailsAI';
-import TaskDetailsTags from './TaskDetails/TaskDetailsTags';
-import TaskDetailsPeople from './TaskDetails/TaskDetailsPeople';
-import TaskDetailsAttachments from './TaskDetails/TaskDetailsAttachments';
-import TaskDetailsAI from './TaskDetails/TaskDetailsAI';
+import { useTaskDetailsHeaderActions } from './TaskDetails/hooks/useTaskDetailsHeaderActions';
+
+const getErrorMessage = (error: unknown): string | undefined =>
+    (error as { message?: string } | null)?.message;
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -61,13 +58,10 @@ const TaskDetails: React.FC = () => {
     useClearNewTaskState(isNewTask);
     const taskModifiedRef = useAbandonedTaskCleanup(uid, isNewTask);
 
-    const projectsStore = useStore((state: any) => state.projectsStore);
-    const tasksStore = useStore((state: any) => state.tasksStore);
-    const areasStore = useStore((state: any) => state.areasStore);
+    const projectsStore = useStore((state) => state.projectsStore);
+    const areasStore = useStore((state) => state.areasStore);
     const { task, loading, error } = useTaskData(uid);
 
-    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-    const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
     const bumpTimeline = () => setTimelineRefreshKey((prev) => prev + 1);
     const { updateAndRefresh, writeTask } = useTaskUpdate({
@@ -91,13 +85,39 @@ const TaskDetails: React.FC = () => {
 
     useLazyTaskMetadata();
 
-    const isOverdue = task ? isTaskOverdueInTodayPlan(task) : false;
-    const isPastDue = task ? isTaskPastDue(task) : false;
-    const {
-        isOverdueBubbleVisible,
-        handleOverdueIconClick,
-        handleDismissOverdueAlert,
-    } = useOverdueBubble(isOverdue);
+    const { attachmentCount, setAttachmentCount } = useTaskDetailsAttachments(
+        task?.uid
+    );
+    const subtasksSection = useTaskDetailsSubtasks({
+        uid,
+        task,
+        updateAndRefresh,
+        writeTask,
+        onMutated: bumpTimeline,
+    });
+    const recurrence = useTaskDetailsRecurrence({
+        task,
+        updateAndRefresh,
+        onMutated: bumpTimeline,
+    });
+    const header = useTaskDetailsHeaderActions({
+        uid,
+        task,
+        taskModifiedRef,
+        updateAndRefresh,
+        writeTask,
+        refreshRecurringSetup: recurrence.refreshRecurringSetup,
+        onMutated: bumpTimeline,
+    });
+    const { handleTagsUpdate } = useTaskDetailsTags({
+        task,
+        updateAndRefresh,
+        onMutated: bumpTimeline,
+    });
+    const { handleAssignPerson } = useTaskDetailsPeople({
+        task,
+        updateAndRefresh,
+    });
 
     const handleStartDueDateEdit = () => {
         setEditedDueDate(task?.due_date || '');
@@ -151,29 +171,18 @@ const TaskDetails: React.FC = () => {
         }
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                due_date: editedDueDate || null,
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
+            await updateAndRefresh(
+                task.uid,
+                { due_date: editedDueDate || null },
+                { write: 'replaceAtIndex' }
+            );
 
             showSuccessToast(
                 t('task.dueDateUpdated', 'Due date updated successfully')
             );
             setIsEditingDueDate(false);
 
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error updating due date:', error);
             showErrorToast(
@@ -231,32 +240,21 @@ const TaskDetails: React.FC = () => {
         }
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                defer_until: editedDeferUntil || null,
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
+            await updateAndRefresh(
+                task.uid,
+                { defer_until: editedDeferUntil || null },
+                { write: 'replaceAtIndex' }
+            );
 
             showSuccessToast(
                 t('task.deferUntilUpdated', 'Defer until successfully updated')
             );
             setIsEditingDeferUntil(false);
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error: any) {
+            bumpTimeline();
+        } catch (error) {
             console.error('Error updating defer until:', error);
             showErrorToast(
-                error?.message ||
+                getErrorMessage(error) ||
                     t(
                         'task.deferUntilUpdateError',
                         'Failed to update defer until'
@@ -272,55 +270,21 @@ const TaskDetails: React.FC = () => {
         setEditedDeferUntil(task?.defer_until || '');
     };
 
-    const { attachmentCount, setAttachmentCount } = useTaskDetailsAttachments(
-        task?.uid
-    );
-    const subtasksSection = useTaskDetailsSubtasks({
-        uid,
-        task,
-        updateAndRefresh,
-        writeTask,
-        onMutated: bumpTimeline,
-    });
-    const recurrence = useTaskDetailsRecurrence({
-        task,
-        updateAndRefresh,
-        onMutated: bumpTimeline,
-    });
-    const { handleTagsUpdate } = useTaskDetailsTags({
-        task,
-        updateAndRefresh,
-        onMutated: bumpTimeline,
-    });
-    const { handleAssignPerson } = useTaskDetailsPeople({
-        task,
-        updateAndRefresh,
-    });
-
     const handleProjectSelection = async (project: Project) => {
         if (!task?.uid) return;
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { project_id: project.id });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
+            await updateAndRefresh(
+                task.uid,
+                { project_id: project.id },
+                { write: 'replaceAtIndex' }
+            );
 
             showSuccessToast(
                 t('task.projectUpdated', 'Project updated successfully')
             );
 
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error updating project:', error);
             showErrorToast(
@@ -333,26 +297,17 @@ const TaskDetails: React.FC = () => {
         if (!task?.uid) return;
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { project_id: null });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
+            await updateAndRefresh(
+                task.uid,
+                { project_id: null },
+                { write: 'replaceAtIndex' }
+            );
 
             showSuccessToast(
                 t('task.projectCleared', 'Project cleared successfully')
             );
 
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error clearing project:', error);
             showErrorToast(
@@ -361,167 +316,7 @@ const TaskDetails: React.FC = () => {
         }
     };
 
-    const handleCompletionToggle = async () => {
-        if (!task?.uid) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            const updatedTaskResponse = await toggleTaskCompletion(
-                task.uid,
-                task
-            );
-            const mergedTask = {
-                ...task,
-                ...updatedTaskResponse,
-                subtasks: updatedTaskResponse.subtasks || task.subtasks || [],
-            };
-
-            if (uid) {
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = mergedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            await recurrence.refreshRecurringSetup(mergedTask);
-            setTimelineRefreshKey((prev) => prev + 1);
-            showSuccessToast(
-                t('task.statusUpdated', 'Status updated successfully')
-            );
-        } catch (error) {
-            console.error('Error toggling task completion:', error);
-            showErrorToast(
-                t('task.statusUpdateError', 'Failed to update status')
-            );
-        }
-    };
-
-    const handleStatusUpdate = async (newStatus: number) => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                status: newStatus,
-            });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.statusUpdated', 'Status updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating status:', error);
-            showErrorToast(
-                t('task.statusUpdateError', 'Failed to update status')
-            );
-        }
-    };
-
-    const handleDeleteClick = () => {
-        if (task) {
-            setTaskToDelete(task);
-            setIsConfirmDialogOpen(true);
-        }
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (taskToDelete?.uid) {
-            try {
-                taskModifiedRef.current = true;
-                await deleteTask(taskToDelete.uid);
-                showSuccessToast(
-                    t('task.deleteSuccess', 'Task deleted successfully')
-                );
-                navigate(location.state?.from || '/today');
-            } catch (error) {
-                console.error('Error deleting task:', error);
-                showErrorToast(t('task.deleteError', 'Failed to delete task'));
-            }
-        }
-        setIsConfirmDialogOpen(false);
-        setTaskToDelete(null);
-    };
-
-    const getProjectLink = (project: Project) => {
-        if (project.uid) {
-            const slug = project.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            return `/project/${project.uid}-${slug}`;
-        }
-        return `/project/${project.id}`;
-    };
-
-    const getTagLink = (tag: any) => {
-        if (tag.uid) {
-            const slug = tag.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            return `/tag/${tag.uid}-${slug}`;
-        }
-        return `/tag/${encodeURIComponent(tag.name)}`;
-    };
-
-    const handleTitleUpdate = async (newTitle: string) => {
-        if (!task?.uid || !newTitle.trim()) {
-            return;
-        }
-
-        if (newTitle.trim() === task.name) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { name: newTitle.trim() });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.titleUpdated', 'Task title updated successfully')
-            );
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating task title:', error);
-            showErrorToast(
-                t('task.titleUpdateError', 'Failed to update task title')
-            );
-            throw error;
-        }
-    };
-
+    /** Rethrows on failure so the card keeps the inline form open. */
     const handleContentUpdate = async (newContent: string) => {
         if (!task?.uid) {
             return;
@@ -534,26 +329,17 @@ const TaskDetails: React.FC = () => {
         }
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { note: trimmedContent });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
+            await updateAndRefresh(
+                task.uid,
+                { note: trimmedContent },
+                { write: 'replaceAtIndex' }
+            );
 
             showSuccessToast(
                 t('task.contentUpdated', 'Task content updated successfully')
             );
 
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error updating task content:', error);
             showErrorToast(
@@ -563,7 +349,8 @@ const TaskDetails: React.FC = () => {
         }
     };
 
-    const handleProjectCreateInlineWrapper = async (name: string) => {
+    /** Rethrows on failure so the card keeps the inline form open. */
+    const handleProjectCreateInline = async (name: string) => {
         if (!task?.uid || !name.trim()) return;
 
         try {
@@ -572,25 +359,17 @@ const TaskDetails: React.FC = () => {
 
             projectsStore.setProjects([...projectsStore.projects, newProject]);
 
-            await updateTask(task.uid, { project_id: newProject.id });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
+            await updateAndRefresh(
+                task.uid,
+                { project_id: newProject.id },
+                { write: 'replaceAtIndex' }
+            );
 
             showSuccessToast(
                 t('project.createdAndAssigned', 'Project created and assigned')
             );
 
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error creating project:', error);
             showErrorToast(
@@ -604,18 +383,16 @@ const TaskDetails: React.FC = () => {
         if (!task?.uid) return;
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { area_id: area.id });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                tasksStore.updateTaskInStore(updatedTask);
-            }
+            await updateAndRefresh(
+                task.uid,
+                { area_id: area.id },
+                { write: 'mergeById' }
+            );
 
             showSuccessToast(
                 t('task.areaUpdated', 'Area updated successfully')
             );
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error updating area:', error);
             showErrorToast(t('task.areaUpdateError', 'Failed to update area'));
@@ -626,70 +403,20 @@ const TaskDetails: React.FC = () => {
         if (!task?.uid) return;
 
         try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { area_id: null });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                tasksStore.updateTaskInStore(updatedTask);
-            }
+            await updateAndRefresh(
+                task.uid,
+                { area_id: null },
+                { write: 'mergeById' }
+            );
 
             showSuccessToast(
                 t('task.areaCleared', 'Area cleared successfully')
             );
-            setTimelineRefreshKey((prev) => prev + 1);
+            bumpTimeline();
         } catch (error) {
             console.error('Error clearing area:', error);
             showErrorToast(t('task.areaClearError', 'Failed to clear area'));
         }
-    };
-
-    const getAreaLink = (area: Area) => {
-        if (area.uid) {
-            const slug = area.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            return `/area/${area.uid}-${slug}`;
-        }
-        return `/area/${area.id}`;
-    };
-
-    const handlePriorityUpdate = async (priority: any) => {
-        if (!task?.uid) return;
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, {
-                priority: priority,
-            });
-            const updatedTask = await fetchTaskByUid(uid!);
-            tasksStore.updateTaskInStore(updatedTask);
-            setTimelineRefreshKey((prev) => prev + 1);
-            showSuccessToast(
-                t('task.priorityUpdated', 'Priority updated successfully')
-            );
-        } catch (error) {
-            console.error('Error updating priority:', error);
-            showErrorToast(
-                t('task.priorityUpdateError', 'Failed to update priority')
-            );
-            throw error;
-        }
-    };
-
-    const handleSizeSaved = (size: TaskSize | null) => {
-        taskModifiedRef.current = true;
-        if (!uid || task?.id == null) return;
-
-        // publishTaskSize already merged by uid. Mirror the priority path's
-        // store write without refetching or refreshing the timeline.
-        const current =
-            useStore
-                .getState()
-                .tasksStore.tasks.find((item: Task) => item.uid === uid) ??
-            task;
-        tasksStore.updateTaskInStore({ ...current, size });
     };
 
     if (loading) {
@@ -728,21 +455,23 @@ const TaskDetails: React.FC = () => {
             <div className="w-full">
                 <TaskDetailsHeader
                     task={task}
-                    onTitleUpdate={handleTitleUpdate}
-                    onStatusUpdate={handleStatusUpdate}
-                    onPriorityUpdate={handlePriorityUpdate}
-                    onSizeSaved={handleSizeSaved}
-                    onDelete={handleDeleteClick}
+                    onTitleUpdate={header.handleTitleUpdate}
+                    onStatusUpdate={header.handleStatusUpdate}
+                    onPriorityUpdate={header.handlePriorityUpdate}
+                    onSizeSaved={header.handleSizeSaved}
+                    onDelete={header.handleDeleteClick}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}
                     activePill={activePill}
                     onPillChange={setActivePill}
-                    showOverdueIcon={isOverdue}
-                    showPastDueBadge={isPastDue}
-                    onOverdueIconClick={handleOverdueIconClick}
-                    isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
-                    onDismissOverdueAlert={handleDismissOverdueAlert}
-                    onQuickStatusToggle={handleCompletionToggle}
+                    showOverdueIcon={header.isOverdue}
+                    showPastDueBadge={header.isPastDue}
+                    onOverdueIconClick={header.handleOverdueIconClick}
+                    isOverdueAlertVisible={
+                        header.isOverdue && header.isOverdueBubbleVisible
+                    }
+                    onDismissOverdueAlert={header.handleDismissOverdueAlert}
+                    onQuickStatusToggle={header.handleCompletionToggle}
                     onAiInsightsClick={
                         ai.aiAssistantEnabled
                             ? ai.handleAiInsightsClick
@@ -779,9 +508,7 @@ const TaskDetails: React.FC = () => {
                                     projects={projectsStore.projects}
                                     onProjectSelect={handleProjectSelection}
                                     onProjectClear={handleClearProject}
-                                    onProjectCreate={
-                                        handleProjectCreateInlineWrapper
-                                    }
+                                    onProjectCreate={handleProjectCreateInline}
                                     getProjectLink={getProjectLink}
                                 />
 
@@ -841,21 +568,17 @@ const TaskDetails: React.FC = () => {
                             />
                         </div>
                     )}
-
                 </div>
 
-                {isConfirmDialogOpen && taskToDelete && (
+                {header.isDeleteDialogOpen && (
                     <ConfirmDialog
                         title={t('task.deleteConfirmTitle', 'Delete Task')}
                         message={t(
                             'task.deleteConfirmMessage',
                             'Are you sure you want to delete this task? This action cannot be undone.'
                         )}
-                        onConfirm={handleDeleteConfirm}
-                        onCancel={() => {
-                            setIsConfirmDialogOpen(false);
-                            setTaskToDelete(null);
-                        }}
+                        onConfirm={header.handleDeleteConfirm}
+                        onCancel={header.handleDeleteCancel}
                     />
                 )}
             </div>

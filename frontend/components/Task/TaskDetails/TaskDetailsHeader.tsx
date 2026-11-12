@@ -14,6 +14,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { Task, PriorityType, TaskSize } from '../../../entities/Task';
+import { Project } from '../../../entities/Project';
+import { Tag } from '../../../entities/Tag';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
@@ -27,8 +29,8 @@ interface TaskDetailsHeaderProps {
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
     onSizeSaved?: (size: TaskSize | null) => void;
     onDelete: () => void;
-    getProjectLink?: (project: any) => string;
-    getTagLink?: (tag: any) => string;
+    getProjectLink?: (project: Project) => string;
+    getTagLink?: (tag: Tag) => string;
     activePill: string;
     onPillChange: (pill: string) => void;
     showOverdueIcon?: boolean;
