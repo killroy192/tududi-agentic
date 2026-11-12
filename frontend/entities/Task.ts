@@ -10,6 +10,10 @@ export interface Task {
     original_name?: string;
     status: StatusType | number;
     priority?: PriorityType | number;
+    size?: TaskSize | null;
+    // Viewer-scoped, computed by the server; never sent back on update
+    access_level?: TaskAccessLevel;
+    is_virtual_occurrence?: boolean;
     due_date?: string;
     defer_until?: string;
     reminder_at?: string;
@@ -67,6 +71,9 @@ export type StatusType =
     | 'cancelled'
     | 'planned';
 export type PriorityType = 'low' | 'medium' | 'high' | null | undefined;
+export const TASK_SIZES = ['S', 'M', 'L', 'XL'] as const;
+export type TaskSize = (typeof TASK_SIZES)[number];
+export type TaskAccessLevel = 'ro' | 'rw' | 'admin';
 export type RecurrenceType =
     | 'none'
     | 'daily'

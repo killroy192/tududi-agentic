@@ -299,32 +299,33 @@ async function getTaskMetrics(userId, timezone) {
         buildMetricsResponse,
         serializeTasks,
     } = require('../core/serializers');
+    const permissionsService = require('../../../services/permissionsService');
 
     const response = await buildMetricsResponse(metrics);
 
-    const serializedLists = {
-        tasks_in_progress: await serializeTasks(
-            metrics.tasks_in_progress,
-            timezone
-        ),
-        tasks_today_plan: await serializeTasks(
-            metrics.today_plan_tasks,
-            timezone
-        ),
-        tasks_due_today: await serializeTasks(
-            metrics.tasks_due_today,
-            timezone
-        ),
-        tasks_overdue: await serializeTasks(metrics.tasks_overdue, timezone),
-        suggested_tasks: await serializeTasks(
-            metrics.suggested_tasks,
-            timezone
-        ),
-        tasks_completed_today: await serializeTasks(
-            metrics.tasks_completed_today,
-            timezone
-        ),
+    const sourceLists = {
+        tasks_in_progress: metrics.tasks_in_progress,
+        tasks_today_plan: metrics.today_plan_tasks,
+        tasks_due_today: metrics.tasks_due_today,
+        tasks_overdue: metrics.tasks_overdue,
+        suggested_tasks: metrics.suggested_tasks,
+        tasks_completed_today: metrics.tasks_completed_today,
     };
+    const allMetricTasks = [];
+    for (const tasks of Object.values(sourceLists)) {
+        if (Array.isArray(tasks)) allMetricTasks.push(...tasks);
+    }
+    const accessMap = await permissionsService.getTaskAccessMap(
+        userId,
+        allMetricTasks
+    );
+
+    const serializedLists = {};
+    for (const [key, tasks] of Object.entries(sourceLists)) {
+        serializedLists[key] = await serializeTasks(tasks, timezone, {
+            accessMap,
+        });
+    }
 
     Object.assign(response, serializedLists);
     response.dashboard_lists = serializedLists;

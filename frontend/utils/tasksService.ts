@@ -7,6 +7,7 @@ import {
 } from './authUtils';
 import { getApiPath } from '../config/paths';
 import { isTaskDone, TASK_STATUS } from '../constants/taskStatus';
+import { isDedicatedSizeWrite, omitTaskSize } from './taskSize';
 
 export interface GroupedTasks {
     [groupName: string]: Task[];
@@ -98,6 +99,10 @@ export const updateTask = async (
     if (payload.original_name && payload.name !== undefined) {
         payload.name = payload.original_name;
     }
+    // Keep a lone `{ size }` write. Completion undo and other full-task callers drop size.
+    const requestBody = isDedicatedSizeWrite(payload)
+        ? payload
+        : omitTaskSize(payload);
 
     const response = await fetch(
         getApiPath(`task/${encodeURIComponent(taskUid)}`),
@@ -105,7 +110,7 @@ export const updateTask = async (
             method: 'PATCH',
             credentials: 'include',
             headers: await getPostHeadersWithCsrf(),
-            body: JSON.stringify(payload),
+            body: JSON.stringify(requestBody),
         }
     );
 
@@ -141,7 +146,10 @@ export const toggleTaskCompletion = async (
         });
     }
 
-    const result = await updateTask(taskUid, { status: newStatus });
+    const result = await updateTask(
+        taskUid,
+        omitTaskSize({ status: newStatus })
+    );
 
     if (process.env.NODE_ENV === 'development') {
         console.log('[toggleTaskCompletion] result', {

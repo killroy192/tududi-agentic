@@ -8,6 +8,12 @@ import { Task } from '../entities/Task';
 import { getTitleAndIcon } from './Task/getTitleAndIcon';
 import { getDescription } from './Task/getDescription';
 import { createTask, GroupedTasks } from '../utils/tasksService';
+import {
+    applyTaskSizeUpdate,
+    applyTaskSizeUpdateToGroups,
+    omitTaskSize,
+} from '../utils/taskSize';
+import { useTaskSizeSync } from '../hooks/useTaskSizeSync';
 import { useStore } from '../store/useStore';
 import { useToast } from './Shared/ToastContext';
 import { SortOption } from './Shared/SortFilterButton';
@@ -56,6 +62,13 @@ const Tasks: React.FC = () => {
     const [showCompleted, setShowCompleted] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [groupBy, setGroupBy] = useState<'none' | 'project'>('none');
+
+    useTaskSizeSync((update) => {
+        setTasks((prev) => applyTaskSizeUpdate(prev, update));
+        setGroupedTasks((prev) =>
+            prev ? applyTaskSizeUpdateToGroups(prev, update) : prev
+        );
+    });
 
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(false);
@@ -387,7 +400,7 @@ const Tasks: React.FC = () => {
                         'Content-Type': 'application/json',
                         'x-csrf-token': await getCsrfToken(),
                     },
-                    body: JSON.stringify(updatedTask),
+                    body: JSON.stringify(omitTaskSize(updatedTask)),
                 }
             );
 

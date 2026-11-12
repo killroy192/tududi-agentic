@@ -48,6 +48,7 @@ const {
     buildTaskAttributes,
     buildUpdateAttributes,
 } = require('./core/builders');
+const { isValidTaskSize } = require('./core/parsers');
 const { createSubtasks, updateSubtasks } = require('./operations/subtasks');
 const { handleCompletionStatus } = require('./operations/completion');
 const { captureOldValues, logTaskChanges } = require('./utils/logging');
@@ -324,8 +325,14 @@ router.get('/tasks', async (req, res) => {
             language || 'en'
         );
 
-        const serializationOptions =
-            type === 'today' ? { preserveOriginalName: true } : {};
+        const accessMap = await permissionsService.getTaskAccessMap(
+            userId,
+            paginatedTasks
+        );
+        const serializationOptions = {
+            ...(type === 'today' ? { preserveOriginalName: true } : {}),
+            accessMap,
+        };
 
         const response = {
             tasks: await serializeTasks(
@@ -337,7 +344,8 @@ router.get('/tasks', async (req, res) => {
 
         const serializedGrouped = await serializeGroupedTasks(
             groupedTasks,
-            timezone
+            timezone,
+            serializationOptions
         );
         if (serializedGrouped) {
             response.groupedTasks = serializedGrouped;
@@ -487,11 +495,16 @@ router.post('/task', async (req, res) => {
 
         if (!taskWithAssociations) {
             logError('Failed to reload created task:', task.id);
+            const fallbackAccess = await permissionsService.getTaskAccessMap(
+                req.currentUser.id,
+                [task]
+            );
             const fallbackTask = {
                 ...task.toJSON(),
                 tags: [],
                 Project: null,
                 subtasks: [],
+                access_level: fallbackAccess.get(task.uid),
                 today_move_count: 0,
                 due_date: task.due_date
                     ? task.due_date instanceof Date
@@ -510,7 +523,10 @@ router.post('/task', async (req, res) => {
         const serializedTask = await serializeTask(
             taskWithAssociations,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            {
+                skipDisplayNameTransform: true,
+                userId: req.currentUser.id,
+            }
         );
 
         res.set({
@@ -546,7 +562,10 @@ router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
         const serializedTask = await serializeTask(
             task,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            {
+                skipDisplayNameTransform: true,
+                userId: req.currentUser.id,
+            }
         );
 
         res.json(serializedTask);
@@ -558,6 +577,16 @@ router.get('/task/:uid', requireTaskReadAccess, async (req, res) => {
 
 router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
     try {
+        if (
+            req.body &&
+            Object.prototype.hasOwnProperty.call(req.body, 'size') &&
+            !isValidTaskSize(req.body.size)
+        ) {
+            return res.status(400).json({
+                error: 'Invalid size. Allowed values are null, S, M, L, or XL.',
+            });
+        }
+
         const {
             status,
             project_id,
@@ -587,6 +616,13 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
 
         if (!task) {
             return res.status(404).json({ error: 'Task not found.' });
+        }
+
+        if (
+            task.habit_mode &&
+            Object.prototype.hasOwnProperty.call(req.body, 'size')
+        ) {
+            delete req.body.size;
         }
 
         const oldValues = captureOldValues(task);
@@ -896,7 +932,10 @@ router.patch('/task/:uid', requireTaskWriteAccess, async (req, res) => {
         const serializedTask = await serializeTask(
             taskWithAssociations,
             req.currentUser.timezone,
-            { skipDisplayNameTransform: true }
+            {
+                skipDisplayNameTransform: true,
+                userId: req.currentUser.id,
+            }
         );
 
         res.json(serializedTask);

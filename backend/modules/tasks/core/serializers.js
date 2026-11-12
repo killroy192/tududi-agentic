@@ -8,6 +8,35 @@ const {
     getTaskTodayMoveCounts,
 } = require('../taskEventService');
 const taskRepository = require('../repository');
+const permissionsService = require('../../../services/permissionsService');
+
+function accessLevelFor(task, options, allowFallback) {
+    const map = options && options.accessMap;
+    if (map && typeof map.has === 'function') {
+        if (task.uid != null && map.has(task.uid)) return map.get(task.uid);
+        if (task.id != null && map.has(task.id)) return map.get(task.id);
+    }
+    if (
+        allowFallback &&
+        options &&
+        Object.prototype.hasOwnProperty.call(options, 'accessLevel')
+    ) {
+        return options.accessLevel;
+    }
+    return undefined;
+}
+
+async function withAccessMap(tasks, options = {}) {
+    if (options.accessMap || !options.userId) return options;
+    if (Object.prototype.hasOwnProperty.call(options, 'accessLevel')) {
+        return options;
+    }
+    const accessMap = await permissionsService.getTaskAccessMap(
+        options.userId,
+        tasks
+    );
+    return { ...options, accessMap };
+}
 
 // Sort tags alphabetically by name (case-insensitive)
 function sortTags(tags) {
@@ -26,6 +55,7 @@ async function serializeTask(
     if (!task) {
         throw new Error('Task is null or undefined');
     }
+    options = await withAccessMap([task], options);
     const taskJson = task.toJSON ? task.toJSON() : task;
 
     const todayMoveCount = taskJson.is_virtual_occurrence
@@ -77,6 +107,8 @@ async function serializeTask(
         recurringParentUid = parentTask?.uid || null;
     }
 
+    const viewerAccessLevel = accessLevelFor(taskJson, options, true);
+
     return {
         ...taskWithoutSubtasks,
         name: displayName,
@@ -104,24 +136,30 @@ async function serializeTask(
               }
             : null,
         subtasks: Subtasks
-            ? Subtasks.map((subtask) => ({
-                  ...subtask,
-                  uid: subtask.uid,
-                  tags: sortTags(subtask.Tags),
-                  due_date: processDueDateForResponse(
-                      subtask.due_date,
-                      safeTimezone
-                  ),
-                  defer_until: processDeferUntilForResponse(
-                      subtask.defer_until,
-                      safeTimezone
-                  ),
-                  completed_at: subtask.completed_at
-                      ? subtask.completed_at instanceof Date
-                          ? subtask.completed_at.toISOString()
-                          : new Date(subtask.completed_at).toISOString()
-                      : null,
-              }))
+            ? Subtasks.map((subtask) => {
+                  const subtaskLevel = accessLevelFor(subtask, options, false);
+                  return {
+                      ...subtask,
+                      uid: subtask.uid,
+                      tags: sortTags(subtask.Tags),
+                      due_date: processDueDateForResponse(
+                          subtask.due_date,
+                          safeTimezone
+                      ),
+                      defer_until: processDeferUntilForResponse(
+                          subtask.defer_until,
+                          safeTimezone
+                      ),
+                      completed_at: subtask.completed_at
+                          ? subtask.completed_at instanceof Date
+                              ? subtask.completed_at.toISOString()
+                              : new Date(subtask.completed_at).toISOString()
+                          : null,
+                      ...(subtaskLevel !== undefined
+                          ? { access_level: subtaskLevel }
+                          : {}),
+                  };
+              })
             : [],
         completed_at: task.completed_at
             ? task.completed_at instanceof Date
@@ -129,6 +167,9 @@ async function serializeTask(
                 : new Date(task.completed_at).toISOString()
             : null,
         today_move_count: todayMoveCount,
+        ...(viewerAccessLevel !== undefined
+            ? { access_level: viewerAccessLevel }
+            : {}),
     };
 }
 
@@ -137,12 +178,13 @@ async function serializeTasks(tasks, userTimezone = 'UTC', options = {}) {
         return [];
     }
 
+    const resolvedOptions = await withAccessMap(tasks, options);
     const taskIds = tasks.map((task) => task.id);
     const moveCountMap = await getTaskTodayMoveCounts(taskIds);
 
     return await Promise.all(
         tasks.map((task) =>
-            serializeTask(task, userTimezone, options, moveCountMap)
+            serializeTask(task, userTimezone, resolvedOptions, moveCountMap)
         )
     );
 }

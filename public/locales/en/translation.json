@@ -984,6 +984,11 @@
     "projectClearError": "Failed to clear project",
     "priorityUpdated": "Priority updated successfully",
     "priorityUpdateError": "Failed to update priority",
+    "size": {
+      "label": "Size",
+      "unset": "Unset"
+    },
+    "sizeUpdateError": "Failed to update size",
     "overview": "Overview",
     "schedule": "Schedule",
     "attachments": "Attachments",

@@ -12,7 +12,15 @@ function parseStatus(status, defaultStatus = Task.STATUS.NOT_STARTED) {
     return typeof status === 'string' ? Task.getStatusValue(status) : status;
 }
 
+function isValidTaskSize(value) {
+    if (value === null) {
+        return true;
+    }
+    return typeof value === 'string' && Task.SIZES.includes(value);
+}
+
 module.exports = {
     parsePriority,
     parseStatus,
+    isValidTaskSize,
 };

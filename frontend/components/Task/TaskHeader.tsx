@@ -16,6 +16,7 @@ import { Task } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
 import { isTaskCompleted, isTaskInProgress } from '../../constants/taskStatus';
 import TaskStatusControl from './TaskStatusControl';
+import TaskSizeControl from './TaskSizeControl';
 import { parseDateString, getTodayDateString, getTomorrowDateString, getYesterdayDateString } from '../../utils/dateUtils';
 
 const tagColorStyle = (color?: string): React.CSSProperties | undefined => {
@@ -164,8 +165,10 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         ? formatDeferUntil(task.defer_until)
         : null;
 
-    // Check if task has metadata (project, tags, due_date, completed_at, recurrence_type, recurring_parent_id, or defer_until)
+    // Size is always shown on a full row, so a task with no other metadata still
+    // keeps the mobile metadata row open. Habits never show size.
     const hasMetadata =
+        !task.habit_mode ||
         (project && !hideProjectName) ||
         (task.tags && task.tags.length > 0) ||
         task.due_date ||
@@ -173,6 +176,21 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         (task.recurrence_type && task.recurrence_type !== 'none') ||
         task.recurring_parent_id ||
         !!formattedDeferUntil;
+
+    const renderTaskSize = (
+        slot: 'desktop' | 'mobile' | 'kanban' | 'upcoming',
+        compact: boolean
+    ) => {
+        if (task.habit_mode) return null;
+        return (
+            <div
+                className="flex-shrink-0 self-start"
+                data-testid={`task-size-slot-${slot}`}
+            >
+                <TaskSizeControl task={task} compact={compact} />
+            </div>
+        );
+    };
 
     return (
         <div
@@ -221,6 +239,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                             {task.original_name || task.name}
                                         </span>
                                     </div>
+                                    {renderTaskSize('upcoming', true)}
                                     <SubtasksToggleButton />
                                 </div>
                                 {/* Show project and tags info in upcoming view */}
@@ -298,7 +317,13 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         )}
                         {/* Project, tags, due date, and recurrence in same row, with spacing when they exist */}
                         {!isUpcomingView && (
-                            <div className={`flex text-xs text-gray-500 dark:text-gray-400 ${isKanbanView ? 'flex-col space-y-0.5 mt-1.5' : 'items-center gap-3 whitespace-nowrap overflow-x-auto'}`}>
+                            <div
+                                className={`flex text-xs text-gray-500 dark:text-gray-400 ${isKanbanView ? 'flex-col space-y-0.5 mt-1.5' : 'items-center gap-3'}`}
+                            >
+                                {isKanbanView && renderTaskSize('kanban', true)}
+                                <div
+                                    className={`flex min-w-0 ${isKanbanView ? 'flex-col space-y-0.5' : 'flex-1 items-center gap-3 whitespace-nowrap overflow-x-auto'}`}
+                                >
                                 {project && !hideProjectName && (
                                     <div className="flex items-center">
                                         <FolderIcon className="h-3 w-3 mr-1" />
@@ -410,6 +435,9 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                         <span>{formattedDeferUntil}</span>
                                     </div>
                                 )}
+                                </div>
+                                {!isKanbanView &&
+                                    renderTaskSize('desktop', false)}
                             </div>
                         )}
                     </div>
@@ -463,6 +491,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                         <div
                             className={`flex flex-col text-xs text-gray-500 dark:text-gray-400 space-y-1 ${hasMetadata ? 'mt-1' : 'hidden'}`}
                         >
+                            {renderTaskSize('mobile', true)}
                             {project && !hideProjectName && (
                                 <div className="flex items-center">
                                     <FolderIcon className="h-3 w-3 mr-1" />

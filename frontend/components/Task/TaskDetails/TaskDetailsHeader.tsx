@@ -13,10 +13,11 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
-import { Task, PriorityType } from '../../../entities/Task';
+import { Task, PriorityType, TaskSize } from '../../../entities/Task';
 import BackButton from '../../Shared/BackButton';
 import { formatDateTime } from '../../../utils/dateUtils';
 import TaskStatusControl from '../TaskStatusControl';
+import TaskSizeControl from '../TaskSizeControl';
 import { getStatusValue } from '../../../constants/taskStatus';
 
 interface TaskDetailsHeaderProps {
@@ -24,6 +25,7 @@ interface TaskDetailsHeaderProps {
     onTitleUpdate: (newTitle: string) => Promise<void>;
     onStatusUpdate: (newStatus: number) => Promise<void>;
     onPriorityUpdate: (newPriority: PriorityType) => Promise<void>;
+    onSizeSaved?: (size: TaskSize | null) => void;
     onDelete: () => void;
     getProjectLink?: (project: any) => string;
     getTagLink?: (tag: any) => string;
@@ -46,6 +48,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     onTitleUpdate,
     onStatusUpdate,
     onPriorityUpdate,
+    onSizeSaved,
     onDelete,
     getProjectLink,
     getTagLink,
@@ -485,6 +488,16 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 </div>
                                             )}
                                         </div>
+
+                                        <TaskSizeControl
+                                            task={task}
+                                            errorMessage={t(
+                                                'task.sizeUpdateError',
+                                                'Failed to update size'
+                                            )}
+                                            className="flex-shrink-0"
+                                            onSaved={onSizeSaved}
+                                        />
 
                                         {/* Past Due Badge - Right of priority button */}
                                         {showPastDueBadge && (

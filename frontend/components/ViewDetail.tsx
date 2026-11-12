@@ -30,6 +30,8 @@ import { SortOption } from './Shared/SortFilterButton';
 import IconSortDropdown from './Shared/IconSortDropdown';
 import { useStore } from '../store/useStore';
 import { getCsrfToken } from '../utils/csrfService';
+import { applyTaskSizeUpdate, omitTaskSize } from '../utils/taskSize';
+import { useTaskSizeSync } from '../hooks/useTaskSizeSync';
 
 interface View {
     id: number;
@@ -52,6 +54,9 @@ const ViewDetail: React.FC = () => {
     const location = useLocation();
     const [view, setView] = useState<View | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
+    useTaskSizeSync((update) => {
+        setTasks((prev) => applyTaskSizeUpdate(prev, update));
+    });
     const [notes, setNotes] = useState<Note[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const globalProjects = useStore((state) => state.projectsStore.projects);
@@ -506,7 +511,7 @@ const ViewDetail: React.FC = () => {
                         'Content-Type': 'application/json',
                         'x-csrf-token': await getCsrfToken(),
                     },
-                    body: JSON.stringify(updatedTask),
+                    body: JSON.stringify(omitTaskSize(updatedTask)),
                 }
             );
 

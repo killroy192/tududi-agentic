@@ -95,6 +95,154 @@ async function getAccess(userId, resourceType, resourceUid) {
     return perm ? perm.access_level : ACCESS.NONE;
 }
 
+function collectTaskRecords(tasks, bucket) {
+    if (!tasks) return;
+    const list = Array.isArray(tasks) ? tasks : [tasks];
+    for (const task of list) {
+        if (!task || (task.uid == null && task.id == null)) continue;
+        bucket.push(task);
+        const nested = task.Subtasks || task.subtasks;
+        if (Array.isArray(nested) && nested.length > 0) {
+            collectTaskRecords(nested, bucket);
+        }
+    }
+}
+
+function rememberAccess(map, task, level) {
+    if (task.uid != null) map.set(task.uid, level);
+    if (task.id != null) map.set(task.id, level);
+}
+
+/**
+ * Viewer access for many tasks, identical to getAccess(userId, 'task', uid)
+ * for each task. Query count stays constant for the request: one admin check,
+ * one project load, one project-permission load, and one task-permission load.
+ * Nested Subtasks / subtasks on the given records are included.
+ */
+async function getTaskAccessMap(userId, tasks) {
+    const map = new Map();
+    const records = [];
+    collectTaskRecords(tasks, records);
+    if (records.length === 0) return map;
+
+    if (await isAdmin(userId)) {
+        for (const task of records) rememberAccess(map, task, ACCESS.ADMIN);
+        return map;
+    }
+
+    const pendingProject = [];
+    const pendingDirect = [];
+
+    for (const task of records) {
+        if (task.user_id === userId) {
+            rememberAccess(map, task, ACCESS.RW);
+            continue;
+        }
+        if (task.project_id) {
+            pendingProject.push(task);
+        } else {
+            pendingDirect.push(task);
+        }
+    }
+
+    if (pendingProject.length > 0) {
+        const projectIds = [
+            ...new Set(pendingProject.map((task) => task.project_id)),
+        ];
+        const projects = await Project.findAll({
+            where: { id: { [Op.in]: projectIds } },
+            attributes: ['id', 'uid', 'user_id'],
+            raw: true,
+        });
+        const projectsById = new Map(
+            projects.map((project) => [project.id, project])
+        );
+
+        const tasksByProjectUid = new Map();
+        for (const task of pendingProject) {
+            const project =
+                projectsById.get(task.project_id) ||
+                projectsById.get(Number(task.project_id));
+            if (!project) {
+                pendingDirect.push(task);
+                continue;
+            }
+            if (project.user_id === userId) {
+                rememberAccess(map, task, ACCESS.RW);
+                continue;
+            }
+            if (!tasksByProjectUid.has(project.uid)) {
+                tasksByProjectUid.set(project.uid, []);
+            }
+            tasksByProjectUid.get(project.uid).push(task);
+        }
+
+        if (tasksByProjectUid.size > 0) {
+            const projectPerms = await Permission.findAll({
+                where: {
+                    user_id: userId,
+                    resource_type: 'project',
+                    resource_uid: { [Op.in]: [...tasksByProjectUid.keys()] },
+                },
+                attributes: ['resource_uid', 'access_level'],
+                raw: true,
+            });
+            const projectLevelByUid = new Map();
+            for (const perm of projectPerms) {
+                if (!projectLevelByUid.has(perm.resource_uid)) {
+                    projectLevelByUid.set(perm.resource_uid, perm.access_level);
+                }
+            }
+            for (const [projectUid, projectTasks] of tasksByProjectUid) {
+                const level = projectLevelByUid.get(projectUid);
+                if (level && level !== ACCESS.NONE) {
+                    for (const task of projectTasks) {
+                        rememberAccess(map, task, level);
+                    }
+                } else {
+                    pendingDirect.push(...projectTasks);
+                }
+            }
+        }
+    }
+
+    if (pendingDirect.length > 0) {
+        const uids = [
+            ...new Set(
+                pendingDirect
+                    .map((task) => task.uid)
+                    .filter((uid) => uid != null)
+            ),
+        ];
+        const taskLevelByUid = new Map();
+        if (uids.length > 0) {
+            const taskPerms = await Permission.findAll({
+                where: {
+                    user_id: userId,
+                    resource_type: 'task',
+                    resource_uid: { [Op.in]: uids },
+                },
+                attributes: ['resource_uid', 'access_level'],
+                raw: true,
+            });
+            for (const perm of taskPerms) {
+                if (!taskLevelByUid.has(perm.resource_uid)) {
+                    taskLevelByUid.set(perm.resource_uid, perm.access_level);
+                }
+            }
+        }
+        for (const task of pendingDirect) {
+            rememberAccess(
+                map,
+                task,
+                taskLevelByUid.get(task.uid) || ACCESS.NONE
+            );
+        }
+    }
+
+    return map;
+}
+
 async function ownershipOrPermissionWhere(resourceType, userId, cache = null) {
     // Check cache first (request-scoped)
     const cacheKey = `permission_${resourceType}_${userId}`;
@@ -172,6 +320,7 @@ async function ownershipOrPermissionWhere(resourceType, userId, cache = null) {
 module.exports = {
     ACCESS,
     getAccess,
+    getTaskAccessMap,
     ownershipOrPermissionWhere,
     getSharedUidsForUser,
 };

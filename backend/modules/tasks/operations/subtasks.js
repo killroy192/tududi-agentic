@@ -2,7 +2,7 @@ const { Task, Tag, Project } = require('../../../models');
 const taskRepository = require('../repository');
 const permissionsService = require('../../../services/permissionsService');
 const { logError } = require('../../../services/logService');
-const { serializeTask } = require('../core/serializers');
+const { serializeTasks } = require('../core/serializers');
 const { parsePriority, parseStatus } = require('../core/parsers');
 
 async function getSubtasks(parentTaskId, userId, timezone) {
@@ -42,9 +42,9 @@ async function getSubtasks(parentTaskId, userId, timezone) {
         }
     );
 
-    const serializedSubtasks = await Promise.all(
-        subtasks.map((subtask) => serializeTask(subtask, timezone))
-    );
+    const serializedSubtasks = await serializeTasks(subtasks, timezone, {
+        userId,
+    });
 
     return { error: null, subtasks: serializedSubtasks };
 }

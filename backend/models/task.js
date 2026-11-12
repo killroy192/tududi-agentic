@@ -41,6 +41,14 @@ module.exports = (sequelize) => {
                     max: 2,
                 },
             },
+            size: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                defaultValue: null,
+                validate: {
+                    isIn: [['S', 'M', 'L', 'XL']],
+                },
+            },
             status: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
@@ -314,6 +322,8 @@ module.exports = (sequelize) => {
         MEDIUM: 1,
         HIGH: 2,
     };
+
+    Task.SIZES = ['S', 'M', 'L', 'XL'];
 
     Task.STATUS = {
         NOT_STARTED: 0,

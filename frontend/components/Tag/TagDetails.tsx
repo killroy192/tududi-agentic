@@ -27,6 +27,8 @@ import { useStore } from '../../store/useStore';
 import { updateTag, deleteTag } from '../../utils/tagsService';
 import { getApiPath } from '../../config/paths';
 import { getCsrfToken } from '../../utils/csrfService';
+import { applyTaskSizeUpdate, omitTaskSize } from '../../utils/taskSize';
+import { useTaskSizeSync } from '../../hooks/useTaskSizeSync';
 import { SortOption } from '../Shared/SortFilterButton';
 import IconSortDropdown from '../Shared/IconSortDropdown';
 
@@ -35,6 +37,9 @@ const TagDetails: React.FC = () => {
     const { uidSlug } = useParams<{ uidSlug: string }>();
     const [tag, setTag] = useState<Tag | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
+    useTaskSizeSync((update) => {
+        setTasks((prev) => applyTaskSizeUpdate(prev, update));
+    });
     const [notes, setNotes] = useState<Note[]>([]);
     const allProjects = useStore((state: any) => state.projectsStore.projects);
     const [loading, setLoading] = useState(true);
@@ -299,7 +304,7 @@ const TagDetails: React.FC = () => {
                         'Content-Type': 'application/json',
                         'x-csrf-token': await getCsrfToken(),
                     },
-                    body: JSON.stringify(updatedTask),
+                    body: JSON.stringify(omitTaskSize(updatedTask)),
                 }
             );
 

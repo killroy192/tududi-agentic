@@ -4,6 +4,18 @@ const habitsRepository = require('./repository');
 const habitService = require('./habitService');
 const { NotFoundError } = require('../../shared/errors');
 
+function withoutSize(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return data;
+    }
+    if (!Object.prototype.hasOwnProperty.call(data, 'size')) {
+        return data;
+    }
+    const habitData = { ...data };
+    delete habitData.size;
+    return habitData;
+}
+
 class HabitsService {
     async getAll(userId) {
         const habits = await habitsRepository.findAllByUser(userId);
@@ -11,7 +23,10 @@ class HabitsService {
     }
 
     async create(userId, data) {
-        const habit = await habitsRepository.createHabit(userId, data);
+        const habit = await habitsRepository.createHabit(
+            userId,
+            withoutSize(data)
+        );
         return { habit };
     }
 
@@ -79,7 +94,7 @@ class HabitsService {
         if (!habit || !habit.habit_mode) {
             throw new NotFoundError('Habit not found');
         }
-        await habitsRepository.update(habit, data);
+        await habitsRepository.update(habit, withoutSize(data));
         return { habit };
     }
 

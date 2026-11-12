@@ -26,6 +26,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { fetchTasks, updateTask, deleteTask } from '../../utils/tasksService';
 import {
+    applyTaskSizeUpdateToGroups,
+    omitTaskSize,
+} from '../../utils/taskSize';
+import { useTaskSizeSync } from '../../hooks/useTaskSizeSync';
+import {
     isTaskDone,
     isTaskActive,
     isHabitArchived,
@@ -182,6 +187,41 @@ const TasksToday: React.FC = () => {
     const [completedTodayDisplayLimit, setCompletedTodayDisplayLimit] =
         useState(20);
     const [habitActionUid, setHabitActionUid] = useState<string | null>(null);
+
+    useTaskSizeSync((update) => {
+        setMetrics((prev) => {
+            const groups: Record<string, Task[]> = {};
+            const sectionKeys = [
+                'tasks_in_progress',
+                'tasks_due_today',
+                'tasks_overdue',
+                'today_plan_tasks',
+                'suggested_tasks',
+                'tasks_completed_today',
+            ] as const;
+            sectionKeys.forEach((key) => {
+                const list = prev[key];
+                if (list) groups[key] = list;
+            });
+            const nextGroups = applyTaskSizeUpdateToGroups(groups, update);
+            if (nextGroups === groups) return prev;
+            return {
+                ...prev,
+                tasks_in_progress:
+                    nextGroups.tasks_in_progress ?? prev.tasks_in_progress,
+                tasks_due_today:
+                    nextGroups.tasks_due_today ?? prev.tasks_due_today,
+                tasks_overdue: nextGroups.tasks_overdue ?? prev.tasks_overdue,
+                today_plan_tasks:
+                    nextGroups.today_plan_tasks ?? prev.today_plan_tasks,
+                suggested_tasks:
+                    nextGroups.suggested_tasks ?? prev.suggested_tasks,
+                tasks_completed_today:
+                    nextGroups.tasks_completed_today ??
+                    prev.tasks_completed_today,
+            };
+        });
+    });
 
     // Helper to get current task data from global store
     // Metrics provides section membership (task IDs), store provides current data
@@ -900,7 +940,7 @@ const TasksToday: React.FC = () => {
                 // Make API call to persist the change and get the updated task from server
                 const updatedTaskFromServer = await updateTask(
                     updatedTask.uid!,
-                    updatedTask
+                    omitTaskSize(updatedTask)
                 );
 
                 // Update the UI again with the actual server response to ensure consistency

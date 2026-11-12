@@ -32,6 +32,8 @@ import {
     fetchProjects,
 } from '../../utils/projectsService';
 import { createTask, deleteTask } from '../../utils/tasksService';
+import { applyTaskSizeUpdate, omitTaskSize } from '../../utils/taskSize';
+import { useTaskSizeSync } from '../../hooks/useTaskSizeSync';
 import {
     updateNote,
     deleteNote as apiDeleteNote,
@@ -61,6 +63,9 @@ const ProjectDetails: React.FC = () => {
     const [allProjects, setAllProjects] = useState<Project[]>([]);
     const [project, setProject] = useState<Project | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
+    useTaskSizeSync((update) => {
+        setTasks((prev) => applyTaskSizeUpdate(prev, update));
+    });
     const [notes, setNotes] = useState<Note[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
@@ -335,7 +340,7 @@ const ProjectDetails: React.FC = () => {
                 'x-csrf-token': await getCsrfToken(),
             },
             credentials: 'include',
-            body: JSON.stringify(updatedTask),
+            body: JSON.stringify(omitTaskSize(updatedTask)),
         });
         if (!response.ok) {
             await response.json();

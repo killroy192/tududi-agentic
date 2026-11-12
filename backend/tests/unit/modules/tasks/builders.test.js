@@ -1,5 +1,7 @@
 const {
     calculateInitialDueDate,
+    buildTaskAttributes,
+    buildUpdateAttributes,
 } = require('../../../../modules/tasks/core/builders');
 
 describe('calculateInitialDueDate', () => {
@@ -246,5 +248,95 @@ describe('calculateInitialDueDate', () => {
             expect(result).toBe('2026-03-27');
             global.Date = RealDate;
         });
+    });
+});
+
+function storedTask(overrides = {}) {
+    return {
+        name: 'Stored name',
+        priority: 1,
+        status: 0,
+        note: 'Stored note',
+        recurrence_type: 'none',
+        recurrence_interval: null,
+        recurrence_end_date: null,
+        recurrence_weekday: null,
+        recurrence_weekdays: null,
+        recurrence_month_day: null,
+        recurrence_week_of_month: null,
+        completion_based: false,
+        size: 'M',
+        ...overrides,
+    };
+}
+
+describe('task size attributes', () => {
+    describe('buildUpdateAttributes', () => {
+        it('includes size when the body has the key', () => {
+            const attrs = buildUpdateAttributes(
+                { size: 'L' },
+                storedTask(),
+                'UTC'
+            );
+
+            expect(attrs.size).toBe('L');
+            expect(attrs.name).toBe('Stored name');
+            expect(attrs.priority).toBe(1);
+        });
+
+        it('includes null when the body sets size to null', () => {
+            const attrs = buildUpdateAttributes(
+                { size: null },
+                storedTask(),
+                'UTC'
+            );
+
+            expect(attrs).toHaveProperty('size', null);
+        });
+
+        it('omits size when the body does not have the key', () => {
+            const attrs = buildUpdateAttributes(
+                { name: 'Renamed', priority: 2 },
+                storedTask(),
+                'UTC'
+            );
+
+            expect(attrs).not.toHaveProperty('size');
+            expect(attrs.name).toBe('Renamed');
+            expect(attrs.priority).toBe(2);
+        });
+
+        it('ignores an inherited size property', () => {
+            const body = Object.create({ size: 'S' });
+            body.note = 'Touched';
+
+            const attrs = buildUpdateAttributes(body, storedTask(), 'UTC');
+
+            expect(attrs).not.toHaveProperty('size');
+            expect(attrs.note).toBe('Touched');
+        });
+    });
+
+    describe('buildTaskAttributes', () => {
+        it.each([
+            ['omitted', undefined],
+            ['null', null],
+            ['S', 'S'],
+            ['XXL', 'XXL'],
+        ])(
+            'never sets size when the create body has size %s',
+            (_label, size) => {
+                const body = { name: 'New task', priority: 1 };
+                if (size !== undefined) {
+                    body.size = size;
+                }
+
+                const attrs = buildTaskAttributes(body, 7, 'UTC');
+
+                expect(attrs).not.toHaveProperty('size');
+                expect(attrs.name).toBe('New task');
+                expect(attrs.user_id).toBe(7);
+            }
+        );
     });
 });

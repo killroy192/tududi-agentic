@@ -7,6 +7,8 @@ import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import TaskItem from '../Task/TaskItem';
 import { getCsrfToken } from '../../utils/csrfService';
+import { useTaskSizeSync } from '../../hooks/useTaskSizeSync';
+import { applyTaskSizeUpdate, omitTaskSize } from '../../utils/taskSize';
 
 const URGENT_TAG = 'urgent';
 
@@ -33,6 +35,9 @@ const EisenhowerMatrix: React.FC = () => {
     const projects: Project[] = useStore((state: any) => state.projectsStore.projects);
 
     const [tasks, setTasks] = useState<Task[]>([]);
+    useTaskSizeSync((update) => {
+        setTasks((prev) => applyTaskSizeUpdate(prev, update));
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -94,7 +99,7 @@ const EisenhowerMatrix: React.FC = () => {
                     'Content-Type': 'application/json',
                     'x-csrf-token': await getCsrfToken(),
                 },
-                body: JSON.stringify(updatedTask),
+                body: JSON.stringify(omitTaskSize(updatedTask)),
             });
             if (res.ok) {
                 const saved = await res.json();

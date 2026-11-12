@@ -18,6 +18,8 @@ import { Project } from '../../entities/Project';
 import { Goal, GoalStatus, GoalHorizon } from '../../entities/Goal';
 import { Task } from '../../entities/Task';
 import { fetchTasks } from '../../utils/tasksService';
+import { applyTaskSizeUpdate } from '../../utils/taskSize';
+import { useTaskSizeSync } from '../../hooks/useTaskSizeSync';
 import { updateArea } from '../../utils/areasService';
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from '../../utils/goalsService';
 import { updateProject } from '../../utils/projectsService';
@@ -65,6 +67,9 @@ const AreaDetails: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [areaTasks, setAreaTasks] = useState<Task[]>([]);
+    useTaskSizeSync((update) => {
+        setAreaTasks((prev) => applyTaskSizeUpdate(prev, update));
+    });
     const [loadingTasks, setLoadingTasks] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 

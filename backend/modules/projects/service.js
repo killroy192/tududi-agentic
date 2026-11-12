@@ -185,7 +185,7 @@ class ProjectsService {
     /**
      * Get project by UID.
      */
-    async getByUid(uid, userTimezone) {
+    async getByUid(uid, userTimezone, userId) {
         const validatedUid = validateUid(uid);
         const project =
             await projectsRepository.findByUidWithIncludes(validatedUid);
@@ -196,20 +196,46 @@ class ProjectsService {
 
         const safeTimezone = getSafeTimezone(userTimezone);
         const projectJson = project.toJSON();
+        const taskAccessMap = userId
+            ? await permissionsService.getTaskAccessMap(
+                  userId,
+                  projectJson.Tasks || []
+              )
+            : null;
+        const accessLevelFor = (record) => {
+            if (!taskAccessMap || !record) return undefined;
+            if (record.uid != null && taskAccessMap.has(record.uid)) {
+                return taskAccessMap.get(record.uid);
+            }
+            if (record.id != null && taskAccessMap.has(record.id)) {
+                return taskAccessMap.get(record.id);
+            }
+            return undefined;
+        };
 
         const normalizedTasks = projectJson.Tasks
             ? projectJson.Tasks.map((task) => {
+                  const taskLevel = accessLevelFor(task);
                   const normalizedTask = {
                       ...task,
                       tags: sortTags(task.Tags),
-                      subtasks: (task.Subtasks || []).map((subtask) => ({
-                          ...subtask,
-                          tags: sortTags(subtask.Tags),
-                      })),
+                      subtasks: (task.Subtasks || []).map((subtask) => {
+                          const subtaskLevel = accessLevelFor(subtask);
+                          return {
+                              ...subtask,
+                              tags: sortTags(subtask.Tags),
+                              ...(subtaskLevel !== undefined
+                                  ? { access_level: subtaskLevel }
+                                  : {}),
+                          };
+                      }),
                       due_date: processDueDateForResponse(
                           task.due_date,
                           safeTimezone
                       ),
+                      ...(taskLevel !== undefined
+                          ? { access_level: taskLevel }
+                          : {}),
                   };
                   delete normalizedTask.Tags;
                   delete normalizedTask.Subtasks;

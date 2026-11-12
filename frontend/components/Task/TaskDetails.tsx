@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import { Task } from '../../entities/Task';
+import { Task, TaskSize } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Area } from '../../entities/Area';
 import {
@@ -1208,6 +1208,20 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleSizeSaved = (size: TaskSize | null) => {
+        taskModifiedRef.current = true;
+        if (!uid || task?.id == null) return;
+
+        // publishTaskSize already merged by uid. Mirror the priority path's
+        // store write without refetching or refreshing the timeline.
+        const current =
+            useStore
+                .getState()
+                .tasksStore.tasks.find((item: Task) => item.uid === uid) ??
+            task;
+        tasksStore.updateTaskInStore({ ...current, size });
+    };
+
     if (loading) {
         return <LoadingScreen />;
     }
@@ -1247,6 +1261,7 @@ const TaskDetails: React.FC = () => {
                     onTitleUpdate={handleTitleUpdate}
                     onStatusUpdate={handleStatusUpdate}
                     onPriorityUpdate={handlePriorityUpdate}
+                    onSizeSaved={handleSizeSaved}
                     onDelete={handleDeleteClick}
                     getProjectLink={getProjectLink}
                     getTagLink={getTagLink}

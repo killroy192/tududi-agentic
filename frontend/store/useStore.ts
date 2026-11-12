@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { Project } from '../entities/Project';
 import { Area } from '../entities/Area';
 import { Note } from '../entities/Note';
-import { Task } from '../entities/Task';
+import { Task, TaskSize } from '../entities/Task';
 import { Tag } from '../entities/Tag';
 import { InboxItem } from '../entities/InboxItem';
+import { applyTaskSizeUpdate } from '../utils/taskSize';
 
 interface NotesStore {
     notes: Note[];
@@ -73,6 +74,15 @@ interface TasksStore {
     addTask: (task: Task) => void;
     removeTask: (taskId: number) => void;
     updateTaskInStore: (updatedTask: Task) => void;
+    lastSizeUpdate: TaskSizeUpdate | null;
+    publishTaskSize: (uid: string, size: TaskSize | null) => void;
+}
+
+export interface TaskSizeUpdate {
+    uid: string;
+    size: TaskSize | null;
+    // Increments on every publish so repeated saves of the same value still notify
+    seq: number;
 }
 
 interface InboxStore {
@@ -624,6 +634,22 @@ export const useStore = create<StoreState>((set: any) => ({
                               }
                             : task
                     ),
+                },
+            })),
+        lastSizeUpdate: null,
+        publishTaskSize: (uid, size) =>
+            set((state) => ({
+                tasksStore: {
+                    ...state.tasksStore,
+                    tasks: applyTaskSizeUpdate(state.tasksStore.tasks, {
+                        uid,
+                        size,
+                    }),
+                    lastSizeUpdate: {
+                        uid,
+                        size,
+                        seq: (state.tasksStore.lastSizeUpdate?.seq ?? 0) + 1,
+                    },
                 },
             })),
     },

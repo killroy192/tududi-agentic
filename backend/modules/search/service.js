@@ -235,6 +235,7 @@ class SearchService {
 
         const serializedTasks = await serializeTasks(tasks, timezone, {
             skipDisplayNameTransform: true,
+            userId,
         });
 
         return {

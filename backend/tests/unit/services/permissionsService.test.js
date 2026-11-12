@@ -1,6 +1,7 @@
 const {
     getAccess,
     getSharedUidsForUser,
+    getTaskAccessMap,
     ownershipOrPermissionWhere,
     ACCESS,
 } = require('../../../services/permissionsService');
@@ -327,6 +328,182 @@ describe('permissionsService', () => {
             expect(ACCESS.RO).toBe('ro');
             expect(ACCESS.RW).toBe('rw');
             expect(ACCESS.ADMIN).toBe('admin');
+        });
+    });
+
+    describe('getTaskAccessMap', () => {
+        async function share(user, resourceType, resourceUid, accessLevel) {
+            await Permission.create({
+                user_id: user.id,
+                resource_type: resourceType,
+                resource_uid: resourceUid,
+                access_level: accessLevel,
+                propagation: 'direct',
+                granted_by_user_id: owner.id,
+            });
+        }
+
+        it('matches getAccess for owner, direct shares, project shares, no access, and system admin', async () => {
+            const owned = await Task.create({
+                name: 'Owned',
+                user_id: owner.id,
+            });
+            const directRo = await Task.create({
+                name: 'Direct ro',
+                user_id: owner.id,
+            });
+            const directRw = await Task.create({
+                name: 'Direct rw',
+                user_id: owner.id,
+            });
+            const projectRo = await Project.create({
+                name: 'Project ro',
+                user_id: owner.id,
+            });
+            const taskProjectRo = await Task.create({
+                name: 'Task in ro project',
+                user_id: owner.id,
+                project_id: projectRo.id,
+            });
+            const projectRw = await Project.create({
+                name: 'Project rw',
+                user_id: owner.id,
+            });
+            const taskProjectRw = await Task.create({
+                name: 'Task in rw project',
+                user_id: owner.id,
+                project_id: projectRw.id,
+            });
+            const untouched = await Task.create({
+                name: 'No access',
+                user_id: owner.id,
+            });
+            const child = await Task.create({
+                name: 'Subtask',
+                user_id: owner.id,
+                parent_task_id: owned.id,
+                project_id: projectRo.id,
+            });
+            const projectAndDirect = await Task.create({
+                name: 'Project ro beats direct rw',
+                user_id: owner.id,
+                project_id: projectRo.id,
+            });
+
+            await share(otherUser, 'task', directRo.uid, 'ro');
+            await share(otherUser, 'task', directRw.uid, 'rw');
+            await share(otherUser, 'task', projectAndDirect.uid, 'rw');
+            await share(otherUser, 'project', projectRo.uid, 'ro');
+            await share(otherUser, 'project', projectRw.uid, 'rw');
+
+            const cases = [
+                ['owner', owner.id, owned, 'rw'],
+                [
+                    'owner inside a shared project',
+                    owner.id,
+                    taskProjectRo,
+                    'rw',
+                ],
+                ['direct ro share', otherUser.id, directRo, 'ro'],
+                ['direct rw share', otherUser.id, directRw, 'rw'],
+                ['project ro share', otherUser.id, taskProjectRo, 'ro'],
+                ['project rw share', otherUser.id, taskProjectRw, 'rw'],
+                [
+                    'project share before direct share',
+                    otherUser.id,
+                    projectAndDirect,
+                    'ro',
+                ],
+                ['no access', otherUser.id, untouched, 'none'],
+                ['system admin', adminUser.uid, untouched, 'admin'],
+                [
+                    'nested subtask in a shared project',
+                    otherUser.id,
+                    child,
+                    'ro',
+                ],
+            ];
+
+            for (const [label, userId, task, expected] of cases) {
+                const direct = await getAccess(userId, 'task', task.uid);
+                expect({ label, access: direct }).toEqual({
+                    label,
+                    access: expected,
+                });
+                const map = await getTaskAccessMap(userId, [task]);
+                expect(map.get(task.uid)).toBe(expected);
+                expect(map.get(task.id)).toBe(expected);
+            }
+
+            const parentWithNested = owned.toJSON();
+            parentWithNested.Subtasks = [child.toJSON()];
+            const mixed = await getTaskAccessMap(otherUser.id, [
+                parentWithNested,
+                directRo,
+                directRw,
+                taskProjectRo,
+                taskProjectRw,
+                projectAndDirect,
+                untouched,
+            ]);
+            expect(mixed.get(owned.uid)).toBe('none');
+            expect(mixed.get(child.uid)).toBe('ro');
+            expect(mixed.get(directRo.uid)).toBe('ro');
+            expect(mixed.get(directRw.uid)).toBe('rw');
+            expect(mixed.get(taskProjectRo.uid)).toBe('ro');
+            expect(mixed.get(taskProjectRw.uid)).toBe('rw');
+            expect(mixed.get(projectAndDirect.uid)).toBe('ro');
+            expect(mixed.get(untouched.uid)).toBe('none');
+        });
+
+        it('keeps the query count constant as the task list grows', async () => {
+            const project = await Project.create({
+                name: 'Bulk project',
+                user_id: owner.id,
+            });
+            await share(otherUser, 'project', project.uid, 'ro');
+
+            const buildTasks = async (count) => {
+                const tasks = [];
+                for (let i = 0; i < count; i++) {
+                    tasks.push(
+                        await Task.create({
+                            name: `Bulk ${count}-${i}`,
+                            user_id: owner.id,
+                            project_id: i % 5 === 0 ? null : project.id,
+                        })
+                    );
+                }
+                const direct = tasks.find((task) => task.project_id == null);
+                await share(otherUser, 'task', direct.uid, 'rw');
+                return tasks;
+            };
+
+            const countQueries = async (tasks) => {
+                const previous = sequelize.options.logging;
+                let queries = 0;
+                sequelize.options.logging = () => {
+                    queries += 1;
+                };
+                try {
+                    const map = await getTaskAccessMap(otherUser.id, tasks);
+                    expect(map.get(tasks[0].uid)).toBe(
+                        tasks[0].project_id ? 'ro' : 'rw'
+                    );
+                    return queries;
+                } finally {
+                    sequelize.options.logging = previous;
+                }
+            };
+
+            const small = await buildTasks(4);
+            const large = await buildTasks(40);
+            const smallQueries = await countQueries(small);
+            const largeQueries = await countQueries(large);
+
+            expect(smallQueries).toBeGreaterThan(0);
+            expect(largeQueries).toBe(smallQueries);
+            expect(largeQueries).toBeLessThanOrEqual(6);
         });
     });
 });

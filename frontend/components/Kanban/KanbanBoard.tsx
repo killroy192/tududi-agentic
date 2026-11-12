@@ -8,6 +8,8 @@ import { Project } from '../../entities/Project';
 import { Tag } from '../../entities/Tag';
 import TaskItem from '../Task/TaskItem';
 import { getCsrfToken } from '../../utils/csrfService';
+import { useTaskSizeSync } from '../../hooks/useTaskSizeSync';
+import { applyTaskSizeUpdate, omitTaskSize } from '../../utils/taskSize';
 
 const COLUMN_STATUS: Record<string, number> = {
     not_started: 0,
@@ -130,6 +132,9 @@ const KanbanBoard: React.FC = () => {
     const projects: Project[] = useStore((state: any) => state.projectsStore.projects);
 
     const [tasks, setTasks] = useState<Task[]>([]);
+    useTaskSizeSync((update) => {
+        setTasks((prev) => applyTaskSizeUpdate(prev, update));
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -206,7 +211,7 @@ const KanbanBoard: React.FC = () => {
                     'Content-Type': 'application/json',
                     'x-csrf-token': await getCsrfToken(),
                 },
-                body: JSON.stringify(updatedTask),
+                body: JSON.stringify(omitTaskSize(updatedTask)),
             });
             if (res.ok) {
                 const saved = await res.json();
