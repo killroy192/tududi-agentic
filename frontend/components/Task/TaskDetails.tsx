@@ -41,6 +41,9 @@ import {
     getTodayDateString,
 } from '../../utils/dateUtils';
 
+// Stable fallback: a fresh [] per render would retrigger the pendingSubtasks sync forever
+const NO_SUBTASKS: Task[] = [];
+
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
@@ -82,7 +85,7 @@ const TaskDetails: React.FC = () => {
         state.tasksStore.tasks.find((t: Task) => t.uid === uid)
     );
 
-    const subtasks = task?.subtasks || [];
+    const subtasks = task?.subtasks || NO_SUBTASKS;
 
     const [loading, setLoading] = useState(!task);
     const [error, setError] = useState<string | null>(null);
