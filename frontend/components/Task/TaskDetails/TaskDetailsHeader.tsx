@@ -556,7 +556,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                                 <span>
                                                     {task.tags.map(
                                                         (
-                                                            tag: any,
+                                                            tag: Tag,
                                                             index: number
                                                         ) => (
                                                             <React.Fragment
