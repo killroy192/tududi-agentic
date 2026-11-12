@@ -40,6 +40,12 @@ import {
     isTaskPastDue,
     getTodayDateString,
 } from '../../utils/dateUtils';
+import { useClearNewTaskState } from './TaskDetails/hooks/useClearNewTaskState';
+import { useAbandonedTaskCleanup } from './TaskDetails/hooks/useAbandonedTaskCleanup';
+import { useTaskData } from './TaskDetails/hooks/useTaskData';
+import { useLazyTaskMetadata } from './TaskDetails/hooks/useLazyTaskMetadata';
+import { useOverdueBubble } from './TaskDetails/hooks/useOverdueBubble';
+import { useDateDraft } from './TaskDetails/hooks/useDateDraft';
 
 // Stable fallback: a fresh [] per render would retrigger the pendingSubtasks sync forever
 const NO_SUBTASKS: Task[] = [];
@@ -50,56 +56,27 @@ const TaskDetails: React.FC = () => {
     const location = useLocation();
     const { t } = useTranslation();
     const isNewTask = location.state?.isNew === true;
-    const isNewTaskRef = useRef(isNewTask);
-    const taskModifiedRef = useRef(false);
     const { showSuccessToast, showErrorToast } = useToast();
 
-    // Clear navigation state so refresh/back doesn't re-trigger edit mode
-    useEffect(() => {
-        if (isNewTask) {
-            navigate(location.pathname, { replace: true, state: {} });
-        }
-    }, [isNewTask, navigate, location.pathname]);
-
-    // Clean up abandoned new tasks: if user navigates away without modifying anything, delete the task
-    useEffect(() => {
-        const taskUid = uid;
-        return () => {
-            if (isNewTaskRef.current && !taskModifiedRef.current && taskUid) {
-                deleteTask(taskUid).catch((err) =>
-                    console.error('Error cleaning up abandoned new task:', err)
-                );
-                const store = useStore.getState();
-                store.tasksStore.setTasks(
-                    store.tasksStore.tasks.filter((t: Task) => t.uid !== taskUid)
-                );
-            }
-        };
-    }, [uid]);
+    useClearNewTaskState(isNewTask);
+    const taskModifiedRef = useAbandonedTaskCleanup(uid, isNewTask);
 
     const projectsStore = useStore((state: any) => state.projectsStore);
     const tagsStore = useStore((state: any) => state.tagsStore);
     const tasksStore = useStore((state: any) => state.tasksStore);
     const areasStore = useStore((state: any) => state.areasStore);
-    const task = useStore((state: any) =>
-        state.tasksStore.tasks.find((t: Task) => t.uid === uid)
-    );
+    const { task, loading, error } = useTaskData(uid);
 
     const subtasks = task?.subtasks || NO_SUBTASKS;
 
-    const [loading, setLoading] = useState(!task);
-    const [error, setError] = useState<string | null>(null);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
-    const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] = useState(false);
     const [nextIterations, setNextIterations] = useState<TaskIteration[]>([]);
     const [loadingIterations, setLoadingIterations] = useState(false);
     const [parentTask, setParentTask] = useState<Task | null>(null);
     const [loadingParent, setLoadingParent] = useState(false);
     const [pendingSubtasks, setPendingSubtasks] = useState<Task[]>([]);
-    const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
-    const actionsMenuRef = useRef<HTMLDivElement>(null);
     const aiAssistantEnabled = useStore(
         (state: any) => state.userSettingsStore.aiAssistantEnabled
     );
@@ -110,48 +87,18 @@ const TaskDetails: React.FC = () => {
         aiInsightsRef.current?.activate();
     }, []);
     const lastKnownSubtaskCount = useRef<number>(0);
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as Node;
-            if (
-                actionsMenuOpen &&
-                actionsMenuRef.current &&
-                !actionsMenuRef.current.contains(target)
-            ) {
-                setActionsMenuOpen(false);
-            }
-
-            if (isOverdueBubbleVisible) {
-                const clickedOverdueToggle =
-                    typeof e.composedPath === 'function'
-                        ? e
-                              .composedPath()
-                              .some(
-                                  (node) =>
-                                      node instanceof HTMLElement &&
-                                      node.hasAttribute('data-overdue-toggle')
-                              )
-                        : target instanceof HTMLElement &&
-                          !!target.closest('[data-overdue-toggle]');
-
-                if (!clickedOverdueToggle) {
-                    setIsOverdueBubbleVisible(false);
-                }
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [actionsMenuOpen, isOverdueBubbleVisible]);
-    const [isEditingDueDate, setIsEditingDueDate] = useState(false);
-    const [editedDueDate, setEditedDueDate] = useState<string>(
-        task?.due_date || ''
-    );
-    const [isEditingDeferUntil, setIsEditingDeferUntil] = useState(false);
-    const [editedDeferUntil, setEditedDeferUntil] = useState<string>(
-        task?.defer_until || ''
-    );
+    const {
+        isEditing: isEditingDueDate,
+        setIsEditing: setIsEditingDueDate,
+        draft: editedDueDate,
+        setDraft: setEditedDueDate,
+    } = useDateDraft(task?.due_date, { syncWithSource: true });
+    const {
+        isEditing: isEditingDeferUntil,
+        setIsEditing: setIsEditingDeferUntil,
+        draft: editedDeferUntil,
+        setDraft: setEditedDeferUntil,
+    } = useDateDraft(task?.defer_until, { syncWithSource: false });
     const [isEditingRecurrence, setIsEditingRecurrence] = useState(false);
     const [recurrenceForm, setRecurrenceForm] = useState({
         recurrence_type: task?.recurrence_type || 'none',
@@ -166,10 +113,6 @@ const TaskDetails: React.FC = () => {
     const [activePill, setActivePill] = useState('overview');
     const [attachmentCount, setAttachmentCount] = useState(0);
     const [hasLoadedSubtasks, setHasLoadedSubtasks] = useState(false);
-
-    useEffect(() => {
-        setEditedDueDate(task?.due_date || '');
-    }, [task?.due_date]);
 
     useEffect(() => {
         setRecurrenceForm({
@@ -193,17 +136,7 @@ const TaskDetails: React.FC = () => {
         task?.completion_based,
     ]);
 
-    useEffect(() => {
-        if (!tagsStore.hasLoaded && !tagsStore.isLoading) {
-            tagsStore.loadTags();
-        }
-    }, [tagsStore.hasLoaded, tagsStore.isLoading]);
-
-    useEffect(() => {
-        if (!areasStore.hasLoaded && !areasStore.isLoading) {
-            areasStore.loadAreas();
-        }
-    }, [areasStore.hasLoaded, areasStore.isLoading]);
+    useLazyTaskMetadata();
 
     const handleStartRecurrenceEdit = () => {
         setRecurrenceForm({
@@ -221,23 +154,11 @@ const TaskDetails: React.FC = () => {
 
     const isOverdue = task ? isTaskOverdueInTodayPlan(task) : false;
     const isPastDue = task ? isTaskPastDue(task) : false;
-
-    useEffect(() => {
-        if (!isOverdue) {
-            setIsOverdueBubbleVisible(false);
-        }
-    }, [isOverdue]);
-
-    const handleOverdueIconClick = () => {
-        if (!isOverdue) {
-            return;
-        }
-        setIsOverdueBubbleVisible((prev) => !prev);
-    };
-
-    const handleDismissOverdueAlert = () => {
-        setIsOverdueBubbleVisible(false);
-    };
+    const {
+        isOverdueBubbleVisible,
+        handleOverdueIconClick,
+        handleDismissOverdueAlert,
+    } = useOverdueBubble(isOverdue);
 
     const handleRecurrenceChange = (field: string, value: any) => {
         setRecurrenceForm((prev) => {
@@ -501,31 +422,6 @@ const TaskDetails: React.FC = () => {
         setIsEditingDeferUntil(false);
         setEditedDeferUntil(task?.defer_until || '');
     };
-
-    useEffect(() => {
-        const fetchTaskData = async () => {
-            if (!uid) {
-                setError('No task uid provided');
-                setLoading(false);
-                return;
-            }
-
-            if (!task) {
-                try {
-                    setLoading(true);
-                    const fetchedTask = await fetchTaskByUid(uid);
-                    tasksStore.setTasks([...tasksStore.tasks, fetchedTask]);
-                } catch (fetchError) {
-                    setError('Task not found');
-                    console.error('Error fetching task:', fetchError);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchTaskData();
-    }, [uid, task, tasksStore]);
 
     useEffect(() => {
         const loadAttachmentCount = async () => {
