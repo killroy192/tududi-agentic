@@ -10,9 +10,6 @@ import {
     updateTask,
     deleteTask,
     fetchTaskByUid,
-    fetchTaskNextIterations,
-    fetchSubtasks,
-    TaskIteration,
     toggleTaskCompletion,
 } from '../../utils/tasksService';
 import { createProject } from '../../utils/projectsService';
@@ -27,8 +24,6 @@ import {
     TaskProjectCard,
     TaskAreaCard,
     TaskTagsCard,
-    TaskSubtasksCard,
-    TaskRecurrenceCard,
     TaskDueDateCard,
     TaskDeferUntilCard,
     TaskAttachmentsCard,
@@ -46,9 +41,11 @@ import { useTaskData } from './TaskDetails/hooks/useTaskData';
 import { useLazyTaskMetadata } from './TaskDetails/hooks/useLazyTaskMetadata';
 import { useOverdueBubble } from './TaskDetails/hooks/useOverdueBubble';
 import { useDateDraft } from './TaskDetails/hooks/useDateDraft';
-
-// Stable fallback: a fresh [] per render would retrigger the pendingSubtasks sync forever
-const NO_SUBTASKS: Task[] = [];
+import { useTaskUpdate } from './TaskDetails/hooks/useTaskUpdate';
+import { useTaskDetailsSubtasks } from './TaskDetails/hooks/useTaskDetailsSubtasks';
+import { useTaskDetailsRecurrence } from './TaskDetails/hooks/useTaskDetailsRecurrence';
+import TaskDetailsSubtasks from './TaskDetails/TaskDetailsSubtasks';
+import TaskDetailsRecurrence from './TaskDetails/TaskDetailsRecurrence';
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -67,16 +64,14 @@ const TaskDetails: React.FC = () => {
     const areasStore = useStore((state: any) => state.areasStore);
     const { task, loading, error } = useTaskData(uid);
 
-    const subtasks = task?.subtasks || NO_SUBTASKS;
-
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
-    const [nextIterations, setNextIterations] = useState<TaskIteration[]>([]);
-    const [loadingIterations, setLoadingIterations] = useState(false);
-    const [parentTask, setParentTask] = useState<Task | null>(null);
-    const [loadingParent, setLoadingParent] = useState(false);
-    const [pendingSubtasks, setPendingSubtasks] = useState<Task[]>([]);
+    const bumpTimeline = () => setTimelineRefreshKey((prev) => prev + 1);
+    const { updateAndRefresh, writeTask } = useTaskUpdate({
+        uid,
+        taskModifiedRef,
+    });
     const aiAssistantEnabled = useStore(
         (state: any) => state.userSettingsStore.aiAssistantEnabled
     );
@@ -86,7 +81,6 @@ const TaskDetails: React.FC = () => {
     const handleAiInsightsClick = useCallback(() => {
         aiInsightsRef.current?.activate();
     }, []);
-    const lastKnownSubtaskCount = useRef<number>(0);
     const {
         isEditing: isEditingDueDate,
         setIsEditing: setIsEditingDueDate,
@@ -99,58 +93,10 @@ const TaskDetails: React.FC = () => {
         draft: editedDeferUntil,
         setDraft: setEditedDeferUntil,
     } = useDateDraft(task?.defer_until, { syncWithSource: false });
-    const [isEditingRecurrence, setIsEditingRecurrence] = useState(false);
-    const [recurrenceForm, setRecurrenceForm] = useState({
-        recurrence_type: task?.recurrence_type || 'none',
-        recurrence_interval: task?.recurrence_interval || 1,
-        recurrence_end_date: task?.recurrence_end_date || '',
-        recurrence_weekday: task?.recurrence_weekday ?? null,
-        recurrence_weekdays: task?.recurrence_weekdays || [],
-        recurrence_month_day: task?.recurrence_month_day ?? null,
-        recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-        completion_based: task?.completion_based || false,
-    });
     const [activePill, setActivePill] = useState('overview');
     const [attachmentCount, setAttachmentCount] = useState(0);
-    const [hasLoadedSubtasks, setHasLoadedSubtasks] = useState(false);
-
-    useEffect(() => {
-        setRecurrenceForm({
-            recurrence_type: task?.recurrence_type || 'none',
-            recurrence_interval: task?.recurrence_interval || 1,
-            recurrence_end_date: task?.recurrence_end_date || '',
-            recurrence_weekday: task?.recurrence_weekday ?? null,
-            recurrence_weekdays: task?.recurrence_weekdays || [],
-            recurrence_month_day: task?.recurrence_month_day ?? null,
-            recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-            completion_based: task?.completion_based || false,
-        });
-    }, [
-        task?.recurrence_type,
-        task?.recurrence_interval,
-        task?.recurrence_end_date,
-        task?.recurrence_weekday,
-        task?.recurrence_weekdays,
-        task?.recurrence_month_day,
-        task?.recurrence_week_of_month,
-        task?.completion_based,
-    ]);
 
     useLazyTaskMetadata();
-
-    const handleStartRecurrenceEdit = () => {
-        setRecurrenceForm({
-            recurrence_type: task?.recurrence_type || 'none',
-            recurrence_interval: task?.recurrence_interval || 1,
-            recurrence_end_date: task?.recurrence_end_date || '',
-            recurrence_weekday: task?.recurrence_weekday ?? null,
-            recurrence_weekdays: task?.recurrence_weekdays || [],
-            recurrence_month_day: task?.recurrence_month_day ?? null,
-            recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-            completion_based: task?.completion_based || false,
-        });
-        setIsEditingRecurrence(true);
-    };
 
     const isOverdue = task ? isTaskOverdueInTodayPlan(task) : false;
     const isPastDue = task ? isTaskPastDue(task) : false;
@@ -159,96 +105,6 @@ const TaskDetails: React.FC = () => {
         handleOverdueIconClick,
         handleDismissOverdueAlert,
     } = useOverdueBubble(isOverdue);
-
-    const handleRecurrenceChange = (field: string, value: any) => {
-        setRecurrenceForm((prev) => {
-            const updated = { ...prev, [field]: value };
-
-            if (
-                field === 'recurrence_type' &&
-                value === 'monthly' &&
-                !prev.recurrence_month_day
-            ) {
-                updated.recurrence_month_day = new Date().getDate();
-            }
-
-            return updated;
-        });
-    };
-
-    const handleSaveRecurrence = async () => {
-        if (!task?.uid) {
-            setIsEditingRecurrence(false);
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            const recurrencePayload: Partial<Task> = {
-                recurrence_type: recurrenceForm.recurrence_type,
-                recurrence_interval: recurrenceForm.recurrence_interval || 1,
-                recurrence_end_date: recurrenceForm.recurrence_end_date || null,
-                recurrence_weekday:
-                    recurrenceForm.recurrence_type === 'weekly' ||
-                    recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_weekday ?? null
-                        : null,
-                recurrence_weekdays:
-                    recurrenceForm.recurrence_type === 'weekly'
-                        ? recurrenceForm.recurrence_weekdays || []
-                        : null,
-                recurrence_month_day:
-                    recurrenceForm.recurrence_type === 'monthly'
-                        ? recurrenceForm.recurrence_month_day ?? null
-                        : null,
-                recurrence_week_of_month:
-                    recurrenceForm.recurrence_type === 'monthly_weekday'
-                        ? recurrenceForm.recurrence_week_of_month ?? null
-                        : null,
-                completion_based: recurrenceForm.completion_based,
-            };
-
-            await updateTask(task.uid, recurrencePayload);
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            showSuccessToast(
-                t('task.recurrenceUpdated', 'Recurrence updated successfully')
-            );
-            setIsEditingRecurrence(false);
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating recurrence:', error);
-            showErrorToast(
-                t('task.recurrenceUpdateError', 'Failed to update recurrence')
-            );
-            setIsEditingRecurrence(false);
-        }
-    };
-
-    const handleCancelRecurrenceEdit = () => {
-        setIsEditingRecurrence(false);
-        setRecurrenceForm({
-            recurrence_type: task?.recurrence_type || 'none',
-            recurrence_interval: task?.recurrence_interval || 1,
-            recurrence_end_date: task?.recurrence_end_date || '',
-            recurrence_weekday: task?.recurrence_weekday ?? null,
-            recurrence_weekdays: task?.recurrence_weekdays || [],
-            recurrence_month_day: task?.recurrence_month_day ?? null,
-            recurrence_week_of_month: task?.recurrence_week_of_month ?? null,
-            completion_based: task?.completion_based || false,
-        });
-    };
 
     const handleStartDueDateEdit = () => {
         setEditedDueDate(task?.due_date || '');
@@ -438,179 +294,18 @@ const TaskDetails: React.FC = () => {
         loadAttachmentCount();
     }, [task?.uid]);
 
-    useEffect(() => {
-        setHasLoadedSubtasks(false);
-        lastKnownSubtaskCount.current = 0;
-    }, [uid]);
-
-    useEffect(() => {
-        const loadSubtasks = async () => {
-            if (!task?.uid) {
-                return;
-            }
-
-            const currentCount = task?.subtasks?.length || 0;
-            const subtasksDisappeared =
-                lastKnownSubtaskCount.current > 0 && currentCount === 0;
-            const needsInitialLoad = !hasLoadedSubtasks && currentCount === 0;
-
-            if (needsInitialLoad || subtasksDisappeared) {
-                try {
-                    const fetchedSubtasks = await fetchSubtasks(task.uid);
-                    setHasLoadedSubtasks(true);
-                    lastKnownSubtaskCount.current = fetchedSubtasks.length;
-
-                    const existingIndex = tasksStore.tasks.findIndex(
-                        (t: Task) => t.uid === task.uid
-                    );
-                    if (existingIndex >= 0) {
-                        const updatedTasks = [...tasksStore.tasks];
-                        updatedTasks[existingIndex] = {
-                            ...task,
-                            subtasks: fetchedSubtasks,
-                        };
-                        tasksStore.setTasks(updatedTasks);
-                    }
-                } catch (error) {
-                    console.error('Error loading subtasks:', error);
-                    setHasLoadedSubtasks(true);
-                }
-            } else if (currentCount > 0) {
-                lastKnownSubtaskCount.current = currentCount;
-            }
-        };
-
-        loadSubtasks();
-    }, [task?.uid, task?.subtasks, hasLoadedSubtasks, tasksStore]);
-
-    useEffect(() => {
-        setPendingSubtasks(subtasks);
-    }, [subtasks]);
-
-    useEffect(() => {
-        const loadNextIterations = async () => {
-            if (
-                task?.id &&
-                task.recurrence_type &&
-                task.recurrence_type !== 'none'
-            ) {
-                try {
-                    setLoadingIterations(true);
-                    const iterations = await fetchTaskNextIterations(task.uid!);
-                    setNextIterations(iterations);
-                } catch (error) {
-                    console.error('Error loading next iterations:', error);
-                    setNextIterations([]);
-                } finally {
-                    setLoadingIterations(false);
-                }
-            } else if (
-                task?.recurring_parent_id &&
-                parentTask?.uid &&
-                parentTask.recurrence_type &&
-                parentTask.recurrence_type !== 'none'
-            ) {
-                try {
-                    setLoadingIterations(true);
-
-                    const iterations = await fetchTaskNextIterations(
-                        parentTask.uid
-                    );
-
-                    setNextIterations(iterations);
-                } catch (error) {
-                    console.error(
-                        'Error loading next iterations for child task:',
-                        error
-                    );
-                    setNextIterations([]);
-                } finally {
-                    setLoadingIterations(false);
-                }
-            } else {
-                setNextIterations([]);
-            }
-        };
-
-        loadNextIterations();
-    }, [
-        task?.id,
-        task?.recurrence_type,
-        task?.due_date,
-        task?.recurring_parent_id,
-        parentTask?.id,
-        parentTask?.recurrence_type,
-    ]);
-
-    useEffect(() => {
-        const loadParentTask = async () => {
-            if (task?.recurring_parent_uid) {
-                try {
-                    setLoadingParent(true);
-                    const parent = await fetchTaskByUid(
-                        task.recurring_parent_uid
-                    );
-                    setParentTask(parent);
-                } catch (error) {
-                    console.error('Error fetching parent task:', error);
-                    setParentTask(null);
-                } finally {
-                    setLoadingParent(false);
-                }
-            }
-        };
-
-        loadParentTask();
-    }, [task?.recurring_parent_uid]);
-
-    const handleSaveSubtasks = async (subtasksToSave: Task[]) => {
-        if (!task?.uid) {
-            return;
-        }
-
-        const hasChanges =
-            subtasksToSave.length !== subtasks.length ||
-            subtasksToSave.some(
-                (ps, i) =>
-                    !subtasks[i] ||
-                    ps.name !== subtasks[i].name ||
-                    ps.status !== subtasks[i].status ||
-                    (ps as any)._isNew ||
-                    (ps as any)._isEdited ||
-                    (ps as any)._statusChanged
-            );
-
-        if (!hasChanges) {
-            return;
-        }
-
-        try {
-            taskModifiedRef.current = true;
-            await updateTask(task.uid, { subtasks: subtasksToSave });
-
-            if (uid) {
-                const updatedTask = await fetchTaskByUid(uid);
-                lastKnownSubtaskCount.current =
-                    updatedTask.subtasks?.length || 0;
-                const existingIndex = tasksStore.tasks.findIndex(
-                    (t: Task) => t.uid === uid
-                );
-                if (existingIndex >= 0) {
-                    const updatedTasks = [...tasksStore.tasks];
-                    updatedTasks[existingIndex] = updatedTask;
-                    tasksStore.setTasks(updatedTasks);
-                }
-            }
-
-            setTimelineRefreshKey((prev) => prev + 1);
-        } catch (error) {
-            console.error('Error updating subtasks:', error);
-            showErrorToast(
-                t('task.subtasksUpdateError', 'Failed to update subtasks')
-            );
-            setPendingSubtasks([...subtasks]);
-        }
-    };
+    const subtasksSection = useTaskDetailsSubtasks({
+        uid,
+        task,
+        updateAndRefresh,
+        writeTask,
+        onMutated: bumpTimeline,
+    });
+    const recurrence = useTaskDetailsRecurrence({
+        task,
+        updateAndRefresh,
+        onMutated: bumpTimeline,
+    });
 
     const handleProjectSelection = async (project: Project) => {
         if (!task?.uid) return;
@@ -676,51 +371,6 @@ const TaskDetails: React.FC = () => {
         }
     };
 
-    const refreshRecurringSetup = useCallback(
-        async (latestTask?: Task | null) => {
-            if (!latestTask) {
-                setNextIterations([]);
-                return;
-            }
-
-            const isTemplateTask =
-                latestTask.recurrence_type &&
-                latestTask.recurrence_type !== 'none' &&
-                !latestTask.recurring_parent_id;
-            const canUseParentIterations =
-                !!latestTask.recurring_parent_id &&
-                !!parentTask?.id &&
-                parentTask?.recurrence_type &&
-                parentTask.recurrence_type !== 'none';
-
-            if (!isTemplateTask && !canUseParentIterations) {
-                setNextIterations([]);
-                return;
-            }
-
-            try {
-                setLoadingIterations(true);
-                if (isTemplateTask) {
-                    const iterations = await fetchTaskNextIterations(
-                        latestTask.uid!
-                    );
-                    setNextIterations(iterations);
-                } else if (canUseParentIterations && parentTask?.uid) {
-                    const iterations = await fetchTaskNextIterations(
-                        parentTask.uid
-                    );
-                    setNextIterations(iterations);
-                }
-            } catch (error) {
-                console.error('Error refreshing recurring setup:', error);
-                setNextIterations([]);
-            } finally {
-                setLoadingIterations(false);
-            }
-        },
-        [parentTask?.id, parentTask?.recurrence_type]
-    );
-
     const handleCompletionToggle = async () => {
         if (!task?.uid) {
             return;
@@ -749,7 +399,7 @@ const TaskDetails: React.FC = () => {
                 }
             }
 
-            await refreshRecurringSetup(mergedTask);
+            await recurrence.refreshRecurringSetup(mergedTask);
             setTimelineRefreshKey((prev) => prev + 1);
             showSuccessToast(
                 t('task.statusUpdated', 'Status updated successfully')
@@ -1199,25 +849,13 @@ const TaskDetails: React.FC = () => {
                                     content={task.note || ''}
                                     onUpdate={handleContentUpdate}
                                 />
-                                <TaskSubtasksCard
+                                <TaskDetailsSubtasks
                                     task={task}
-                                    subtasks={pendingSubtasks}
-                                    onSubtasksChange={setPendingSubtasks}
-                                    onSave={handleSaveSubtasks}
+                                    subtasks={subtasksSection}
                                 />
-                                <TaskRecurrenceCard
+                                <TaskDetailsRecurrence
                                     task={task}
-                                    parentTask={parentTask}
-                                    loadingParent={loadingParent}
-                                    isEditing={isEditingRecurrence}
-                                    recurrenceForm={recurrenceForm}
-                                    onStartEdit={handleStartRecurrenceEdit}
-                                    onChange={handleRecurrenceChange}
-                                    onSave={handleSaveRecurrence}
-                                    onCancel={handleCancelRecurrenceEdit}
-                                    loadingIterations={loadingIterations}
-                                    nextIterations={nextIterations}
-                                    canEdit={!task.recurring_parent_id}
+                                    recurrence={recurrence}
                                 />
                             </div>
 

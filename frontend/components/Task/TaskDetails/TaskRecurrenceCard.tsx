@@ -8,23 +8,29 @@ import { TaskIteration } from '../../../utils/tasksService';
 import { getTodayDateString, parseDateString } from '../../../utils/dateUtils';
 import { resolveUserLocale } from '../../../utils/localeUtils';
 
+export interface RecurrenceForm {
+    recurrence_type: RecurrenceType;
+    recurrence_interval: number;
+    recurrence_end_date: string | null;
+    recurrence_weekday: number | null;
+    recurrence_weekdays: number[] | null;
+    recurrence_month_day: number | null;
+    recurrence_week_of_month: number | null;
+    completion_based: boolean;
+}
+
+export type RecurrenceFormChangeHandler = <K extends keyof RecurrenceForm>(
+    field: K,
+    value: RecurrenceForm[K]
+) => void;
 interface TaskRecurrenceCardProps {
     task: Task;
     parentTask: Task | null;
     loadingParent: boolean;
     isEditing: boolean;
-    recurrenceForm: {
-        recurrence_type: RecurrenceType;
-        recurrence_interval: number;
-        recurrence_end_date: string | null;
-        recurrence_weekday: number | null;
-        recurrence_weekdays: number[] | null;
-        recurrence_month_day: number | null;
-        recurrence_week_of_month: number | null;
-        completion_based: boolean;
-    };
+    recurrenceForm: RecurrenceForm;
     onStartEdit: () => void;
-    onChange: (field: string, value: any) => void;
+    onChange: RecurrenceFormChangeHandler;
     onSave: () => void;
     onCancel: () => void;
     loadingIterations: boolean;
